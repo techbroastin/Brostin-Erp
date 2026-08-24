@@ -9,94 +9,110 @@ REMOTE DATA:       NOT MODIFIED
 LOCAL MIGRATIONS:  READY FOR REVIEW
 LOCAL SEED:        READY BUT NOT APPLIED
 ANONYMOUS AUTH:    NOT ENABLED YET
-APP SCREENS:       NOT BUILT YET
+APP SCREENS:       BUILT (UI/UX phase) — running on LOCAL MOCK DATA ONLY
+BACKEND WIRING:    NOT CONNECTED — UI does not talk to Supabase yet
 ```
 
 Nothing in `supabase/` has ever been pushed, executed, or seeded against
 `detqohhtihlygwxjasti` (or any other project). Every SQL file in this repo
 exists only on disk / in local git history. No `supabase db push`, no
 direct SQL execution, no Auth/RLS/Storage dashboard changes have been made
-by this codebase at any point.
+by this codebase at any point. This phase also did not enable Anonymous
+Auth, apply migrations, seed Supabase, or connect the app to any Supabase
+repository implementation — per explicit instruction, UI/UX came first and
+is fully decoupled from the backend.
 
 ## What exists today
 
 ```
 Brostin crm & pos/
-├── lib/                    Flutter Web PWA — architecture only, no screens yet
-│   ├── main.dart / app.dart   Supabase init + Provider wiring; app.dart
-│   │                          currently renders a placeholder home screen
-│   ├── core/                  theme, constants, phone validation
-│   ├── models/                Dart mirrors of every DB table
-│   ├── data/repositories/     the ONLY files that call Supabase
-│   ├── services/               supabase_service, session_service (local
-│   │                            cache, not auth — see 08_AUTHENTICATION.md),
-│   │                            cart_service, geolocation_service
-│   └── domain/                 use-case orchestration (identify customer,
-│                                manage addresses, place order)
-├── supabase/
-│   ├── config.toml            local CLI project-ref reference only
-│   ├── migrations/            4 files, reviewed and corrected — see below
-│   └── seed.sql               full approved provisional menu, NOT applied
-└── docs/                      this documentation set
+├── lib/
+│   ├── main.dart / app.dart    Wires MOCK repositories + go_router; does
+│   │                           NOT call Supabase.initialize() in this phase
+│   ├── core/                   theme, constants, phone validation, router
+│   ├── models/                 Dart mirrors of every DB table
+│   ├── mock/                   MockMenuData (approved menu, in-memory),
+│   │                           MockBackend (in-memory customers/addresses/
+│   │                           orders shared across the mock repositories)
+│   ├── data/repositories/      one ABSTRACT interface per repository +
+│   │                           a Mock*Repository (active now) and a
+│   │                           Supabase*Repository (dormant, unused this
+│   │                           phase) implementation of each
+│   ├── services/               supabase_service (unused this phase),
+│   │                           session_service, cart_service,
+│   │                           checkout_service, geolocation_service,
+│   │                           address_draft_holder
+│   ├── domain/                 use-case orchestration — unchanged from the
+│   │                           backend phase; depends only on the
+│   │                           abstract repository interfaces
+│   └── presentation/
+│       ├── screens/            all 13 screens — see 04_UI_UX_SPECIFICATION.md
+│       └── widgets/             shared components — see 04_UI_UX_SPECIFICATION.md
+├── supabase/                   unchanged from the backend-review phase;
+│                                 nothing here has been touched or applied
+└── docs/                       this documentation set
 ```
 
-`flutter analyze` and `flutter test` both pass as of this handover.
+`flutter analyze`, `flutter test`, and `flutter build web` all pass as of
+this handover — see the final report for exact output.
 
-## Migration files (all local, none applied)
+## How the mock/backend seam works (read this before connecting Supabase)
 
-1. `20260824120001_core_schema.sql` — restaurants, branches,
-   menu_categories, products, product_variants, customers,
-   customer_addresses.
-2. `20260824120002_orders_schema.sql` — order_number_sequences, orders,
-   order_items, and the three integrity trigger functions
-   (`generate_order_number`, `set_order_item_snapshot`,
-   `recalculate_order_totals`).
-3. `20260824120003_rls_policies.sql` — RLS enablement + policies for every
-   table.
-4. `20260824120004_customer_identification_function.sql` —
-   `identify_or_create_customer`, security-reviewed and corrected.
+Every repository has three files:
 
-Full schema reference: `06_DATABASE_SCHEMA.md`. Full security rationale:
-`07_SECURITY_RLS.md`. All four passed a local read-through validation
-covering execution order, foreign-key acyclicity, RLS coverage, price
-tamper-resistance, and idempotency — see the validation record in this
-conversation's history for the itemized checklist.
+```
+data/repositories/<name>_repository.dart           abstract interface
+data/repositories/mock_<name>_repository.dart       active now
+data/repositories/supabase_<name>_repository.dart   dormant, unused
+```
 
-## What is NOT built yet
+`main.dart` is the ONLY file that decides which implementation backs each
+interface — it currently instantiates the four `Mock*Repository` classes
+and provides them via Provider, typed as the abstract interface. Screens,
+domain use-cases, and `CartService`/`CheckoutService` never import or
+reference a `Mock*` or `Supabase*` class directly — only the interfaces.
 
-- No screens (landing, menu, product details, cart, checkout, confirmation,
-  order status, my orders, my profile) — this is the **next phase**.
-- Anonymous auth is not wired into `main.dart` — intentionally deferred
-  until Anonymous Sign-ins is enabled remotely (see `18_SUPABASE_SETUP.md`),
-  since shipping that call now would just fail against current config.
-- No delivery-fee calculation logic (no zone/fee table) — see the known
-  gap noted in `07_SECURITY_RLS.md` and `10_ORDER_LIFECYCLE.md`.
-- No payment gateway integration (Cash/UPI only, `payment_status` tracked
-  manually — architecture allows Razorpay/other gateway to be added later
-  without schema changes).
+**To connect the backend later:** enable Anonymous Sign-ins (see
+`18_SUPABASE_SETUP.md`), wire `signInAnonymously()` into `main.dart`'s
+startup, then in `main.dart` swap each `Mock*Repository(...)` construction
+for the matching `Supabase*Repository()` and call
+`await SupabaseService.initialize()` before building the provider tree.
+No screen, widget, or domain file should need to change.
+
+## What is NOT built / connected yet
+
+- The app does not talk to Supabase at all in this phase — see above.
+- Anonymous auth is not wired in — same reasoning as the backend-review
+  phase (`08_AUTHENTICATION.md`), now additionally true because there's no
+  Supabase connection at all yet in this build.
+- No delivery-fee calculation logic (no zone/fee table) — unchanged from
+  before; the UI shows a flat placeholder delivery charge
+  (`CheckoutService.flatDeliveryCharge`, ₹30) for delivery orders, clearly
+  a placeholder, not real business logic.
+- No payment gateway integration (Cash/UPI selection only).
+- Not every screen/state was individually smoke-tested in a live browser
+  this phase — see the final report's "Known UI issues" for exactly what
+  was and wasn't exercised.
 
 ## Exact next phase
 
-Per the original development plan, the next steps are, in order:
-
-1. **You enable Anonymous Sign-ins** in the Supabase dashboard for
-   `detqohhtihlygwxjasti` (manual dashboard action, not automatable by this
-   codebase).
-2. **Apply the migrations remotely** using the exact commands in
-   `18_SUPABASE_SETUP.md`, only after your explicit approval to do so.
-3. **Wire `signInAnonymously()`** into `main.dart`'s startup sequence.
-4. **Build the screens** (Step 6 in the original plan): landing → menu →
-   product details → cart → customer identification → order type →
-   address → order review → confirmation → order status → my orders → my
-   profile.
-5. Connect the built screens to the existing repository/domain layer — the
-   data layer was built ahead of the UI specifically so screens are "wire
-   up," not "design from scratch."
+1. **You review the built UI** (this handover's purpose) and give feedback.
+2. Once UI is approved: enable Anonymous Sign-ins, apply the reviewed
+   migrations remotely (`18_SUPABASE_SETUP.md`), wire
+   `signInAnonymously()`, and swap the four `Mock*Repository` instances in
+   `main.dart` for their `Supabase*Repository` counterparts.
+3. Re-test the full customer journey against the real backend.
+4. Only after that: consider payment gateway integration, delivery-fee
+   logic, and the future systems listed in `05_DATABASE_ARCHITECTURE.md`
+   ("Consumption by future systems") — all explicitly out of scope for
+   App 1.
 
 ## Where to look for what
 
 | Question | Document |
 |---|---|
+| What screens/components exist, brand, responsive rules? | `04_UI_UX_SPECIFICATION.md` |
+| What's the exact customer journey and navigation graph? | `11_CUSTOMER_FLOW.md` |
 | How do the tables relate? | `05_DATABASE_ARCHITECTURE.md` |
 | What's the exact column/constraint list? | `06_DATABASE_SCHEMA.md` |
 | How does RLS prevent cross-customer access? | `07_SECURITY_RLS.md` |
@@ -104,3 +120,4 @@ Per the original development plan, the next steps are, in order:
 | How does an order get created and priced? | `10_ORDER_LIFECYCLE.md` |
 | What's the approved menu and how are variants modeled? | `13_MENU_AND_PRICING.md` |
 | How do I actually apply this to Supabase? | `18_SUPABASE_SETUP.md` |
+| What changed and when? | `CHANGELOG.md` |

@@ -4,6 +4,10 @@ class AppConstants {
   static const String appName = 'Broastin Fried Chicken';
   static const String appTagline = 'Fresh • Crunchy • Juicy';
 
+  /// App 1 operates a single branch. This id is shared by mock data and the
+  /// eventual Supabase seed data — see supabase/seed.sql.
+  static const String singleBranchId = '22222222-2222-4222-8222-222222222222';
+
   // SharedPreferences keys for the local customer ordering session.
   static const String prefsCustomerId = 'broastin_customer_id';
   static const String prefsCustomerPhone = 'broastin_customer_phone';
