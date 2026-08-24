@@ -58,6 +58,17 @@ create policy "products_public_read_available"
   using (is_available = true);
 
 -- ---------------------------------------------------------------------------
+-- product_variants — public read of available variants only
+-- ---------------------------------------------------------------------------
+alter table public.product_variants enable row level security;
+
+drop policy if exists "product_variants_public_read_available" on public.product_variants;
+create policy "product_variants_public_read_available"
+  on public.product_variants for select
+  to anon, authenticated
+  using (is_available = true);
+
+-- ---------------------------------------------------------------------------
 -- customers — a session may only ever see/update its OWN customer row.
 -- No INSERT policy: rows are only ever created via the SECURITY DEFINER
 -- identify_or_create_customer() function, never by a direct client insert.
@@ -137,6 +148,9 @@ create policy "orders_insert_own"
 
 -- ---------------------------------------------------------------------------
 -- order_items — readable/insertable only via an order the session owns.
+-- Insert is additionally restricted to orders still in 'placed' status, so
+-- items can only be added during the initial checkout write, never
+-- appended to an order after the kitchen/ops workflow has moved it along.
 -- ---------------------------------------------------------------------------
 alter table public.order_items enable row level security;
 
@@ -163,6 +177,7 @@ create policy "order_items_insert_own"
       join public.customers c on c.id = o.customer_id
       where o.id = order_items.order_id
         and c.auth_user_id = auth.uid()
+        and o.order_status = 'placed'
     )
   );
 

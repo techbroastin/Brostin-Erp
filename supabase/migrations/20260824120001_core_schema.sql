@@ -103,6 +103,35 @@ before update on public.products
 for each row execute function public.set_updated_at();
 
 -- ---------------------------------------------------------------------------
+-- product_variants
+--
+-- Optional size/meal options for a product (e.g. Solo/Meal on burgers,
+-- Quarter/Half/Full on Alfaham). A product with zero variant rows is sold
+-- directly at products.price; a product WITH variant rows must have a
+-- variant selected — the cart/order layer always prices from the variant
+-- when one is chosen, never from the parent product's price. See
+-- set_order_item_snapshot() in the orders migration for how this is
+-- enforced server-side, not just client-side.
+-- ---------------------------------------------------------------------------
+create table if not exists public.product_variants (
+  id             uuid primary key default gen_random_uuid(),
+  product_id     uuid not null references public.products(id) on delete cascade,
+  name           text not null,
+  price          numeric(10,2) not null check (price >= 0),
+  is_default     boolean not null default false,
+  display_order  integer not null default 0,
+  is_available   boolean not null default true,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+create index if not exists idx_product_variants_product_id on public.product_variants(product_id);
+
+create or replace trigger trg_product_variants_updated_at
+before update on public.product_variants
+for each row execute function public.set_updated_at();
+
+-- ---------------------------------------------------------------------------
 -- customers
 --
 -- auth_user_id links this CRM record to a Supabase Auth identity. In App 1
@@ -111,17 +140,24 @@ for each row execute function public.set_updated_at();
 -- identity linking keeps this same auth.uid() in place, so no data migration
 -- is required. Phone number alone is never sufficient to read this table —
 -- see the RLS migration for the enforcement.
+--
+-- IMPORTANT: phone is intentionally NOT unique. auth_user_id (unique) is the
+-- only ownership anchor. See identify_or_create_customer() for why: two
+-- different anonymous sessions can legitimately type the same real-world
+-- phone number, and neither may ever gain access to the other's identity
+-- just by knowing that number. Until real OTP verification unifies them,
+-- they remain two separate CRM rows sharing a phone — reconciling those is
+-- a future Growth OS / backend concern, not something client-facing code
+-- is allowed to resolve.
 -- ---------------------------------------------------------------------------
 create table if not exists public.customers (
   id             uuid primary key default gen_random_uuid(),
   auth_user_id   uuid unique references auth.users(id) on delete set null,
-  phone          text not null unique check (phone ~ '^\+91[6-9][0-9]{9}$'),
+  phone          text not null check (phone ~ '^\+91[6-9][0-9]{9}$'),
   name           text,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
 );
-
-create index if not exists idx_customers_auth_user_id on public.customers(auth_user_id);
 
 create or replace trigger trg_customers_updated_at
 before update on public.customers

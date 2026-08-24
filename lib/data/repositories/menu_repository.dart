@@ -1,6 +1,7 @@
 import '../../models/branch.dart';
 import '../../models/menu_category.dart';
 import '../../models/product.dart';
+import '../../models/product_variant.dart';
 import '../../services/supabase_service.dart';
 
 class MenuRepository {
@@ -39,5 +40,19 @@ class MenuRepository {
   Future<Product> fetchProduct(String productId) async {
     final row = await _client.from('products').select().eq('id', productId).single();
     return Product.fromJson(row);
+  }
+
+  /// Empty list means the product has no size/meal options and is sold
+  /// directly at Product.price.
+  Future<List<ProductVariant>> fetchVariants({required String productId}) async {
+    final rows = await _client
+        .from('product_variants')
+        .select()
+        .eq('product_id', productId)
+        .eq('is_available', true)
+        .order('display_order');
+    return (rows as List)
+        .map((e) => ProductVariant.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

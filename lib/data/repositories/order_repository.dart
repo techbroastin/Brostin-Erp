@@ -33,9 +33,15 @@ class OrderRepository {
   final _client = SupabaseService.client;
 
   /// Creates the order row (order_number is generated server-side by a
-  /// trigger, never by the client), then the associated order_items. Product
-  /// name and price are snapshotted from the cart at order time and never
-  /// recalculated from current product data.
+  /// trigger, never by the client), then the associated order_items.
+  ///
+  /// subtotal/grand_total sent here are only an optimistic first value —
+  /// the database overwrites both once order_items exist (see
+  /// recalculate_order_totals()). product_name/variant_name/unit_price/
+  /// line_total on each item are entirely server-assigned (see
+  /// set_order_item_snapshot()) — this call only supplies product_id,
+  /// variant_id and quantity; anything else sent for those fields is
+  /// discarded by the database, by design.
   Future<Order> createOrder(NewOrderInput input) async {
     final orderRow = await _client
         .from('orders')
@@ -59,9 +65,13 @@ class OrderRepository {
         .map((line) => {
               'order_id': order.id,
               'product_id': line.product.id,
-              'product_name': line.product.name,
-              'unit_price': line.product.price,
+              if (line.variant != null) 'variant_id': line.variant!.id,
               'quantity': line.quantity,
+              // product_name/variant_name/unit_price/line_total are required
+              // (not null) columns but are overwritten server-side before
+              // the row is stored — these are placeholders only.
+              'product_name': line.product.name,
+              'unit_price': line.unitPrice,
               'line_total': line.lineTotal,
             })
         .toList();
