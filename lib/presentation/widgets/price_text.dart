@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-final _rupeeFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
+final _rupeeFormat = NumberFormat.currency(
+  locale: 'en_IN',
+  symbol: '₹',
+  decimalDigits: 0,
+);
 
 class PriceText extends StatelessWidget {
   final double amount;
@@ -12,7 +16,11 @@ class PriceText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(_rupeeFormat.format(amount), style: style, textAlign: textAlign);
+    return Text(
+      _rupeeFormat.format(amount),
+      style: style,
+      textAlign: textAlign,
+    );
   }
 }
 

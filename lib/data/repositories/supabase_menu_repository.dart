@@ -15,7 +15,9 @@ class SupabaseMenuRepository implements MenuRepository {
         .select()
         .eq('is_active', true)
         .order('name');
-    return (rows as List).map((e) => Branch.fromJson(e as Map<String, dynamic>)).toList();
+    return (rows as List)
+        .map((e) => Branch.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -38,17 +40,25 @@ class SupabaseMenuRepository implements MenuRepository {
         .eq('category_id', categoryId)
         .eq('is_available', true)
         .order('display_order');
-    return (rows as List).map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
+    return (rows as List)
+        .map((e) => Product.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
   Future<Product> fetchProduct(String productId) async {
-    final row = await _client.from('products').select().eq('id', productId).single();
+    final row = await _client
+        .from('products')
+        .select()
+        .eq('id', productId)
+        .single();
     return Product.fromJson(row);
   }
 
   @override
-  Future<List<ProductVariant>> fetchVariants({required String productId}) async {
+  Future<List<ProductVariant>> fetchVariants({
+    required String productId,
+  }) async {
     final rows = await _client
         .from('product_variants')
         .select()

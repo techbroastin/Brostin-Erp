@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/phone_validator.dart';
 import '../../../domain/customer_identification_usecase.dart';
 
@@ -12,10 +13,12 @@ class CustomerIdentificationScreen extends StatefulWidget {
   const CustomerIdentificationScreen({super.key});
 
   @override
-  State<CustomerIdentificationScreen> createState() => _CustomerIdentificationScreenState();
+  State<CustomerIdentificationScreen> createState() =>
+      _CustomerIdentificationScreenState();
 }
 
-class _CustomerIdentificationScreenState extends State<CustomerIdentificationScreen> {
+class _CustomerIdentificationScreenState
+    extends State<CustomerIdentificationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _nameController = TextEditingController();
@@ -39,12 +42,16 @@ class _CustomerIdentificationScreenState extends State<CustomerIdentificationScr
       final useCase = context.read<CustomerIdentificationUseCase>();
       await useCase.identify(
         rawPhone: _phoneController.text,
-        name: _nameController.text.trim().isEmpty ? null : _nameController.text.trim(),
+        name: _nameController.text.trim().isEmpty
+            ? null
+            : _nameController.text.trim(),
       );
       if (!mounted) return;
       context.push(AppRoutes.checkoutOrderType);
     } catch (e) {
-      setState(() => _errorMessage = 'Could not verify your number. Please try again.');
+      setState(
+        () => _errorMessage = 'Could not verify your number. Please try again.',
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -99,7 +106,10 @@ class _CustomerIdentificationScreenState extends State<CustomerIdentificationScr
                     ),
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 12),
-                      Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: AppColors.error),
+                      ),
                     ],
                     const SizedBox(height: 24),
                     ElevatedButton(
@@ -108,7 +118,10 @@ class _CustomerIdentificationScreenState extends State<CustomerIdentificationScr
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text('Continue'),
                     ),

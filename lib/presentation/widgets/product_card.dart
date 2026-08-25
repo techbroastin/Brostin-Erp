@@ -36,7 +36,10 @@ class ProductCard extends StatelessWidget {
                     children: [
                       Text(
                         product.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -44,7 +47,10 @@ class ProductCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           product.description!,
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12.5,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -55,7 +61,10 @@ class ProductCard extends StatelessWidget {
                           if (hasVariants)
                             Text(
                               'from ',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
                             ),
                           PriceText(
                             product.price,
@@ -65,7 +74,11 @@ class ProductCard extends StatelessWidget {
                             ),
                           ),
                           const Spacer(),
-                          const Icon(Icons.add_circle, color: AppColors.primaryRed, size: 26),
+                          const Icon(
+                            Icons.add_circle,
+                            color: AppColors.primaryRed,
+                            size: 26,
+                          ),
                         ],
                       ),
                     ],
@@ -94,7 +107,11 @@ class _ProductImage extends StatelessWidget {
           ? ColoredBox(
               color: AppColors.accentYellow.withValues(alpha: 0.18),
               child: const Center(
-                child: Icon(Icons.restaurant, color: AppColors.primaryRed, size: 32),
+                child: Icon(
+                  Icons.restaurant,
+                  color: AppColors.primaryRed,
+                  size: 32,
+                ),
               ),
             )
           : Image.network(imageUrl!, fit: BoxFit.cover),

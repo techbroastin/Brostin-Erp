@@ -36,7 +36,9 @@ class MockMenuRepository implements MenuRepository {
   }
 
   @override
-  Future<List<ProductVariant>> fetchVariants({required String productId}) async {
+  Future<List<ProductVariant>> fetchVariants({
+    required String productId,
+  }) async {
     await Future.delayed(_simulatedDelay);
     return MockMenuData.variantsForProduct(productId);
   }

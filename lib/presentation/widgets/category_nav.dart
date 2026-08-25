@@ -38,7 +38,9 @@ class CategoryNav extends StatelessWidget {
             ),
             selectedColor: AppColors.primaryRed,
             backgroundColor: AppColors.surface,
-            side: BorderSide(color: selected ? AppColors.primaryRed : AppColors.border),
+            side: BorderSide(
+              color: selected ? AppColors.primaryRed : AppColors.border,
+            ),
           );
         },
       ),

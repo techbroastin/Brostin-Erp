@@ -8,10 +8,16 @@ class MockCustomerRepository implements CustomerRepository {
   MockCustomerRepository(this._backend);
 
   @override
-  Future<IdentifyCustomerResult> identifyOrCreate({required String phone, String? name}) async {
+  Future<IdentifyCustomerResult> identifyOrCreate({
+    required String phone,
+    String? name,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final result = _backend.identifyOrCreate(phone: phone, name: name);
-    return IdentifyCustomerResult(customerId: result.customer.id, isNewCustomer: result.isNew);
+    return IdentifyCustomerResult(
+      customerId: result.customer.id,
+      isNewCustomer: result.isNew,
+    );
   }
 
   @override

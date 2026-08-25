@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
@@ -30,14 +31,19 @@ import 'services/session_service.dart';
 /// integration is explicitly approved — requires editing only this file.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  usePathUrlStrategy();
 
   final sessionService = SessionService();
   await sessionService.restore();
 
   final mockBackend = MockBackend();
   final MenuRepository menuRepository = MockMenuRepository();
-  final CustomerRepository customerRepository = MockCustomerRepository(mockBackend);
-  final AddressRepository addressRepository = MockAddressRepository(mockBackend);
+  final CustomerRepository customerRepository = MockCustomerRepository(
+    mockBackend,
+  );
+  final AddressRepository addressRepository = MockAddressRepository(
+    mockBackend,
+  );
   final OrderRepository orderRepository = MockOrderRepository(mockBackend);
 
   runApp(
@@ -53,7 +59,8 @@ Future<void> main() async {
         Provider<OrderRepository>.value(value: orderRepository),
         Provider<GeolocationService>(create: (_) => GeolocationService()),
         Provider<CustomerIdentificationUseCase>(
-          create: (context) => CustomerIdentificationUseCase(customerRepository, sessionService),
+          create: (context) =>
+              CustomerIdentificationUseCase(customerRepository, sessionService),
         ),
         Provider<AddressManagementUseCase>(
           create: (context) => AddressManagementUseCase(

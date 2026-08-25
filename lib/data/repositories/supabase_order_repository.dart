@@ -37,18 +37,20 @@ class SupabaseOrderRepository implements OrderRepository {
     final order = Order.fromJson(orderRow);
 
     final itemRows = input.lines
-        .map((line) => {
-              'order_id': order.id,
-              'product_id': line.product.id,
-              if (line.variant != null) 'variant_id': line.variant!.id,
-              'quantity': line.quantity,
-              // product_name/variant_name/unit_price/line_total are required
-              // (not null) columns but are overwritten server-side before
-              // the row is stored — these are placeholders only.
-              'product_name': line.product.name,
-              'unit_price': line.unitPrice,
-              'line_total': line.lineTotal,
-            })
+        .map(
+          (line) => {
+            'order_id': order.id,
+            'product_id': line.product.id,
+            if (line.variant != null) 'variant_id': line.variant!.id,
+            'quantity': line.quantity,
+            // product_name/variant_name/unit_price/line_total are required
+            // (not null) columns but are overwritten server-side before
+            // the row is stored — these are placeholders only.
+            'product_name': line.product.name,
+            'unit_price': line.unitPrice,
+            'line_total': line.lineTotal,
+          },
+        )
         .toList();
 
     await _client.from('order_items').insert(itemRows);
@@ -58,14 +60,23 @@ class SupabaseOrderRepository implements OrderRepository {
 
   @override
   Future<Order> fetchOrder(String orderId) async {
-    final row = await _client.from('orders').select().eq('id', orderId).single();
+    final row = await _client
+        .from('orders')
+        .select()
+        .eq('id', orderId)
+        .single();
     return Order.fromJson(row);
   }
 
   @override
   Future<List<OrderItem>> fetchOrderItems(String orderId) async {
-    final rows = await _client.from('order_items').select().eq('order_id', orderId);
-    return (rows as List).map((e) => OrderItem.fromJson(e as Map<String, dynamic>)).toList();
+    final rows = await _client
+        .from('order_items')
+        .select()
+        .eq('order_id', orderId);
+    return (rows as List)
+        .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -75,6 +86,8 @@ class SupabaseOrderRepository implements OrderRepository {
         .select()
         .eq('customer_id', customerId)
         .order('created_at', ascending: false);
-    return (rows as List).map((e) => Order.fromJson(e as Map<String, dynamic>)).toList();
+    return (rows as List)
+        .map((e) => Order.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

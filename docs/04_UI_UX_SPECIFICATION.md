@@ -74,10 +74,13 @@ forward-looking spec.
   this was the primary target and default layout.
 - Wide screens (tablet/desktop): content-bearing screens
   (`LandingScreen`, `CustomerIdentificationScreen`,
-  `EditAddressScreen`, `OrderReviewScreen`, `OrderConfirmationScreen`,
-  `OrderStatusScreen`) center their content in a `ConstrainedBox` (max
-  width 480–560) rather than stretching form fields/cards edge-to-edge
-  across a full desktop viewport.
+  `EditAddressScreen`, `AddressScreen`, `OrderReviewScreen`,
+  `OrderConfirmationScreen`, `OrderStatusScreen`) center their content in a
+  `ConstrainedBox` (max width 480–560) rather than stretching form
+  fields/cards edge-to-edge across a full desktop viewport. `AddressScreen`
+  was missing this wrapper (its "Use Current Location"/"Add Address
+  Manually" buttons and address cards stretched full-bleed on wide
+  viewports) — found and fixed during the final UI QA pass.
 - `MenuScreen`'s product list also centers within a constrained reading
   width on wide viewports via a `LayoutBuilder`-computed horizontal
   padding, rather than stretching cards absurdly wide.
@@ -87,12 +90,18 @@ forward-looking spec.
   viewport produced a ~980px-tall image pushing all other content below
   the fold. Fixed during this phase (see `CHANGELOG.md`).
 
+## Form field focus vs. error state (fixed in final UI QA)
+
+`AppColors.error` (`0xFFC62828`) was close enough in hue to `AppColors.
+primaryRed` (`0xFFD32F2F`, used for the plain focused-field border) that a
+field with a validation error was hard to distinguish from a field that was
+simply focused. Fixed by giving errors their own colour (`0xFFE65100`,
+orange) and explicit `errorBorder`/`focusedErrorBorder` in
+`AppTheme.light.inputDecorationTheme` — see `CHANGELOG.md`.
+
 ## Known UI issues
 
 See `CHANGELOG.md` and the final report's "Known UI issues" section for
-the full list, including a browser-timing quirk observed only in
-automated testing (not expected to affect real users) and screens that
-were code-reviewed but not individually smoke-tested in a live browser
-this phase (My Orders, My Profile, saved-address management, manual
-address entry, and all loading/empty/error branches other than the ones
-exercised on the happy path).
+the full list. My Orders, My Profile, saved-address management, and manual
+address entry were all live-browser tested during the final UI QA pass
+(this phase) and are no longer only code-reviewed.

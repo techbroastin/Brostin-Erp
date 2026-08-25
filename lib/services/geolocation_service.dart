@@ -44,6 +44,9 @@ class GeolocationService {
       locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
     );
 
-    return LocationResult(latitude: position.latitude, longitude: position.longitude);
+    return LocationResult(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
   }
 }

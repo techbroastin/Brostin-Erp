@@ -9,9 +9,13 @@ import '../../widgets/empty_state_view.dart';
 
 String _avatarInitial(SessionService session) {
   final name = session.customerName;
-  if (name != null && name.isNotEmpty) return name.substring(0, 1).toUpperCase();
+  if (name != null && name.isNotEmpty) {
+    return name.substring(0, 1).toUpperCase();
+  }
   final phone = session.customerPhone;
-  if (phone != null && phone.isNotEmpty) return phone.substring(phone.length - 1);
+  if (phone != null && phone.isNotEmpty) {
+    return phone.substring(phone.length - 1);
+  }
   return '?';
 }
 
@@ -28,7 +32,8 @@ class MyProfileScreen extends StatelessWidget {
           ? EmptyStateView(
               icon: Icons.person_outline,
               title: 'You have not placed an order yet',
-              message: 'Your profile appears here once you provide your details at checkout.',
+              message:
+                  'Your profile appears here once you provide your details at checkout.',
               actionLabel: 'Browse Menu',
               onAction: () => context.go(AppRoutes.menu),
             )
@@ -38,7 +43,9 @@ class MyProfileScreen extends StatelessWidget {
                 Center(
                   child: CircleAvatar(
                     radius: 40,
-                    backgroundColor: AppColors.accentYellow.withValues(alpha: 0.3),
+                    backgroundColor: AppColors.accentYellow.withValues(
+                      alpha: 0.3,
+                    ),
                     child: Text(
                       _avatarInitial(session),
                       style: const TextStyle(
@@ -67,14 +74,20 @@ class MyProfileScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       ListTile(
-                        leading: const Icon(Icons.location_on_outlined, color: AppColors.primaryRed),
+                        leading: const Icon(
+                          Icons.location_on_outlined,
+                          color: AppColors.primaryRed,
+                        ),
                         title: const Text('Saved Addresses'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.push(AppRoutes.profileAddresses),
                       ),
                       const Divider(height: 1),
                       ListTile(
-                        leading: const Icon(Icons.receipt_long_outlined, color: AppColors.primaryRed),
+                        leading: const Icon(
+                          Icons.receipt_long_outlined,
+                          color: AppColors.primaryRed,
+                        ),
                         title: const Text('Order History'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.push(AppRoutes.myOrders),

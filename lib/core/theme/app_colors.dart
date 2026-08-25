@@ -14,6 +14,11 @@ class AppColors {
   static const Color textSecondary = Color(0xFF6B615B);
 
   static const Color success = Color(0xFF2E7D32);
-  static const Color error = Color(0xFFC62828);
+
+  /// Deliberately NOT a shade of [primaryRed]/[primaryRedDark] — an error
+  /// border must read as distinct from a plain focused field at a glance.
+  /// See `inputDecorationTheme.focusedBorder` vs `errorBorder`/
+  /// `focusedErrorBorder` in `app_theme.dart`.
+  static const Color error = Color(0xFFE65100);
   static const Color border = Color(0xFFE7E0D8);
 }

@@ -65,19 +65,19 @@ class Order {
   });
 
   factory Order.fromJson(Map<String, dynamic> json) => Order(
-        id: json['id'] as String,
-        orderNumber: json['order_number'] as String,
-        customerId: json['customer_id'] as String,
-        branchId: json['branch_id'] as String,
-        addressId: json['address_id'] as String?,
-        orderType: orderTypeFromString(json['order_type'] as String),
-        subtotal: (json['subtotal'] as num).toDouble(),
-        deliveryCharge: (json['delivery_charge'] as num).toDouble(),
-        discount: (json['discount'] as num).toDouble(),
-        grandTotal: (json['grand_total'] as num).toDouble(),
-        paymentMethod: paymentMethodFromString(json['payment_method'] as String),
-        paymentStatus: paymentStatusFromString(json['payment_status'] as String),
-        orderStatus: orderStatusFromString(json['order_status'] as String),
-        createdAt: DateTime.parse(json['created_at'] as String),
-      );
+    id: json['id'] as String,
+    orderNumber: json['order_number'] as String,
+    customerId: json['customer_id'] as String,
+    branchId: json['branch_id'] as String,
+    addressId: json['address_id'] as String?,
+    orderType: orderTypeFromString(json['order_type'] as String),
+    subtotal: (json['subtotal'] as num).toDouble(),
+    deliveryCharge: (json['delivery_charge'] as num).toDouble(),
+    discount: (json['discount'] as num).toDouble(),
+    grandTotal: (json['grand_total'] as num).toDouble(),
+    paymentMethod: paymentMethodFromString(json['payment_method'] as String),
+    paymentStatus: paymentStatusFromString(json['payment_status'] as String),
+    orderStatus: orderStatusFromString(json['order_status'] as String),
+    createdAt: DateTime.parse(json['created_at'] as String),
+  );
 }

@@ -16,7 +16,10 @@ class CustomerIdentificationUseCase {
   }) async {
     final phone = PhoneValidator.toE164(rawPhone);
 
-    final result = await _customerRepository.identifyOrCreate(phone: phone, name: name);
+    final result = await _customerRepository.identifyOrCreate(
+      phone: phone,
+      name: name,
+    );
 
     await _sessionService.save(
       customerId: result.customerId,

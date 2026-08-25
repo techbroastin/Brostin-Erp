@@ -12,9 +12,9 @@ class Restaurant {
   });
 
   factory Restaurant.fromJson(Map<String, dynamic> json) => Restaurant(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        tagline: json['tagline'] as String?,
-        logoUrl: json['logo_url'] as String?,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    tagline: json['tagline'] as String?,
+    logoUrl: json['logo_url'] as String?,
+  );
 }

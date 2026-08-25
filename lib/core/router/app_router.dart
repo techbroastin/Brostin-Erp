@@ -26,7 +26,8 @@ class AppRoutes {
   static const checkoutAddress = '/checkout/address';
   static const checkoutAddressNew = '/checkout/address/new';
   static const checkoutReview = '/checkout/review';
-  static String orderConfirmation(String orderId) => '/order/$orderId/confirmation';
+  static String orderConfirmation(String orderId) =>
+      '/order/$orderId/confirmation';
   static String orderStatus(String orderId) => '/order/$orderId/status';
   static const myOrders = '/orders';
   static const profile = '/profile';
@@ -37,14 +38,23 @@ class AppRoutes {
 final appRouter = GoRouter(
   initialLocation: AppRoutes.landing,
   routes: [
-    GoRoute(path: AppRoutes.landing, builder: (context, state) => const LandingScreen()),
-    GoRoute(path: AppRoutes.menu, builder: (context, state) => const MenuScreen()),
+    GoRoute(
+      path: AppRoutes.landing,
+      builder: (context, state) => const LandingScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.menu,
+      builder: (context, state) => const MenuScreen(),
+    ),
     GoRoute(
       path: '/product/:productId',
       builder: (context, state) =>
           ProductDetailsScreen(productId: state.pathParameters['productId']!),
     ),
-    GoRoute(path: AppRoutes.cart, builder: (context, state) => const CartScreen()),
+    GoRoute(
+      path: AppRoutes.cart,
+      builder: (context, state) => const CartScreen(),
+    ),
     GoRoute(
       path: AppRoutes.checkoutPhone,
       builder: (context, state) => const CustomerIdentificationScreen(),
@@ -55,7 +65,8 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.checkoutAddress,
-      builder: (context, state) => const AddressScreen(mode: AddressScreenMode.checkoutSelect),
+      builder: (context, state) =>
+          const AddressScreen(mode: AddressScreenMode.checkoutSelect),
     ),
     GoRoute(
       path: AppRoutes.checkoutAddressNew,
@@ -72,13 +83,21 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/order/:orderId/status',
-      builder: (context, state) => OrderStatusScreen(orderId: state.pathParameters['orderId']!),
+      builder: (context, state) =>
+          OrderStatusScreen(orderId: state.pathParameters['orderId']!),
     ),
-    GoRoute(path: AppRoutes.myOrders, builder: (context, state) => const MyOrdersScreen()),
-    GoRoute(path: AppRoutes.profile, builder: (context, state) => const MyProfileScreen()),
+    GoRoute(
+      path: AppRoutes.myOrders,
+      builder: (context, state) => const MyOrdersScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.profile,
+      builder: (context, state) => const MyProfileScreen(),
+    ),
     GoRoute(
       path: AppRoutes.profileAddresses,
-      builder: (context, state) => const AddressScreen(mode: AddressScreenMode.manage),
+      builder: (context, state) =>
+          const AddressScreen(mode: AddressScreenMode.manage),
     ),
     GoRoute(
       path: AppRoutes.profileAddressNew,

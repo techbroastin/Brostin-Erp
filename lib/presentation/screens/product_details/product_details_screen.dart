@@ -39,7 +39,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final product = await repo.fetchProduct(widget.productId);
     final variants = await repo.fetchVariants(productId: widget.productId);
     if (variants.isNotEmpty) {
-      _selectedVariant = variants.firstWhere((v) => v.isDefault, orElse: () => variants.first);
+      _selectedVariant = variants.firstWhere(
+        (v) => v.isDefault,
+        orElse: () => variants.first,
+      );
     }
     return (product: product, variants: variants);
   }
@@ -55,7 +58,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             return const LoadingView();
           }
           if (snapshot.hasError) {
-            return ErrorStateView(title: 'Could not load this item', message: '${snapshot.error}');
+            return const ErrorStateView(
+              title: 'Item not available',
+              message:
+                  'This item may have been removed from the menu. Please go back and pick something else.',
+            );
           }
           final data = snapshot.data!;
           return _Body(
@@ -67,10 +74,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             onQuantityChanged: (q) => setState(() => _quantity = q),
             onAddToCart: () {
               context.read<CartService>().addProduct(
-                    data.product,
-                    variant: _selectedVariant,
-                    quantity: _quantity,
-                  );
+                data.product,
+                variant: _selectedVariant,
+                quantity: _quantity,
+              );
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('${data.product.name} added to cart')),
               );
@@ -114,76 +121,106 @@ class _Body extends StatelessWidget {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 560),
                 child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AspectRatio(
-                  aspectRatio: 16 / 10,
-                  child: product.imageUrl == null
-                      ? ColoredBox(
-                          color: AppColors.accentYellow.withValues(alpha: 0.18),
-                          child: const Center(
-                            child: Icon(Icons.restaurant, color: AppColors.primaryRed, size: 64),
-                          ),
-                        )
-                      : Image.network(product.imageUrl!, fit: BoxFit.cover),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(product.name, style: Theme.of(context).textTheme.headlineSmall),
-                      const SizedBox(height: 8),
-                      if (product.description != null)
-                        Text(
-                          product.description!,
-                          style: const TextStyle(color: AppColors.textSecondary),
-                        ),
-                      const SizedBox(height: 16),
-                      PriceText(
-                        _unitPrice,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.primaryRedDark,
-                              fontWeight: FontWeight.w800,
-                            ),
-                      ),
-                      if (variants.isNotEmpty) ...[
-                        const SizedBox(height: 24),
-                        Text('Choose an option', style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: variants.map((variant) {
-                            final selected = variant.id == selectedVariant?.id;
-                            return ChoiceChip(
-                              label: Text('${variant.name} · ${formatPrice(variant.price)}'),
-                              selected: selected,
-                              onSelected: (_) => onVariantSelected(variant),
-                              showCheckmark: false,
-                              selectedColor: AppColors.primaryRed,
-                              labelStyle: TextStyle(
-                                color: selected ? Colors.white : AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 16 / 10,
+                      child: product.imageUrl == null
+                          ? ColoredBox(
+                              color: AppColors.accentYellow.withValues(
+                                alpha: 0.18,
                               ),
-                              side: BorderSide(color: selected ? AppColors.primaryRed : AppColors.border),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                      const SizedBox(height: 24),
-                      Row(
+                              child: const Center(
+                                child: Icon(
+                                  Icons.restaurant,
+                                  color: AppColors.primaryRed,
+                                  size: 64,
+                                ),
+                              ),
+                            )
+                          : Image.network(product.imageUrl!, fit: BoxFit.cover),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Quantity', style: Theme.of(context).textTheme.titleMedium),
-                          const Spacer(),
-                          QuantityStepper(quantity: quantity, onChanged: onQuantityChanged),
+                          Text(
+                            product.name,
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          if (product.description != null)
+                            Text(
+                              product.description!,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          const SizedBox(height: 16),
+                          PriceText(
+                            _unitPrice,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: AppColors.primaryRedDark,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          if (variants.isNotEmpty) ...[
+                            const SizedBox(height: 24),
+                            Text(
+                              'Choose an option',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: variants.map((variant) {
+                                final selected =
+                                    variant.id == selectedVariant?.id;
+                                return ChoiceChip(
+                                  label: Text(
+                                    '${variant.name} · ${formatPrice(variant.price)}',
+                                  ),
+                                  selected: selected,
+                                  onSelected: (_) => onVariantSelected(variant),
+                                  showCheckmark: false,
+                                  selectedColor: AppColors.primaryRed,
+                                  labelStyle: TextStyle(
+                                    color: selected
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  side: BorderSide(
+                                    color: selected
+                                        ? AppColors.primaryRed
+                                        : AppColors.border,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Text(
+                                'Quantity',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const Spacer(),
+                              QuantityStepper(
+                                quantity: quantity,
+                                onChanged: onQuantityChanged,
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
               ),
             ),
           ),
@@ -194,7 +231,9 @@ class _Body extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
             child: ElevatedButton(
               onPressed: onAddToCart,
-              child: Text('Add to Cart · ${formatPrice(_unitPrice * quantity)}'),
+              child: Text(
+                'Add to Cart · ${formatPrice(_unitPrice * quantity)}',
+              ),
             ),
           ),
         ),

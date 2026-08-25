@@ -40,7 +40,10 @@ class MockBackend {
   /// ownership/security model has nothing to demonstrate in a pure-UI mock
   /// with no concept of "another session" — this mock only needs to make
   /// "returning customer" behavior visible in the UI during development.
-  ({Customer customer, bool isNew}) identifyOrCreate({required String phone, String? name}) {
+  ({Customer customer, bool isNew}) identifyOrCreate({
+    required String phone,
+    String? name,
+  }) {
     Customer? existing;
     for (final c in _customersById.values) {
       if (c.phone == phone) {
@@ -49,7 +52,11 @@ class MockBackend {
       }
     }
     if (existing != null) {
-      final updated = Customer(id: existing.id, phone: phone, name: name ?? existing.name);
+      final updated = Customer(
+        id: existing.id,
+        phone: phone,
+        name: name ?? existing.name,
+      );
       _customersById[existing.id] = updated;
       return (customer: updated, isNew: false);
     }
@@ -65,10 +72,9 @@ class MockBackend {
   // Addresses
   // ---------------------------------------------------------------------
 
-  List<CustomerAddress> addressesForCustomer(String customerId) => _addressesById.values
-      .where((a) => a.customerId == customerId)
-      .toList()
-    ..sort((a, b) => b.isDefault ? 1 : -1);
+  List<CustomerAddress> addressesForCustomer(String customerId) =>
+      _addressesById.values.where((a) => a.customerId == customerId).toList()
+        ..sort((a, b) => (a.isDefault ? 0 : 1).compareTo(b.isDefault ? 0 : 1));
 
   CustomerAddress addAddress(CustomerAddress address) {
     final id = _newId('addr');
@@ -122,21 +128,33 @@ class MockBackend {
     required OrderType orderType,
     required double deliveryCharge,
     required PaymentMethod paymentMethod,
-    required List<({String productId, String? variantId, String productName, String? variantName, double unitPrice, int quantity})> lines,
+    required List<
+      ({
+        String productId,
+        String? variantId,
+        String productName,
+        String? variantName,
+        double unitPrice,
+        int quantity,
+      })
+    >
+    lines,
   }) {
     final orderId = _newId('order');
     final items = lines
-        .map((l) => OrderItem(
-              id: _newId('item'),
-              orderId: orderId,
-              productId: l.productId,
-              variantId: l.variantId,
-              productName: l.productName,
-              variantName: l.variantName,
-              unitPrice: l.unitPrice,
-              quantity: l.quantity,
-              lineTotal: l.unitPrice * l.quantity,
-            ))
+        .map(
+          (l) => OrderItem(
+            id: _newId('item'),
+            orderId: orderId,
+            productId: l.productId,
+            variantId: l.variantId,
+            productName: l.productName,
+            variantName: l.variantName,
+            unitPrice: l.unitPrice,
+            quantity: l.quantity,
+            lineTotal: l.unitPrice * l.quantity,
+          ),
+        )
         .toList();
 
     final subtotal = items.fold(0.0, (sum, i) => sum + i.lineTotal);
@@ -166,12 +184,12 @@ class MockBackend {
 
   Order? orderById(String orderId) => _ordersById[orderId];
 
-  List<OrderItem> itemsForOrder(String orderId) => _orderItemsByOrderId[orderId] ?? const [];
+  List<OrderItem> itemsForOrder(String orderId) =>
+      _orderItemsByOrderId[orderId] ?? const [];
 
-  List<Order> ordersForCustomer(String customerId) => _ordersById.values
-      .where((o) => o.customerId == customerId)
-      .toList()
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  List<Order> ordersForCustomer(String customerId) =>
+      _ordersById.values.where((o) => o.customerId == customerId).toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   static const branchId = MockMenuData.branchId;
 }

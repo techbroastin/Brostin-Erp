@@ -27,7 +27,8 @@ class CustomerAddress {
     required this.isDefault,
   });
 
-  factory CustomerAddress.fromJson(Map<String, dynamic> json) => CustomerAddress(
+  factory CustomerAddress.fromJson(Map<String, dynamic> json) =>
+      CustomerAddress(
         id: json['id'] as String,
         customerId: json['customer_id'] as String,
         label: json['label'] as String,
@@ -43,16 +44,16 @@ class CustomerAddress {
       );
 
   Map<String, dynamic> toInsertJson({required String customerId}) => {
-        'customer_id': customerId,
-        'label': label,
-        'house_building': houseBuilding,
-        'street': street,
-        'area': area,
-        'landmark': landmark,
-        'pincode': pincode,
-        'latitude': latitude,
-        'longitude': longitude,
-        'delivery_notes': deliveryNotes,
-        'is_default': isDefault,
-      };
+    'customer_id': customerId,
+    'label': label,
+    'house_building': houseBuilding,
+    'street': street,
+    'area': area,
+    'landmark': landmark,
+    'pincode': pincode,
+    'latitude': latitude,
+    'longitude': longitude,
+    'delivery_notes': deliveryNotes,
+    'is_default': isDefault,
+  };
 }

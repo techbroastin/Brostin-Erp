@@ -22,9 +22,14 @@ class LandingScreen extends StatelessWidget {
             final isWide = constraints.maxWidth > 700;
             return Center(
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: isWide ? 640 : double.infinity),
+                constraints: BoxConstraints(
+                  maxWidth: isWide ? 640 : double.infinity,
+                ),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 32,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -34,9 +39,7 @@ class LandingScreen extends StatelessWidget {
                       Text(
                         AppConstants.appName,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
+                        style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 6),
@@ -56,7 +59,10 @@ class LandingScreen extends StatelessWidget {
                         onPressed: () => context.go(AppRoutes.menu),
                         child: const Padding(
                           padding: EdgeInsets.symmetric(vertical: 4),
-                          child: Text('Order Now', style: TextStyle(fontSize: 17)),
+                          child: Text(
+                            'Order Now',
+                            style: TextStyle(fontSize: 17),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -69,22 +75,33 @@ class LandingScreen extends StatelessWidget {
                         spacing: 8,
                         runSpacing: 8,
                         children: MockMenuData.categories
-                            .map((c) => ActionChip(
-                                  label: Text(c.name),
-                                  onPressed: () => context.go(AppRoutes.menu),
-                                  backgroundColor: AppColors.surface,
-                                  side: const BorderSide(color: AppColors.border),
-                                ))
+                            .map(
+                              (c) => ActionChip(
+                                label: Text(c.name),
+                                onPressed: () => context.go(AppRoutes.menu),
+                                backgroundColor: AppColors.surface,
+                                side: const BorderSide(color: AppColors.border),
+                              ),
+                            )
                             .toList(),
                       ),
                       const SizedBox(height: 32),
                       const Divider(),
                       const SizedBox(height: 16),
-                      Text('Restaurant Information', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Restaurant Information',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 8),
-                      _InfoRow(icon: Icons.storefront_outlined, text: branch.name),
+                      _InfoRow(
+                        icon: Icons.storefront_outlined,
+                        text: branch.name,
+                      ),
                       if (branch.address != null)
-                        _InfoRow(icon: Icons.location_on_outlined, text: branch.address!),
+                        _InfoRow(
+                          icon: Icons.location_on_outlined,
+                          text: branch.address!,
+                        ),
                     ],
                   ),
                 ),
@@ -111,7 +128,11 @@ class _Logo extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: const Center(
-          child: Icon(Icons.restaurant_menu, color: AppColors.accentYellow, size: 44),
+          child: Icon(
+            Icons.restaurant_menu,
+            color: AppColors.accentYellow,
+            size: 44,
+          ),
         ),
       ),
     );
@@ -136,7 +157,13 @@ class _OpenStatusBadge extends StatelessWidget {
         children: [
           Icon(Icons.circle, size: 8, color: AppColors.success),
           SizedBox(width: 6),
-          Text('Open Now', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w600)),
+          Text(
+            'Open Now',
+            style: TextStyle(
+              color: AppColors.success,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -157,7 +184,12 @@ class _InfoRow extends StatelessWidget {
         children: [
           Icon(icon, size: 18, color: AppColors.textSecondary),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(color: AppColors.textSecondary))),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
         ],
       ),
     );

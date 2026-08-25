@@ -77,38 +77,42 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
     setState(() => _saving = true);
     try {
       await context.read<AddressManagementUseCase>().saveAddress(
-            CustomerAddress(
-              id: _editingId ?? '',
-              customerId: customerId,
-              label: _label,
-              houseBuilding: _houseController.text.trim(),
-              street: _emptyToNull(_streetController.text),
-              area: _emptyToNull(_areaController.text),
-              landmark: _emptyToNull(_landmarkController.text),
-              pincode: _pincodeController.text.trim(),
-              latitude: _latitude,
-              longitude: _longitude,
-              deliveryNotes: _emptyToNull(_notesController.text),
-              isDefault: false,
-            ),
-          );
+        CustomerAddress(
+          id: _editingId ?? '',
+          customerId: customerId,
+          label: _label,
+          houseBuilding: _houseController.text.trim(),
+          street: _emptyToNull(_streetController.text),
+          area: _emptyToNull(_areaController.text),
+          landmark: _emptyToNull(_landmarkController.text),
+          pincode: _pincodeController.text.trim(),
+          latitude: _latitude,
+          longitude: _longitude,
+          deliveryNotes: _emptyToNull(_notesController.text),
+          isDefault: false,
+        ),
+      );
       if (!mounted) return;
       context.pop(true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not save address: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not save address: $e')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
-  String? _emptyToNull(String value) => value.trim().isEmpty ? null : value.trim();
+  String? _emptyToNull(String value) =>
+      value.trim().isEmpty ? null : value.trim();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_editingId == null ? 'Add Address' : 'Edit Address')),
+      appBar: AppBar(
+        title: Text(_editingId == null ? 'Add Address' : 'Edit Address'),
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -130,18 +134,28 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.my_location, size: 18, color: AppColors.success),
+                            const Icon(
+                              Icons.my_location,
+                              size: 18,
+                              color: AppColors.success,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 'Location captured (${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}) — confirm the details below',
-                                style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    Text('Address Label', style: Theme.of(context).textTheme.titleSmall),
+                    Text(
+                      'Address Label',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -152,15 +166,22 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                           selected: selected,
                           onSelected: (_) => setState(() => _label = label),
                           selectedColor: AppColors.primaryRed,
-                          labelStyle: TextStyle(color: selected ? Colors.white : AppColors.textPrimary),
+                          labelStyle: TextStyle(
+                            color: selected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                          ),
                         );
                       }).toList(),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _houseController,
-                      decoration: const InputDecoration(labelText: 'House / Building'),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      decoration: const InputDecoration(
+                        labelText: 'House / Building',
+                      ),
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Required' : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -184,14 +205,18 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                       decoration: const InputDecoration(labelText: 'Pincode'),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return 'Required';
-                        if (!RegExp(r'^[0-9]{6}$').hasMatch(v.trim())) return 'Enter a valid 6-digit pincode';
+                        if (!RegExp(r'^[0-9]{6}$').hasMatch(v.trim())) {
+                          return 'Enter a valid 6-digit pincode';
+                        }
                         return null;
                       },
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _notesController,
-                      decoration: const InputDecoration(labelText: 'Delivery Notes (optional)'),
+                      decoration: const InputDecoration(
+                        labelText: 'Delivery Notes (optional)',
+                      ),
                       maxLines: 2,
                     ),
                     const SizedBox(height: 24),
@@ -201,7 +226,10 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text('Save Address'),
                     ),

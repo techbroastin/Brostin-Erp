@@ -48,12 +48,16 @@ class CartScreen extends StatelessWidget {
                                   line.variant == null
                                       ? line.product.name
                                       : '${line.product.name} (${line.variant!.name})',
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 PriceText(
                                   line.unitPrice,
-                                  style: const TextStyle(color: AppColors.textSecondary),
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -73,7 +77,9 @@ class CartScreen extends StatelessWidget {
                             width: 64,
                             child: PriceText(
                               line.lineTotal,
-                              style: const TextStyle(fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
                               textAlign: TextAlign.right,
                             ),
                           ),
@@ -88,10 +94,17 @@ class CartScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       _SummaryRow(label: 'Subtotal', value: cart.subtotal),
-                      const _SummaryRow(label: 'Delivery charge', valueLabel: 'Calculated at checkout'),
+                      const _SummaryRow(
+                        label: 'Delivery charge',
+                        valueLabel: 'Calculated at checkout',
+                      ),
                       const _SummaryRow(label: 'Discount', valueLabel: '—'),
                       const Divider(height: 20),
-                      _SummaryRow(label: 'Total', value: cart.subtotal, emphasize: true),
+                      _SummaryRow(
+                        label: 'Total',
+                        value: cart.subtotal,
+                        emphasize: true,
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -132,7 +145,12 @@ class _SummaryRow extends StatelessWidget {
   final String? valueLabel;
   final bool emphasize;
 
-  const _SummaryRow({required this.label, this.value, this.valueLabel, this.emphasize = false});
+  const _SummaryRow({
+    required this.label,
+    this.value,
+    this.valueLabel,
+    this.emphasize = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +165,10 @@ class _SummaryRow extends StatelessWidget {
         children: [
           Text(label, style: style),
           const Spacer(),
-          if (value != null) PriceText(value!, style: style) else Text(valueLabel ?? '', style: style),
+          if (value != null)
+            PriceText(value!, style: style)
+          else
+            Text(valueLabel ?? '', style: style),
         ],
       ),
     );

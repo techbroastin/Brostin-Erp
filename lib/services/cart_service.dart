@@ -20,7 +20,8 @@ class CartLine {
   /// added to the cart — the cart key must include the variant so "Big
   /// Broaster Burger (Solo)" and "Big Broaster Burger (Meal)" are distinct
   /// lines.
-  String get cartKey => variant == null ? product.id : '${product.id}::${variant!.id}';
+  String get cartKey =>
+      variant == null ? product.id : '${product.id}::${variant!.id}';
 }
 
 /// Cart state for the current ordering session. Provided app-wide via
@@ -34,8 +35,16 @@ class CartService extends ChangeNotifier {
   double get subtotal => _lines.values.fold(0.0, (sum, l) => sum + l.lineTotal);
   bool get isEmpty => _lines.isEmpty;
 
-  void addProduct(Product product, {ProductVariant? variant, int quantity = 1}) {
-    final line = CartLine(product: product, variant: variant, quantity: quantity);
+  void addProduct(
+    Product product, {
+    ProductVariant? variant,
+    int quantity = 1,
+  }) {
+    final line = CartLine(
+      product: product,
+      variant: variant,
+      quantity: quantity,
+    );
     final existing = _lines[line.cartKey];
     if (existing != null) {
       existing.quantity += quantity;

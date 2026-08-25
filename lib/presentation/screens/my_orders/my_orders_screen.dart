@@ -82,7 +82,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                     return Card(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
-                        onTap: () => context.push(AppRoutes.orderStatus(order.id)),
+                        onTap: () =>
+                            context.push(AppRoutes.orderStatus(order.id)),
                         child: Padding(
                           padding: const EdgeInsets.all(14),
                           child: Column(
@@ -90,26 +91,49 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Text(order.orderNumber, style: const TextStyle(fontWeight: FontWeight.w700)),
+                                  Text(
+                                    order.orderNumber,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                   const Spacer(),
-                                  PriceText(order.grandTotal, style: const TextStyle(fontWeight: FontWeight.w700)),
+                                  PriceText(
+                                    order.grandTotal,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                DateFormat('d MMM yyyy, h:mm a').format(order.createdAt),
-                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
+                                DateFormat(
+                                  'd MMM yyyy, h:mm a',
+                                ).format(order.createdAt),
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12.5,
+                                ),
                               ),
                               const SizedBox(height: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentYellow.withValues(alpha: 0.25),
+                                  color: AppColors.accentYellow.withValues(
+                                    alpha: 0.25,
+                                  ),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   orderStatusLabel(order.orderStatus),
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ],

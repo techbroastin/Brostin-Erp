@@ -42,6 +42,25 @@ Saved Addresses (/profile/addresses) — same AddressScreen, "manage" mode:
   no select-to-continue, only view/add/edit/delete
 ```
 
+Reached via a profile icon in `MenuScreen`'s app bar (added during the final
+UI QA pass — `My Profile`/`My Orders` had no in-app entry point before this
+and were only reachable by typing their URL directly; see final QA report).
+
+## Known navigation-URL limitation (final QA pass)
+
+`go_router`'s `context.push()` (used for every screen after Menu — Product
+Details, Cart, Customer Identification, Order Type, Address, Order Review)
+does not rewrite the browser address bar to that screen's path; only
+`context.go()` calls (Landing, Menu, Order Confirmation, Order Status, My
+Orders, My Profile) do. In practice this means only those `go()`-reached
+screens are bookmarkable/refresh-safe by URL — a mid-checkout refresh drops
+back to Menu rather than restoring the exact push()'d screen. This is
+`go_router`'s own push/go distinction, not a defect introduced by the UI
+phase; back-button behavior through the checkout stack is unaffected. Left
+as-is for this QA pass since converting the checkout flow to `go()` would be
+an architecture-level change, not a bug fix — flagged here for the next
+phase to decide on.
+
 ## Returning-customer shortcut
 
 `CartScreen`'s "Checkout" button checks `SessionService.isIdentified`: a

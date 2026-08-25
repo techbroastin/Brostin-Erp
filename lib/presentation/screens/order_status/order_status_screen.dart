@@ -25,7 +25,11 @@ class OrderStatusScreen extends StatelessWidget {
             return const LoadingView();
           }
           if (snapshot.hasError) {
-            return ErrorStateView(title: 'Could not load this order', message: '${snapshot.error}');
+            return const ErrorStateView(
+              title: 'Could not load this order',
+              message:
+                  'We could not find this order. Please check My Orders instead.',
+            );
           }
           final order = snapshot.data!;
           return Center(
@@ -38,18 +42,29 @@ class OrderStatusScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(order.orderNumber, style: Theme.of(context).textTheme.titleLarge),
+                        Text(
+                          order.orderNumber,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
                         const Spacer(),
-                        PriceText(order.grandTotal, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        PriceText(
+                          order.grandTotal,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      order.orderType == OrderType.delivery ? 'Delivery' : 'Takeaway',
+                      order.orderType == OrderType.delivery
+                          ? 'Delivery'
+                          : 'Takeaway',
                       style: const TextStyle(color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 28),
-                    OrderStatusTimeline(currentStatus: order.orderStatus, orderType: order.orderType),
+                    OrderStatusTimeline(
+                      currentStatus: order.orderStatus,
+                      orderType: order.orderType,
+                    ),
                   ],
                 ),
               ),

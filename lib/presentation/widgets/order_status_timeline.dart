@@ -20,21 +20,25 @@ const _deliverySteps = [
 ];
 
 String orderStatusLabel(OrderStatus status) => switch (status) {
-      OrderStatus.placed => 'Placed',
-      OrderStatus.confirmed => 'Confirmed',
-      OrderStatus.preparing => 'Preparing',
-      OrderStatus.ready => 'Ready',
-      OrderStatus.outForDelivery => 'Out for Delivery',
-      OrderStatus.delivered => 'Delivered',
-      OrderStatus.completed => 'Completed',
-      OrderStatus.cancelled => 'Cancelled',
-    };
+  OrderStatus.placed => 'Placed',
+  OrderStatus.confirmed => 'Confirmed',
+  OrderStatus.preparing => 'Preparing',
+  OrderStatus.ready => 'Ready',
+  OrderStatus.outForDelivery => 'Out for Delivery',
+  OrderStatus.delivered => 'Delivered',
+  OrderStatus.completed => 'Completed',
+  OrderStatus.cancelled => 'Cancelled',
+};
 
 class OrderStatusTimeline extends StatelessWidget {
   final OrderStatus currentStatus;
   final OrderType orderType;
 
-  const OrderStatusTimeline({super.key, required this.currentStatus, required this.orderType});
+  const OrderStatusTimeline({
+    super.key,
+    required this.currentStatus,
+    required this.orderType,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,12 +47,20 @@ class OrderStatusTimeline extends StatelessWidget {
         children: [
           Icon(Icons.cancel, color: AppColors.error),
           SizedBox(width: 8),
-          Text('This order was cancelled', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
+          Text(
+            'This order was cancelled',
+            style: TextStyle(
+              color: AppColors.error,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       );
     }
 
-    final steps = orderType == OrderType.delivery ? _deliverySteps : _takeawaySteps;
+    final steps = orderType == OrderType.delivery
+        ? _deliverySteps
+        : _takeawaySteps;
     final currentIndex = steps.indexOf(currentStatus);
 
     return Column(
@@ -59,8 +71,8 @@ class OrderStatusTimeline extends StatelessWidget {
             state: i < currentIndex
                 ? _StepState.done
                 : i == currentIndex
-                    ? _StepState.current
-                    : _StepState.upcoming,
+                ? _StepState.current
+                : _StepState.upcoming,
             isLast: i == steps.length - 1,
           ),
       ],
@@ -75,7 +87,11 @@ class _TimelineRow extends StatelessWidget {
   final _StepState state;
   final bool isLast;
 
-  const _TimelineRow({required this.label, required this.state, required this.isLast});
+  const _TimelineRow({
+    required this.label,
+    required this.state,
+    required this.isLast,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +119,13 @@ class _TimelineRow extends StatelessWidget {
                     ? const Icon(Icons.check, size: 13, color: Colors.white)
                     : null,
               ),
-              if (!isLast) Expanded(child: Container(width: 2, color: color.withValues(alpha: 0.4))),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: color.withValues(alpha: 0.4),
+                  ),
+                ),
             ],
           ),
           const SizedBox(width: 14),
@@ -112,8 +134,12 @@ class _TimelineRow extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                fontWeight: state == _StepState.current ? FontWeight.w700 : FontWeight.w500,
-                color: state == _StepState.upcoming ? AppColors.textSecondary : AppColors.textPrimary,
+                fontWeight: state == _StepState.current
+                    ? FontWeight.w700
+                    : FontWeight.w500,
+                color: state == _StepState.upcoming
+                    ? AppColors.textSecondary
+                    : AppColors.textPrimary,
               ),
             ),
           ),

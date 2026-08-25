@@ -14,10 +14,10 @@ class MenuCategory {
   });
 
   factory MenuCategory.fromJson(Map<String, dynamic> json) => MenuCategory(
-        id: json['id'] as String,
-        branchId: json['branch_id'] as String?,
-        name: json['name'] as String,
-        displayOrder: json['display_order'] as int,
-        isActive: json['is_active'] as bool,
-      );
+    id: json['id'] as String,
+    branchId: json['branch_id'] as String?,
+    name: json['name'] as String,
+    displayOrder: json['display_order'] as int,
+    isActive: json['is_active'] as bool,
+  );
 }

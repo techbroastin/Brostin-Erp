@@ -37,14 +37,14 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
     });
     try {
       final order = await context.read<OrderPlacementUseCase>().placeOrder(
-            customerId: session.customerId!,
-            branchId: checkout.branchId,
-            addressId: checkout.selectedAddress?.id,
-            orderType: checkout.orderType!,
-            paymentMethod: checkout.paymentMethod,
-            cart: cart,
-            deliveryCharge: checkout.deliveryCharge,
-          );
+        customerId: session.customerId!,
+        branchId: checkout.branchId,
+        addressId: checkout.selectedAddress?.id,
+        orderType: checkout.orderType!,
+        paymentMethod: checkout.paymentMethod,
+        cart: cart,
+        deliveryCharge: checkout.deliveryCharge,
+      );
       cart.clear();
       checkout.reset();
       if (!mounted) return;
@@ -81,7 +81,10 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                         title: 'Customer',
                         children: [
                           _KeyValueRow('Name', session.customerName ?? '—'),
-                          _KeyValueRow('Phone', '+91 ${session.customerPhone?.replaceFirst('+91', '') ?? '—'}'),
+                          _KeyValueRow(
+                            'Phone',
+                            '+91 ${session.customerPhone?.replaceFirst('+91', '') ?? '—'}',
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -90,9 +93,12 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                         children: [
                           _KeyValueRow(
                             'Type',
-                            checkout.orderType == OrderType.delivery ? 'Delivery' : 'Takeaway',
+                            checkout.orderType == OrderType.delivery
+                                ? 'Delivery'
+                                : 'Takeaway',
                           ),
-                          if (checkout.orderType == OrderType.delivery && checkout.selectedAddress != null)
+                          if (checkout.orderType == OrderType.delivery &&
+                              checkout.selectedAddress != null)
                             _KeyValueRow(
                               'Address',
                               '${checkout.selectedAddress!.houseBuilding}, ${checkout.selectedAddress!.area ?? ''}',
@@ -148,7 +154,10 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                               padding: EdgeInsets.only(top: 4),
                               child: Text(
                                 'Payment is not automatically verified — pay the delivery/pickup staff via UPI and it will be confirmed manually.',
-                                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ),
                         ],
@@ -158,14 +167,24 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                         title: 'Total',
                         children: [
                           _KeyValueRow('Subtotal', formatPrice(cart.subtotal)),
-                          _KeyValueRow('Delivery Charge', formatPrice(checkout.deliveryCharge)),
+                          _KeyValueRow(
+                            'Delivery Charge',
+                            formatPrice(checkout.deliveryCharge),
+                          ),
                           const Divider(),
-                          _KeyValueRow('Grand Total', formatPrice(grandTotal), emphasize: true),
+                          _KeyValueRow(
+                            'Grand Total',
+                            formatPrice(grandTotal),
+                            emphasize: true,
+                          ),
                         ],
                       ),
                       if (_error != null) ...[
                         const SizedBox(height: 12),
-                        Text(_error!, style: const TextStyle(color: Colors.red)),
+                        Text(
+                          _error!,
+                          style: const TextStyle(color: AppColors.error),
+                        ),
                       ],
                     ],
                   ),
@@ -178,7 +197,10 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Text('Place Order'),
                   ),
@@ -233,7 +255,9 @@ class _KeyValueRow extends StatelessWidget {
           const Spacer(),
           Text(
             value,
-            style: TextStyle(fontWeight: emphasize ? FontWeight.w800 : FontWeight.w500),
+            style: TextStyle(
+              fontWeight: emphasize ? FontWeight.w800 : FontWeight.w500,
+            ),
           ),
         ],
       ),

@@ -9,9 +9,21 @@ REMOTE DATA:       NOT MODIFIED
 LOCAL MIGRATIONS:  READY FOR REVIEW
 LOCAL SEED:        READY BUT NOT APPLIED
 ANONYMOUS AUTH:    NOT ENABLED YET
-APP SCREENS:       BUILT (UI/UX phase) — running on LOCAL MOCK DATA ONLY
+APP SCREENS:       BUILT + LIVE UI-QA'D — running on LOCAL MOCK DATA ONLY
 BACKEND WIRING:    NOT CONNECTED — UI does not talk to Supabase yet
 ```
+
+This handover supersedes the previous one: a final UI QA pass (live-browser
+testing of all 13 screens, every documented flow, and a code-level
+separation audit) has since run on top of the UI/UX phase below. See the
+final QA report for the full findings; the short version — several real
+bugs were found and fixed (deep-link/menu-load routing, a wide-viewport
+`AddressScreen` layout gap, focus-vs-error field styling, two raw-exception
+error messages, `My Profile`/`My Orders` had no in-app entry point, a
+`MenuScreen` bug that re-fetched product variants on every rebuild), one
+suspected bug turned out to be a sandbox artifact (see below), and the
+mock/Supabase separation and the ₹30 delivery fee were both reconfirmed
+clean. Nothing in this QA pass touched Supabase, auth, or migrations.
 
 Nothing in `supabase/` has ever been pushed, executed, or seeded against
 `detqohhtihlygwxjasti` (or any other project). Every SQL file in this repo
@@ -90,9 +102,19 @@ No screen, widget, or domain file should need to change.
   (`CheckoutService.flatDeliveryCharge`, ₹30) for delivery orders, clearly
   a placeholder, not real business logic.
 - No payment gateway integration (Cash/UPI selection only).
-- Not every screen/state was individually smoke-tested in a live browser
-  this phase — see the final report's "Known UI issues" for exactly what
-  was and wasn't exercised.
+- Every screen and the documented flows were live-browser tested in this
+  QA pass (see the final report for the exact matrix and remaining gaps —
+  mainly the 7 required responsive widths, which this sandbox's browser
+  could not be resized to test manually; covered instead by widget tests
+  pumping `LandingScreen` at all 7 widths, plus manual review of the other
+  screens' `ConstrainedBox`/`LayoutBuilder` responsive patterns).
+- `go_router`'s `context.push()` (Product Details, Cart, Customer
+  Identification, Order Type, Address, Order Review) does not update the
+  browser URL the way `context.go()` (Landing, Menu, Order Confirmation,
+  Order Status, My Orders, My Profile) does — see `11_CUSTOMER_FLOW.md`
+  "Known navigation-URL limitation." Not fixed this phase since it's a
+  `go_router` push/go semantics question, not a bug, and fixing it would
+  mean redesigning the checkout back-stack.
 
 ## Exact next phase
 

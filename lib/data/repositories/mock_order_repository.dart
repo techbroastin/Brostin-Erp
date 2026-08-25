@@ -19,14 +19,16 @@ class MockOrderRepository implements OrderRepository {
       deliveryCharge: input.deliveryCharge,
       paymentMethod: input.paymentMethod,
       lines: input.lines
-          .map((l) => (
-                productId: l.product.id,
-                variantId: l.variant?.id,
-                productName: l.product.name,
-                variantName: l.variant?.name,
-                unitPrice: l.unitPrice,
-                quantity: l.quantity,
-              ))
+          .map(
+            (l) => (
+              productId: l.product.id,
+              variantId: l.variant?.id,
+              productName: l.product.name,
+              variantName: l.variant?.name,
+              unitPrice: l.unitPrice,
+              quantity: l.quantity,
+            ),
+          )
           .toList(),
     );
   }

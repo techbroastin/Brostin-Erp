@@ -51,6 +51,11 @@ class _MenuScreenState extends State<MenuScreen> {
         title: const Text('Menu'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () => context.push(AppRoutes.profile),
+            tooltip: 'Profile',
+          ),
+          IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
             onPressed: () => context.push(AppRoutes.cart),
             tooltip: 'Cart',
@@ -85,7 +90,10 @@ class _MenuScreenState extends State<MenuScreen> {
           ? null
           : Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: CartBar(cart: cart, onTap: () => context.push(AppRoutes.cart)),
+              child: CartBar(
+                cart: cart,
+                onTap: () => context.push(AppRoutes.cart),
+              ),
             ),
     );
   }
@@ -111,6 +119,13 @@ class _MenuBody extends StatefulWidget {
 class _MenuBodyState extends State<_MenuBody> {
   late String _selectedCategoryId;
   late Future<List<Product>> _productsFuture;
+  final Map<String, Future<List<ProductVariant>>> _variantsFutureCache = {};
+
+  Future<List<ProductVariant>> _variantsFor(String productId) =>
+      _variantsFutureCache.putIfAbsent(
+        productId,
+        () => widget.repo.fetchVariants(productId: productId),
+      );
 
   @override
   void initState() {
@@ -155,7 +170,10 @@ class _MenuBodyState extends State<_MenuBody> {
                 return const LoadingView();
               }
               if (snapshot.hasError) {
-                return ErrorStateView(title: 'Could not load items', message: '${snapshot.error}');
+                return ErrorStateView(
+                  title: 'Could not load items',
+                  message: '${snapshot.error}',
+                );
               }
               final products = snapshot.data!;
               if (products.isEmpty) {
@@ -169,7 +187,9 @@ class _MenuBodyState extends State<_MenuBody> {
                   final isWide = constraints.maxWidth > 700;
                   return ListView.separated(
                     padding: EdgeInsets.symmetric(
-                      horizontal: isWide ? (constraints.maxWidth - 640) / 2 + 16 : 16,
+                      horizontal: isWide
+                          ? (constraints.maxWidth - 640) / 2 + 16
+                          : 16,
                       vertical: 8,
                     ),
                     itemCount: products.length,
@@ -177,13 +197,16 @@ class _MenuBodyState extends State<_MenuBody> {
                     itemBuilder: (context, index) {
                       final product = products[index];
                       return FutureBuilder<List<ProductVariant>>(
-                        future: widget.repo.fetchVariants(productId: product.id),
+                        future: _variantsFor(product.id),
                         builder: (context, variantSnapshot) {
-                          final hasVariants = (variantSnapshot.data ?? const []).isNotEmpty;
+                          final hasVariants =
+                              (variantSnapshot.data ?? const []).isNotEmpty;
                           return ProductCard(
                             product: product,
                             hasVariants: hasVariants,
-                            onTap: () => context.push(AppRoutes.productDetails(product.id)),
+                            onTap: () => context.push(
+                              AppRoutes.productDetails(product.id),
+                            ),
                           );
                         },
                       );

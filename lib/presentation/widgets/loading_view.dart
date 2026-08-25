@@ -15,7 +15,10 @@ class LoadingView extends StatelessWidget {
           const CircularProgressIndicator(color: AppColors.primaryRed),
           if (message != null) ...[
             const SizedBox(height: 16),
-            Text(message!, style: const TextStyle(color: AppColors.textSecondary)),
+            Text(
+              message!,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
           ],
         ],
       ),
@@ -29,7 +32,12 @@ class SkeletonBox extends StatelessWidget {
   final double? width;
   final BorderRadius? borderRadius;
 
-  const SkeletonBox({super.key, required this.height, this.width, this.borderRadius});
+  const SkeletonBox({
+    super.key,
+    required this.height,
+    this.width,
+    this.borderRadius,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -50,9 +50,14 @@ class _AddressScreenState extends State<AddressScreen> {
   Future<void> _useCurrentLocation() async {
     setState(() => _locating = true);
     try {
-      final location = await context.read<AddressManagementUseCase>().captureCurrentLocation();
+      final location = await context
+          .read<AddressManagementUseCase>()
+          .captureCurrentLocation();
       if (!mounted) return;
-      context.read<AddressDraftHolder>().setLocation(location.latitude, location.longitude);
+      context.read<AddressDraftHolder>().setLocation(
+        location.latitude,
+        location.longitude,
+      );
       final saved = await context.push<bool>(_addressFormRoute(widget.mode));
       if (saved == true) _retry();
     } on LocationPermissionDeniedException catch (e) {
@@ -102,7 +107,9 @@ class _AddressScreenState extends State<AddressScreen> {
   Widget build(BuildContext context) {
     final isCheckout = widget.mode == AddressScreenMode.checkoutSelect;
     return Scaffold(
-      appBar: AppBar(title: Text(isCheckout ? 'Delivery Address' : 'Saved Addresses')),
+      appBar: AppBar(
+        title: Text(isCheckout ? 'Delivery Address' : 'Saved Addresses'),
+      ),
       body: FutureBuilder<List<CustomerAddress>>(
         future: _future,
         builder: (context, snapshot) {
@@ -117,55 +124,76 @@ class _AddressScreenState extends State<AddressScreen> {
             );
           }
           final addresses = snapshot.data!;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _locating ? null : _useCurrentLocation,
-                  icon: _locating
-                      ? const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Icon(Icons.my_location),
-                  label: Text(_locating ? 'Getting your location…' : 'Use Current Location'),
-                ),
-                const SizedBox(height: 10),
-                OutlinedButton.icon(
-                  onPressed: _addManually,
-                  icon: const Icon(Icons.add_location_alt_outlined),
-                  label: const Text('Add Address Manually'),
-                ),
-                const SizedBox(height: 20),
-                if (addresses.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 24),
-                    child: EmptyStateView(
-                      icon: Icons.location_off_outlined,
-                      title: 'No saved addresses yet',
-                      message: 'Add one above to speed up checkout next time.',
-                    ),
-                  )
-                else ...[
-                  Text('Saved Addresses', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 10),
-                  for (final address in addresses)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: AddressCard(
-                        address: address,
-                        selected: isCheckout &&
-                            context.watch<CheckoutService>().selectedAddress?.id == address.id,
-                        onTap: isCheckout ? () => _select(address) : null,
-                        onEdit: () => _edit(address),
-                        onDelete: () => _delete(address),
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _locating ? null : _useCurrentLocation,
+                      icon: _locating
+                          ? const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.my_location),
+                      label: Text(
+                        _locating
+                            ? 'Getting your location…'
+                            : 'Use Current Location',
                       ),
                     ),
-                ],
-              ],
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: _addManually,
+                      icon: const Icon(Icons.add_location_alt_outlined),
+                      label: const Text('Add Address Manually'),
+                    ),
+                    const SizedBox(height: 20),
+                    if (addresses.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 24),
+                        child: EmptyStateView(
+                          icon: Icons.location_off_outlined,
+                          title: 'No saved addresses yet',
+                          message:
+                              'Add one above to speed up checkout next time.',
+                        ),
+                      )
+                    else ...[
+                      Text(
+                        'Saved Addresses',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 10),
+                      for (final address in addresses)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: AddressCard(
+                            address: address,
+                            selected:
+                                isCheckout &&
+                                context
+                                        .watch<CheckoutService>()
+                                        .selectedAddress
+                                        ?.id ==
+                                    address.id,
+                            onTap: isCheckout ? () => _select(address) : null,
+                            onEdit: () => _edit(address),
+                            onDelete: () => _delete(address),
+                          ),
+                        ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           );
         },
@@ -174,6 +202,7 @@ class _AddressScreenState extends State<AddressScreen> {
   }
 }
 
-String _addressFormRoute(AddressScreenMode mode) => mode == AddressScreenMode.checkoutSelect
+String _addressFormRoute(AddressScreenMode mode) =>
+    mode == AddressScreenMode.checkoutSelect
     ? AppRoutes.checkoutAddressNew
     : AppRoutes.profileAddressNew;

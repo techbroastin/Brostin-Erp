@@ -22,17 +22,17 @@ class OrderItem {
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) => OrderItem(
-        id: json['id'] as String,
-        orderId: json['order_id'] as String,
-        productId: json['product_id'] as String,
-        variantId: json['variant_id'] as String?,
-        productName: json['product_name'] as String,
-        variantName: json['variant_name'] as String?,
-        // unit_price/product_name/variant_name/line_total are all assigned
-        // server-side by set_order_item_snapshot() — this is just reading
-        // back what the trigger computed, never client-trusted input.
-        unitPrice: (json['unit_price'] as num).toDouble(),
-        quantity: json['quantity'] as int,
-        lineTotal: (json['line_total'] as num).toDouble(),
-      );
+    id: json['id'] as String,
+    orderId: json['order_id'] as String,
+    productId: json['product_id'] as String,
+    variantId: json['variant_id'] as String?,
+    productName: json['product_name'] as String,
+    variantName: json['variant_name'] as String?,
+    // unit_price/product_name/variant_name/line_total are all assigned
+    // server-side by set_order_item_snapshot() — this is just reading
+    // back what the trigger computed, never client-trusted input.
+    unitPrice: (json['unit_price'] as num).toDouble(),
+    quantity: json['quantity'] as int,
+    lineTotal: (json['line_total'] as num).toDouble(),
+  );
 }

@@ -18,12 +18,12 @@ class ProductVariant {
   });
 
   factory ProductVariant.fromJson(Map<String, dynamic> json) => ProductVariant(
-        id: json['id'] as String,
-        productId: json['product_id'] as String,
-        name: json['name'] as String,
-        price: (json['price'] as num).toDouble(),
-        isDefault: json['is_default'] as bool,
-        displayOrder: json['display_order'] as int,
-        isAvailable: json['is_available'] as bool,
-      );
+    id: json['id'] as String,
+    productId: json['product_id'] as String,
+    name: json['name'] as String,
+    price: (json['price'] as num).toDouble(),
+    isDefault: json['is_default'] as bool,
+    displayOrder: json['display_order'] as int,
+    isAvailable: json['is_available'] as bool,
+  );
 }
