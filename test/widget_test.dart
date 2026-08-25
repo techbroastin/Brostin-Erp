@@ -36,13 +36,16 @@ void main() {
   });
 
   group('responsive layout — no overflow at required widths', () {
-    // Required QA widths: 320, 375, 390, 430 (phones), 768, 1024 (tablet),
-    // 1366 (small desktop). Verified via widget tests rather than manual
-    // browser resize because this sandbox's Chrome window is fixed-size and
-    // does not respond to resize_window (see final QA report). Menu and
-    // Product Details/Cart/Address were also checked manually in a live
-    // browser at the one width the sandbox does offer.
-    const widths = <double>[320, 375, 390, 430, 768, 1024, 1366];
+    // Required QA widths per 02_REQUIREMENTS.md — this customer app is
+    // strictly mobile-only (QR-code entry, Android primary/iPhone
+    // supported); tablet/desktop is explicitly not an acceptance
+    // criterion, so only phone widths are covered here. Verified via
+    // widget tests rather than manual browser resize because this
+    // sandbox's Chrome window is fixed-size and does not respond to
+    // resize_window (see final QA report). Menu and Product
+    // Details/Cart/Address were also checked manually in a live browser
+    // at the one width the sandbox does offer.
+    const widths = <double>[320, 360, 375, 390, 412, 430, 480];
 
     Future<void> pumpAppAt(WidgetTester tester, double width) async {
       tester.view.physicalSize = Size(width, 900);

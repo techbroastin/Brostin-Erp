@@ -6,6 +6,16 @@ Built against **local mock data only** (see `19_DEVELOPER_HANDOVER.md`). This
 document describes what was actually implemented in the UI/UX phase, not a
 forward-looking spec.
 
+## STRICT — mobile-only customer app
+
+See `02_REQUIREMENTS.md` for the full statement: this app is reached by QR
+code and is customer-mobile-only (Android primary, iPhone supported).
+Desktop/tablet is explicitly **not** a customer requirement. Every note in
+this document about wide-viewport (`ConstrainedBox`) behavior below is
+legacy defensive layout, not something to design further for or gate a
+release on. QA and design attention belongs on the phone widths in
+`02_REQUIREMENTS.md` (320/360/375/390/412/430/480px).
+
 ## Brand
 
 - Primary: Broastin red (`AppColors.primaryRed` `#D32F2F`, dark variant
@@ -70,9 +80,12 @@ forward-looking spec.
 
 ## Responsive behavior
 
-- Mobile-first: all screens work unmodified at narrow (phone) widths —
-  this was the primary target and default layout.
-- Wide screens (tablet/desktop): content-bearing screens
+- **Mobile-first is the actual, strict requirement, not just a default.**
+  Every screen is designed and judged at 320–480px (see
+  `02_REQUIREMENTS.md` for the exact widths). This is the primary — and,
+  per product requirement, effectively the *only* — target.
+- Wide screens (tablet/desktop) — informational only, not an acceptance
+  criterion (see `02_REQUIREMENTS.md`): content-bearing screens
   (`LandingScreen`, `CustomerIdentificationScreen`,
   `EditAddressScreen`, `AddressScreen`, `OrderReviewScreen`,
   `OrderConfirmationScreen`, `OrderStatusScreen`) center their content in a

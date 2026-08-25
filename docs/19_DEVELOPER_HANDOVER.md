@@ -1,5 +1,16 @@
 # 19 — Developer Handover
 
+## STRICT product requirement — read before touching any layout code
+
+This customer app is **mobile-only**, reached exclusively via QR-code
+entry: Android primary, iPhone supported, no tablet/desktop customer
+requirement. See `02_REQUIREMENTS.md` for the full statement and the
+required QA widths (320/360/375/390/412/430/480px). Admin/Operations is a
+**separate, desktop-only application** that does not live in this
+repository and must never be merged into this UI. Any future work here —
+QA, layout changes, new screens — should target phone widths only; do not
+reintroduce desktop/tablet as a design or acceptance concern for this app.
+
 ## Current state (authoritative — read this first)
 
 ```
@@ -133,8 +144,11 @@ No screen, widget, or domain file should need to change.
 
 | Question | Document |
 |---|---|
+| What is this product, and how does the customer/admin split work? | `01_PRODUCT_OVERVIEW.md` |
+| What's the strict mobile-only requirement and QA widths? | `02_REQUIREMENTS.md` |
 | What screens/components exist, brand, responsive rules? | `04_UI_UX_SPECIFICATION.md` |
 | What's the exact customer journey and navigation graph? | `11_CUSTOMER_FLOW.md` |
+| QR entry, manifest/PWA install, mobile rendering targets? | `14_PWA_SPECIFICATION.md` |
 | How do the tables relate? | `05_DATABASE_ARCHITECTURE.md` |
 | What's the exact column/constraint list? | `06_DATABASE_SCHEMA.md` |
 | How does RLS prevent cross-customer access? | `07_SECURITY_RLS.md` |

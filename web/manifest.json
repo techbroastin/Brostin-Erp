@@ -1,11 +1,11 @@
 {
-    "name": "broastin_ordering",
-    "short_name": "broastin_ordering",
+    "name": "Broastin Fried Chicken",
+    "short_name": "Broastin",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFBF5",
+    "theme_color": "#D32F2F",
+    "description": "Order Broastin Fried Chicken for takeaway or delivery.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
