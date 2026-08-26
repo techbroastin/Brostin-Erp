@@ -23,11 +23,66 @@ import 'package:broastin_ordering/services/checkout_service.dart';
 import 'package:broastin_ordering/services/geolocation_service.dart';
 import 'package:broastin_ordering/services/session_service.dart';
 
+/// Pumps the real app wired with the same Mock* providers main.dart uses.
+/// LandingScreen now reads MenuRepository (see CHANGELOG), so every test
+/// that pumps BroastinApp needs this provider tree, not a bare widget.
+Future<void> pumpBroastinApp(WidgetTester tester, {double? width}) async {
+  if (width != null) {
+    tester.view.physicalSize = Size(width, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
+
+  SharedPreferences.setMockInitialValues({});
+  final sessionService = SessionService();
+  await sessionService.restore();
+  final mockBackend = MockBackend();
+  final MenuRepository menuRepository = MockMenuRepository();
+  final CustomerRepository customerRepository = MockCustomerRepository(
+    mockBackend,
+  );
+  final AddressRepository addressRepository = MockAddressRepository(
+    mockBackend,
+  );
+  final OrderRepository orderRepository = MockOrderRepository(mockBackend);
+
+  await tester.pumpWidget(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CartService()),
+        ChangeNotifierProvider(create: (_) => CheckoutService()),
+        Provider<SessionService>.value(value: sessionService),
+        Provider<AddressDraftHolder>(create: (_) => AddressDraftHolder()),
+        Provider<MenuRepository>.value(value: menuRepository),
+        Provider<CustomerRepository>.value(value: customerRepository),
+        Provider<AddressRepository>.value(value: addressRepository),
+        Provider<OrderRepository>.value(value: orderRepository),
+        Provider<GeolocationService>(create: (_) => GeolocationService()),
+        Provider<CustomerIdentificationUseCase>(
+          create: (context) =>
+              CustomerIdentificationUseCase(customerRepository, sessionService),
+        ),
+        Provider<AddressManagementUseCase>(
+          create: (context) => AddressManagementUseCase(
+            addressRepository,
+            context.read<GeolocationService>(),
+          ),
+        ),
+        Provider<OrderPlacementUseCase>(
+          create: (context) => OrderPlacementUseCase(orderRepository),
+        ),
+      ],
+      child: const BroastinApp(),
+    ),
+  );
+}
+
 void main() {
   testWidgets('landing screen renders the Broastin brand and Order Now CTA', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const BroastinApp());
+    await pumpBroastinApp(tester);
     await tester.pumpAndSettle();
 
     expect(find.text(AppConstants.appName), findsOneWidget);
@@ -47,63 +102,9 @@ void main() {
     // at the one width the sandbox does offer.
     const widths = <double>[320, 360, 375, 390, 412, 430, 480];
 
-    Future<void> pumpAppAt(WidgetTester tester, double width) async {
-      tester.view.physicalSize = Size(width, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      SharedPreferences.setMockInitialValues({});
-      final sessionService = SessionService();
-      await sessionService.restore();
-      final mockBackend = MockBackend();
-      final MenuRepository menuRepository = MockMenuRepository();
-      final CustomerRepository customerRepository = MockCustomerRepository(
-        mockBackend,
-      );
-      final AddressRepository addressRepository = MockAddressRepository(
-        mockBackend,
-      );
-      final OrderRepository orderRepository = MockOrderRepository(
-        mockBackend,
-      );
-
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (_) => CartService()),
-            ChangeNotifierProvider(create: (_) => CheckoutService()),
-            Provider<SessionService>.value(value: sessionService),
-            Provider<AddressDraftHolder>(create: (_) => AddressDraftHolder()),
-            Provider<MenuRepository>.value(value: menuRepository),
-            Provider<CustomerRepository>.value(value: customerRepository),
-            Provider<AddressRepository>.value(value: addressRepository),
-            Provider<OrderRepository>.value(value: orderRepository),
-            Provider<GeolocationService>(create: (_) => GeolocationService()),
-            Provider<CustomerIdentificationUseCase>(
-              create: (context) => CustomerIdentificationUseCase(
-                customerRepository,
-                sessionService,
-              ),
-            ),
-            Provider<AddressManagementUseCase>(
-              create: (context) => AddressManagementUseCase(
-                addressRepository,
-                context.read<GeolocationService>(),
-              ),
-            ),
-            Provider<OrderPlacementUseCase>(
-              create: (context) => OrderPlacementUseCase(orderRepository),
-            ),
-          ],
-          child: const BroastinApp(),
-        ),
-      );
-    }
-
     for (final width in widths) {
       testWidgets('Landing — no overflow at ${width}px', (tester) async {
-        await pumpAppAt(tester, width);
+        await pumpBroastinApp(tester, width: width);
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
       });

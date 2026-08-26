@@ -3,6 +3,27 @@
 All notable changes to Broastin App 1 (Customer Ordering PWA). Dates are
 when the work happened in this repository, not a release schedule.
 
+## 2026-08-25 — Pre-backend architecture fixes (mock data, still no backend access)
+
+Two fixes from the Graphify architecture audit's "minor refactoring before
+backend" verdict. No Supabase access, migrations, or UI/flow changes.
+
+- **`LandingScreen` no longer imports `mock/mock_menu_data.dart` directly.**
+  It previously read `MockMenuData.branch`/`.categories` as static data,
+  bypassing `MenuRepository` entirely — the one screen the `SupabaseMenuRepository`
+  swap in `main.dart` would not have reached. Converted to a `MenuRepository`-backed
+  `FutureBuilder` screen (same `LoadingView`/`ErrorStateView` pattern as
+  `MenuScreen`); `MockMenuRepository` already returned the identical branch/category
+  data, so the rendered result is unchanged.
+- **`MockBackend.createOrder` no longer recomputes `subtotal`/`grandTotal`
+  independently.** It now takes them (and `discount`) as parameters and
+  trusts the values `OrderPlacementUseCase` already computed, instead of
+  re-deriving `subtotal` from `order_items` a second time. The domain-layer
+  and `OrderReviewScreen` display calculations are unchanged — this only
+  removed the mock persistence layer's redundant copy. The real backend's
+  authoritative calculation remains `recalculate_order_totals()`
+  (unmodified, not touched by this change).
+
 ## 2026-08-25 — Final UI QA (mock data, still no backend access)
 
 Live-browser QA of all 13 screens and the documented flows, per the "UI

@@ -121,12 +121,22 @@ class MockBackend {
     return 'BR-$datePart-${_orderSequenceToday.toString().padLeft(4, '0')}';
   }
 
+  /// subtotal/discount/grandTotal are computed once by
+  /// OrderPlacementUseCase (the domain layer) and passed in here — this
+  /// mock intentionally does not recompute them independently. The real
+  /// backend's authoritative recalculation is the recalculate_order_totals()
+  /// trigger (supabase/migrations/20260824120002_orders_schema.sql), not
+  /// this mock; duplicating that logic here served no purpose once the
+  /// domain layer already produces the values.
   Order createOrder({
     required String customerId,
     required String branchId,
     String? addressId,
     required OrderType orderType,
+    required double subtotal,
     required double deliveryCharge,
+    required double discount,
+    required double grandTotal,
     required PaymentMethod paymentMethod,
     required List<
       ({
@@ -157,9 +167,6 @@ class MockBackend {
         )
         .toList();
 
-    final subtotal = items.fold(0.0, (sum, i) => sum + i.lineTotal);
-    final grandTotal = subtotal + deliveryCharge;
-
     final order = Order(
       id: orderId,
       orderNumber: _nextOrderNumber(),
@@ -169,7 +176,7 @@ class MockBackend {
       orderType: orderType,
       subtotal: subtotal,
       deliveryCharge: deliveryCharge,
-      discount: 0,
+      discount: discount,
       grandTotal: grandTotal,
       paymentMethod: paymentMethod,
       paymentStatus: PaymentStatus.pending,

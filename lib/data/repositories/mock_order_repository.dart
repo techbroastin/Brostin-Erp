@@ -16,7 +16,10 @@ class MockOrderRepository implements OrderRepository {
       branchId: input.branchId,
       addressId: input.addressId,
       orderType: input.orderType,
+      subtotal: input.subtotal,
       deliveryCharge: input.deliveryCharge,
+      discount: input.discount,
+      grandTotal: input.grandTotal,
       paymentMethod: input.paymentMethod,
       lines: input.lines
           .map(

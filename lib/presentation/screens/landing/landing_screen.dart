@@ -1,117 +1,174 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../mock/mock_menu_data.dart';
+import '../../../data/repositories/menu_repository.dart';
+import '../../../models/branch.dart';
+import '../../../models/menu_category.dart';
+import '../../widgets/error_state_view.dart';
+import '../../widgets/loading_view.dart';
 
 /// Screen 1 — Landing/Restaurant. Menu browsing starts here with zero
-/// account/phone requirement, per the App 1 UX rule.
-class LandingScreen extends StatelessWidget {
+/// account/phone requirement, per the App 1 UX rule. Branch/category data
+/// comes from [MenuRepository] — backed by mock data in the UI/UX phase,
+/// Supabase later, with no changes needed here when that swap happens.
+class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final branch = MockMenuData.branch;
+  State<LandingScreen> createState() => _LandingScreenState();
+}
 
+class _LandingScreenState extends State<LandingScreen> {
+  late Future<_LandingData> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  Future<_LandingData> _load() async {
+    final repo = context.read<MenuRepository>();
+    final branches = await repo.fetchActiveBranches();
+    final categories = await repo.fetchCategories();
+    return _LandingData(
+      branch: branches.isNotEmpty ? branches.first : null,
+      categories: categories,
+    );
+  }
+
+  void _retry() => setState(() => _future = _load());
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 700;
-            return Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: isWide ? 640 : double.infinity,
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 32,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 24),
-                      _Logo(),
-                      const SizedBox(height: 20),
-                      Text(
-                        AppConstants.appName,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(fontWeight: FontWeight.w800),
+        child: FutureBuilder<_LandingData>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const LoadingView();
+            }
+            if (snapshot.hasError) {
+              return ErrorStateView(
+                title: 'Could not load restaurant info',
+                message: '${snapshot.error}',
+                onRetry: _retry,
+              );
+            }
+            final data = snapshot.data!;
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth > 700;
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: isWide ? 640 : double.infinity,
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 32,
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        AppConstants.appTagline,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: AppColors.primaryRedDark,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const _OpenStatusBadge(),
-                      const SizedBox(height: 32),
-                      ElevatedButton(
-                        onPressed: () => context.go(AppRoutes.menu),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                            'Order Now',
-                            style: TextStyle(fontSize: 17),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 24),
+                          _Logo(),
+                          const SizedBox(height: 20),
+                          Text(
+                            AppConstants.appName,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(fontWeight: FontWeight.w800),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Text(
-                        'Explore the Menu',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: MockMenuData.categories
-                            .map(
-                              (c) => ActionChip(
-                                label: Text(c.name),
-                                onPressed: () => context.go(AppRoutes.menu),
-                                backgroundColor: AppColors.surface,
-                                side: const BorderSide(color: AppColors.border),
+                          const SizedBox(height: 6),
+                          Text(
+                            AppConstants.appTagline,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: AppColors.primaryRedDark,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const _OpenStatusBadge(),
+                          const SizedBox(height: 32),
+                          ElevatedButton(
+                            onPressed: () => context.go(AppRoutes.menu),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4),
+                              child: Text(
+                                'Order Now',
+                                style: TextStyle(fontSize: 17),
                               ),
-                            )
-                            .toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          Text(
+                            'Explore the Menu',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: data.categories
+                                .map(
+                                  (c) => ActionChip(
+                                    label: Text(c.name),
+                                    onPressed: () => context.go(AppRoutes.menu),
+                                    backgroundColor: AppColors.surface,
+                                    side: const BorderSide(
+                                      color: AppColors.border,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                          if (data.branch != null) ...[
+                            const SizedBox(height: 32),
+                            const Divider(),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Restaurant Information',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            _InfoRow(
+                              icon: Icons.storefront_outlined,
+                              text: data.branch!.name,
+                            ),
+                            if (data.branch!.address != null)
+                              _InfoRow(
+                                icon: Icons.location_on_outlined,
+                                text: data.branch!.address!,
+                              ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 32),
-                      const Divider(),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Restaurant Information',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      _InfoRow(
-                        icon: Icons.storefront_outlined,
-                        text: branch.name,
-                      ),
-                      if (branch.address != null)
-                        _InfoRow(
-                          icon: Icons.location_on_outlined,
-                          text: branch.address!,
-                        ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
         ),
       ),
     );
   }
+}
+
+class _LandingData {
+  final Branch? branch;
+  final List<MenuCategory> categories;
+
+  const _LandingData({required this.branch, required this.categories});
 }
 
 class _Logo extends StatelessWidget {
