@@ -30,7 +30,6 @@ import 'services/address_draft_holder.dart';
 import 'services/cart_service.dart';
 import 'services/checkout_service.dart';
 import 'services/dining_context_service.dart';
-import 'services/distance_provider.dart';
 import 'services/geolocation_service.dart';
 import 'services/session_service.dart';
 import 'services/supabase_service.dart';
@@ -110,7 +109,6 @@ Future<void> main() async {
           value: deliveryPricingRepository,
         ),
         Provider<GeolocationService>(create: (_) => GeolocationService()),
-        Provider<DistanceProvider>(create: (_) => HaversineDistanceProvider()),
         Provider<CustomerIdentificationUseCase>(
           create: (context) =>
               CustomerIdentificationUseCase(customerRepository, sessionService),
@@ -125,11 +123,7 @@ Future<void> main() async {
           create: (context) => OrderPlacementUseCase(orderRepository),
         ),
         Provider<DeliveryPricingUseCase>(
-          create: (context) => DeliveryPricingUseCase(
-            menuRepository,
-            deliveryPricingRepository,
-            context.read<DistanceProvider>(),
-          ),
+          create: (context) => DeliveryPricingUseCase(deliveryPricingRepository),
         ),
       ],
       child: const BroastinApp(),

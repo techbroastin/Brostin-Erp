@@ -26,7 +26,6 @@ import 'package:broastin_ordering/services/address_draft_holder.dart';
 import 'package:broastin_ordering/services/cart_service.dart';
 import 'package:broastin_ordering/services/checkout_service.dart';
 import 'package:broastin_ordering/services/dining_context_service.dart';
-import 'package:broastin_ordering/services/distance_provider.dart';
 import 'package:broastin_ordering/services/geolocation_service.dart';
 import 'package:broastin_ordering/services/session_service.dart';
 
@@ -75,7 +74,6 @@ Future<void> pumpBroastinApp(WidgetTester tester, {double? width}) async {
           value: deliveryPricingRepository,
         ),
         Provider<GeolocationService>(create: (_) => GeolocationService()),
-        Provider<DistanceProvider>(create: (_) => HaversineDistanceProvider()),
         Provider<CustomerIdentificationUseCase>(
           create: (context) =>
               CustomerIdentificationUseCase(customerRepository, sessionService),
@@ -90,11 +88,7 @@ Future<void> pumpBroastinApp(WidgetTester tester, {double? width}) async {
           create: (context) => OrderPlacementUseCase(orderRepository),
         ),
         Provider<DeliveryPricingUseCase>(
-          create: (context) => DeliveryPricingUseCase(
-            menuRepository,
-            deliveryPricingRepository,
-            context.read<DistanceProvider>(),
-          ),
+          create: (context) => DeliveryPricingUseCase(deliveryPricingRepository),
         ),
       ],
       child: const BroastinApp(),

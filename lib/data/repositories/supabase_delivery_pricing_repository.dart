@@ -5,16 +5,23 @@ class SupabaseDeliveryPricingRepository implements DeliveryPricingRepository {
   final _client = SupabaseService.client;
 
   @override
-  Future<double?> calculateCharge({
+  Future<DeliveryChargeLookup> calculateCharge({
     required String branchId,
-    required double distanceKm,
+    required String addressId,
   }) async {
     final result = await _client.rpc(
       'calculate_delivery_charge',
-      params: {'p_branch_id': branchId, 'p_distance_km': distanceKm},
+      params: {'p_branch_id': branchId, 'p_address_id': addressId},
     );
-    if (result == null) return null;
-    if (result is num) return result.toDouble();
-    return double.parse(result.toString());
+
+    if (result is! List || result.isEmpty) {
+      return const DeliveryChargeLookup();
+    }
+
+    final row = result.first as Map<String, dynamic>;
+    return DeliveryChargeLookup(
+      distanceKm: (row['distance_km'] as num?)?.toDouble(),
+      charge: (row['charge'] as num?)?.toDouble(),
+    );
   }
 }
