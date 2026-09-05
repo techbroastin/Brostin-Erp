@@ -17,4 +17,10 @@ abstract class MenuRepository {
   /// Empty list means the product has no size/meal options and is sold
   /// directly at Product.price.
   Future<List<ProductVariant>> fetchVariants({required String productId});
+
+  /// Matches available products by name (App 1 is single-branch, so this
+  /// intentionally is not branch-scoped — consistent with [fetchProduct]).
+  /// Empty/whitespace-only [query] returns an empty list rather than the
+  /// full catalog.
+  Future<List<Product>> searchProducts(String query);
 }

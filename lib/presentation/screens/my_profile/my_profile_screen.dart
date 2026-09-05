@@ -37,7 +37,10 @@ class MyProfileScreen extends StatelessWidget {
               actionLabel: 'Browse Menu',
               onAction: () => context.go(AppRoutes.menu),
             )
-          : ListView(
+          : Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
                 Center(
@@ -96,6 +99,8 @@ class MyProfileScreen extends StatelessWidget {
                   ),
                 ),
               ],
+                ),
+              ),
             ),
     );
   }

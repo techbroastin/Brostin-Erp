@@ -1,11 +1,18 @@
 # 11 — Customer Flow
 
-## Journey (as implemented, mock data)
+## Journey (as implemented)
 
 ```
+QR entry (/qr/:token)                      [optional — table QR only]
+  → resolves the token via resolve_dining_table(); stores branch/table in
+    DiningContextService for this browser session → continues to Landing
+  → an invalid/inactive token shows a friendly message and continues to
+    Menu instead — dining is simply unavailable, other order types aren't
 Landing (/)
+  → shows a "Table N" badge if a valid table QR was resolved this session
   → "Order Now" or a category chip
 Menu (/menu)
+  → also shows the "Table N" badge, if present
   → tap a product card
 Product Details (/product/:productId)
   → choose variant (if any) + quantity → "Add to Cart"
@@ -16,13 +23,19 @@ Cart (/cart)
 Customer Identification (/checkout/phone)
   → phone (+ optional name) → "Continue"
 Order Type (/checkout/order-type)
+  → Dining (only shown if a valid table QR was resolved this session) →
+    straight to Review
   → Takeaway → straight to Review
   → Delivery → Address
 Address (/checkout/address)                [delivery only]
   → "Use Current Location" (permission prompt, then confirm/edit details)
   → "Add Address Manually" (/checkout/address/new)
   → or tap a saved address
-  → selecting an address → Review
+  → selecting an address calls calculate_delivery_charge() for a
+    server-priced delivery-charge preview (see 10_ORDER_LIFECYCLE.md);
+    a friendly message shows instead of proceeding if the address is
+    outside every priced distance band
+  → pricing succeeds → Review
 Order Review (/checkout/review)
   → choose payment method (Cash / UPI) → "Place Order"
 Order Confirmation (/order/:orderId/confirmation)
@@ -74,24 +87,32 @@ only.
 
 ## What is intentionally NOT in this flow
 
-- No dine-in / table QR flow (`order_source` stays extensible for later,
-  nothing built for it now).
 - No coupon/discount entry (Cart's Discount row is a static placeholder).
 - No reorder button on My Orders (explicitly deferred, per the original
   scope note — "unless clean," and it wasn't in scope for this phase).
 - No exact delivery-time promise anywhere — Order Confirmation shows a
   static "20–30 minutes" range, not a computed ETA.
+- No real road-routing distance for delivery pricing — the preview and
+  the server-enforced charge both use a straight-line (haversine)
+  estimate; see `10_ORDER_LIFECYCLE.md` and `19_DEVELOPER_HANDOVER.md`.
 
-## Mock-data specifics that affect the flow
+## Mock vs. real backend
 
-- All orders belong to whichever phone number is currently in
-  `MockBackend` for this browser session — see `05_DATABASE_ARCHITECTURE.md`
-  (backend docs) for how phone-based mock lookup differs from the real
-  `auth_user_id`-anchored design; this mock simplification exists only to
-  make "returning customer" visible in the UI, not as a security model.
-- `MockBackend.createOrder` computes `order_number` client-side in the same
-  `BR-YYYYMMDD-####` format the real database trigger will produce, but
-  the mock's counter is per-app-session only (resets on page reload) — the
-  real backend's per-day, per-branch, concurrency-safe sequence is
-  documented in `10_ORDER_LIFECYCLE.md` (backend docs) and is not
-  reproduced here.
+Whether this flow runs on `Mock*Repository` or `Supabase*Repository`
+instances is decided entirely in `main.dart` at startup (see
+`19_DEVELOPER_HANDOVER.md`) — no screen or flow behavior described above
+differs between the two; only where the data actually lives does.
+
+- **Mock** (`flutter test`, or any run/build without Supabase
+  `--dart-define`s, or if Supabase init/anonymous-session setup fails):
+  orders belong to whichever phone number is currently in `MockBackend`
+  for this browser session — see `05_DATABASE_ARCHITECTURE.md` for how
+  phone-based mock lookup differs from the real `auth_user_id`-anchored
+  design; `MockBackend.createOrder` computes `order_number` client-side in
+  the same `BR-YYYYMMDD-####` format the real database trigger produces,
+  but the mock's counter is per-app-session only (resets on page reload).
+- **Real** (Supabase configured and reachable): identity is anchored to
+  the session's anonymous `auth.uid()`, and `order_number`/pricing/
+  snapshots are all server-computed exactly as `10_ORDER_LIFECYCLE.md`
+  describes — nothing in this phase changed that document's sequence,
+  it only added the dining and delivery-pricing pieces to it.

@@ -29,7 +29,10 @@ class CartScreen extends StatelessWidget {
               actionLabel: 'Browse Menu',
               onAction: () => context.go(AppRoutes.menu),
             )
-          : Column(
+          : Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Column(
               children: [
                 Expanded(
                   child: ListView.separated(
@@ -134,6 +137,8 @@ class CartScreen extends StatelessWidget {
                   ),
                 ),
               ],
+                ),
+              ),
             ),
     );
   }

@@ -15,53 +15,66 @@ class CartBar extends StatelessWidget {
   Widget build(BuildContext context) {
     if (cart.isEmpty) return const SizedBox.shrink();
 
+    final itemLabel = cart.itemCount == 1 ? 'item' : 'items';
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: Material(
           color: AppColors.primaryRed,
           borderRadius: BorderRadius.circular(14),
-          elevation: 4,
+          elevation: 6,
+          shadowColor: AppColors.primaryRed.withValues(alpha: 0.4),
           child: InkWell(
             borderRadius: BorderRadius.circular(14),
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      '${cart.itemCount}',
-                      style: const TextStyle(
-                        color: AppColors.primaryRed,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${cart.itemCount} $itemLabel',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12.5,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            PriceText(
+                              cart.subtotal,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'View Cart',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 17,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'View Cart',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const Spacer(),
-                  PriceText(
-                    cart.subtotal,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
                   const Icon(
-                    Icons.arrow_forward_ios,
+                    Icons.arrow_forward_rounded,
                     color: Colors.white,
-                    size: 14,
+                    size: 22,
                   ),
                 ],
               ),

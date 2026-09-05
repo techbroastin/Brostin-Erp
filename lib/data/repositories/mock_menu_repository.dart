@@ -42,4 +42,22 @@ class MockMenuRepository implements MenuRepository {
     await Future.delayed(_simulatedDelay);
     return MockMenuData.variantsForProduct(productId);
   }
+
+  @override
+  Future<List<Product>> searchProducts(String query) async {
+    await Future.delayed(_simulatedDelay);
+    final trimmed = query.trim().toLowerCase();
+    if (trimmed.isEmpty) return const [];
+    final categoryNamesById = {
+      for (final c in MockMenuData.categories) c.id: c.name.toLowerCase(),
+    };
+    return MockMenuData.products
+        .where(
+          (p) =>
+              p.isAvailable &&
+              (p.name.toLowerCase().contains(trimmed) ||
+                  (categoryNamesById[p.categoryId] ?? '').contains(trimmed)),
+        )
+        .toList();
+  }
 }

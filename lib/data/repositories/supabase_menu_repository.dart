@@ -14,7 +14,7 @@ class SupabaseMenuRepository implements MenuRepository {
         .from('branches')
         .select()
         .eq('is_active', true)
-        .order('name');
+        .order('name', ascending: true);
     return (rows as List)
         .map((e) => Branch.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -26,7 +26,7 @@ class SupabaseMenuRepository implements MenuRepository {
     if (branchId != null) {
       query = query.eq('branch_id', branchId);
     }
-    final rows = await query.order('display_order');
+    final rows = await query.order('display_order', ascending: true);
     return (rows as List)
         .map((e) => MenuCategory.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -39,7 +39,7 @@ class SupabaseMenuRepository implements MenuRepository {
         .select()
         .eq('category_id', categoryId)
         .eq('is_available', true)
-        .order('display_order');
+        .order('display_order', ascending: true);
     return (rows as List)
         .map((e) => Product.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -64,9 +64,32 @@ class SupabaseMenuRepository implements MenuRepository {
         .select()
         .eq('product_id', productId)
         .eq('is_available', true)
-        .order('display_order');
+        .order('display_order', ascending: true);
     return (rows as List)
         .map((e) => ProductVariant.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  @override
+  Future<List<Product>> searchProducts(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return const [];
+    final escaped = _escapeLikeWildcards(trimmed);
+    final rows = await _client
+        .from('products')
+        .select()
+        .eq('is_available', true)
+        .ilike('name', '%$escaped%')
+        .order('name', ascending: true);
+    return (rows as List)
+        .map((e) => Product.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Escapes `\`, `%`, and `_` so user input can't inject LIKE/ILIKE
+  /// wildcards (e.g. searching "50%" or "combo_1" matching everything).
+  String _escapeLikeWildcards(String input) => input
+      .replaceAll(r'\', r'\\')
+      .replaceAll('%', r'\%')
+      .replaceAll('_', r'\_');
 }

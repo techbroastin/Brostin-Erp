@@ -30,6 +30,12 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     _future = _load();
   }
 
+  void _retry() {
+    setState(() {
+      _future = _load();
+    });
+  }
+
   Future<List<Order>> _load() {
     final customerId = context.read<SessionService>().customerId;
     if (customerId == null) return Future.value(const []);
@@ -60,7 +66,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                   return ErrorStateView(
                     title: 'Could not load your orders',
                     message: '${snapshot.error}',
-                    onRetry: () => setState(() => _future = _load()),
+                    onRetry: _retry,
                   );
                 }
                 final orders = snapshot.data!;
@@ -73,7 +79,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                     onAction: () => context.go(AppRoutes.menu),
                   );
                 }
-                return ListView.separated(
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: orders.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
@@ -142,6 +151,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                       ),
                     );
                   },
+                    ),
+                  ),
                 );
               },
             ),

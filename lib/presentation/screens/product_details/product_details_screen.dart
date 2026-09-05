@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../models/product.dart';
 import '../../../models/product_variant.dart';
 import '../../../services/cart_service.dart';
 import '../../widgets/error_state_view.dart';
+import '../../widgets/food_visual.dart';
 import '../../widgets/loading_view.dart';
 import '../../widgets/price_text.dart';
 import '../../widgets/quantity_stepper.dart';
@@ -81,7 +83,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('${data.product.name} added to cart')),
               );
-              context.pop();
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppRoutes.menu);
+              }
             },
           );
         },
@@ -126,17 +132,11 @@ class _Body extends StatelessWidget {
                     AspectRatio(
                       aspectRatio: 16 / 10,
                       child: product.imageUrl == null
-                          ? ColoredBox(
-                              color: AppColors.accentYellow.withValues(
-                                alpha: 0.18,
+                          ? FoodVisualBox(
+                              visual: FoodVisual.forProduct(
+                                productName: product.name,
                               ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.restaurant,
-                                  color: AppColors.primaryRed,
-                                  size: 64,
-                                ),
-                              ),
+                              iconSize: 72,
                             )
                           : Image.network(product.imageUrl!, fit: BoxFit.cover),
                     ),

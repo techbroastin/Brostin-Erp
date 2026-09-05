@@ -3,6 +3,95 @@
 All notable changes to Broastin App 1 (Customer Ordering PWA). Dates are
 when the work happened in this repository, not a release schedule.
 
+## 2026-09-05 — QR dining + delivery pricing (backend wiring connected)
+
+Adds table-based (dine-in) ordering via QR and replaces the flat ₹30
+delivery placeholder with server-calculated, distance-banded pricing.
+Also connects `main.dart` to real Supabase repositories for the first
+time — gated behind `--dart-define` config, not unconditional.
+
+### Added
+- **QR dining flow.** A table's printed QR encodes `/qr/{opaque-token}`
+  (`QrEntryScreen`, new route in `app_router.dart`). The token is resolved
+  via the `resolve_dining_table()` RPC into a branch/table pair, held for
+  the browser session in the new `DiningContextService`, and surfaced as a
+  "Table N" badge on Landing and Menu. An invalid/inactive token does not
+  block ordering — it just means dining stays unavailable; Takeaway/
+  Delivery are unaffected. `OrderTypeScreen` only ever offers **Dining**
+  when `DiningContextService.hasDiningContext` is true this session — there
+  is no UI path into dining without a valid scanned table QR.
+- **`OrderType.dining`** added alongside `takeaway`/`delivery`
+  (`lib/models/order.dart`). `Order`/`OrderPlacementUseCase` gained
+  `tableId`; a dining order without a `tableId` is rejected client-side
+  before it ever reaches the database.
+- **Server-calculated delivery pricing**, replacing
+  `CheckoutService.flatDeliveryCharge` (₹30) entirely:
+  - `DistanceProvider` / `HaversineDistanceProvider` (new,
+    `lib/services/distance_provider.dart`) estimate straight-line distance
+    between branch and address. **MVP limitation:** this is great-circle
+    distance, not real road distance from a routing API — see "Known
+    limitations" below.
+  - `DeliveryPricingUseCase` calls the new `calculate_delivery_charge()`
+    RPC (reads `delivery_pricing_rules`, a per-branch distance-banded
+    table) to preview a charge the moment an address is selected on
+    `AddressScreen`. The preview is display-only; `AddressScreen` blocks
+    proceeding to Review until it succeeds, and shows a friendly message
+    (not a raw error) if the address falls outside every priced band.
+  - The database itself never trusts the client's number: a new
+    `set_delivery_charge()` `BEFORE INSERT` trigger on `orders`
+    re-derives `delivery_charge` from `delivery_pricing_rules` for every
+    delivery order, overwriting whatever the client sent, and rejects the
+    insert outright if no active band covers the submitted distance.
+  - `orders` gained a delivery snapshot (`delivery_address_snapshot`,
+    `delivery_latitude`, `delivery_longitude`, `delivery_instructions`,
+    `delivery_distance_km`) — same "server-verified copy at order time"
+    pattern `order_items` already used for price/name.
+- **`orders.payment_reference`** (nullable) — a landing spot for a future
+  payment-gateway webhook's transaction id. No gateway integration yet;
+  no new constraint, index, or RLS policy.
+- **Real backend wiring in `main.dart`.** Every repository
+  (`Menu`/`Customer`/`Address`/`Order`/new `Dining`/new
+  `DeliveryPricing`) now has a live `Supabase*Repository`, and `main.dart`
+  picks it over `Mock*Repository` only when
+  `SupabaseService.isConfigured` (i.e. `SUPABASE_URL`/`SUPABASE_ANON_KEY`
+  were supplied via `--dart-define`) **and** `SupabaseService.initialize()`
+  + `ensureAnonymousSession()` both succeed at startup. `flutter test` and
+  a plain `flutter run`/`flutter build web` with no dart-defines never hit
+  this path and behave exactly as before (Mock-only). A Supabase
+  init/session failure is caught and logged, not fatal — the app falls
+  back to Mock rather than crash.
+  `SupabaseService.ensureAnonymousSession()` only calls
+  `signInAnonymously()` when no session survived `initialize()`'s restore,
+  so a normal reload reuses the existing anonymous identity instead of
+  minting a new one.
+- 7 new migrations (on top of the 4 documented previously):
+  `20260826140000_revoke_trigger_function_execute.sql`,
+  `20260829120001_dining_tables_and_order_type.sql` (`restaurant_tables`,
+  `resolve_dining_table()`, `orders.table_id`, widened
+  `orders_order_type_check`), `20260829120002_delivery_pricing_and_snapshot.sql`
+  (described above), `20260829120003_payment_reference.sql`, and three
+  QA/dev-only seed migrations (`20260830090000_qa_test_dataset.sql`,
+  `20260830091500_qa_test_qr_token.sql`, `20260830100000_temporary_menu_seed.sql`).
+  **Remote application status:** consistent with every migration before
+  it, none of this has been verified as pushed/applied to
+  `detqohhtihlygwxjasti` from within this repository this phase — applying
+  migrations remains the separately-gated step described in
+  `docs/19_DEVELOPER_HANDOVER.md` / rule 19 (Database Change Gate).
+
+### Known limitations (carried forward, not fixed this phase)
+- **Delivery distance is a haversine (straight-line) estimate**, not a
+  real road-routing distance — no Maps/Directions API key exists for this
+  project. It will read a little short of the real route in most cases.
+  Swapping in a real provider later is a single DI registration change in
+  `main.dart` (`DistanceProvider` is already behind an interface for
+  exactly this reason); no pricing-rule or database change is needed.
+- No payment gateway integration — `payment_reference` exists only as a
+  future landing spot, nothing writes to it yet.
+- `restaurant_tables`/`delivery_pricing_rules` have zero client-facing RLS
+  policies by design (Ops/dashboard-managed) — App 1 never seeds or edits
+  either table itself; the three QA-only migrations above provide the
+  minimal dev/test rows this phase's Playwright testing needed.
+
 ## 2026-08-25 — Pre-backend architecture fixes (mock data, still no backend access)
 
 Two fixes from the Graphify architecture audit's "minor refactoring before
