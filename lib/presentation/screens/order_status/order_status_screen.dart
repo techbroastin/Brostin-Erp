@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/repositories/order_repository.dart';
 import '../../../models/order.dart';
+import '../../../services/dining_context_service.dart';
 import '../../widgets/error_state_view.dart';
 import '../../widgets/loading_view.dart';
 import '../../widgets/order_status_timeline.dart';
@@ -55,11 +56,32 @@ class OrderStatusScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      order.orderType == OrderType.delivery
-                          ? 'Delivery'
-                          : 'Takeaway',
+                      orderTypeLabel(order.orderType),
                       style: const TextStyle(color: AppColors.textSecondary),
                     ),
+                    if (order.orderType == OrderType.dining &&
+                        context.watch<DiningContextService>().tableNumber !=
+                            null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Table ${context.watch<DiningContextService>().tableNumber}',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    if (order.orderType == OrderType.delivery &&
+                        order.deliveryAddressSnapshot != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          '${order.deliveryAddressSnapshot!['house_building'] ?? ''}, '
+                          '${order.deliveryAddressSnapshot!['area'] ?? ''}',
+                          style: const TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ),
                     const SizedBox(height: 28),
                     OrderStatusTimeline(
                       currentStatus: order.orderStatus,

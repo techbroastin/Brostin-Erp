@@ -8,6 +8,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../models/branch.dart';
 import '../../../models/menu_category.dart';
+import '../../../services/checkout_service.dart';
+import '../../../services/dining_context_service.dart';
 import '../../widgets/error_state_view.dart';
 import '../../widgets/loading_view.dart';
 
@@ -35,13 +37,22 @@ class _LandingScreenState extends State<LandingScreen> {
     final repo = context.read<MenuRepository>();
     final branches = await repo.fetchActiveBranches();
     final categories = await repo.fetchCategories();
-    return _LandingData(
-      branch: branches.isNotEmpty ? branches.first : null,
-      categories: categories,
-    );
+    final branch = branches.isNotEmpty ? branches.first : null;
+    // Threads the real branch id into CheckoutService so takeaway/delivery
+    // orders are placed against an actual branch row, not the mock-phase
+    // placeholder AppConstants.singleBranchId. Dining still overrides this
+    // with the QR-resolved branch — see CheckoutService.chooseDining().
+    if (branch != null && mounted) {
+      context.read<CheckoutService>().setActiveBranch(branch.id);
+    }
+    return _LandingData(branch: branch, categories: categories);
   }
 
-  void _retry() => setState(() => _future = _load());
+  void _retry() {
+    setState(() {
+      _future = _load();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +109,14 @@ class _LandingScreenState extends State<LandingScreen> {
                           ),
                           const SizedBox(height: 16),
                           const _OpenStatusBadge(),
+                          if (context.watch<DiningContextService>().hasDiningContext) ...[
+                            const SizedBox(height: 10),
+                            _TableBadge(
+                              tableNumber: context
+                                  .watch<DiningContextService>()
+                                  .tableNumber!,
+                            ),
+                          ],
                           const SizedBox(height: 32),
                           ElevatedButton(
                             onPressed: () => context.go(AppRoutes.menu),
@@ -219,6 +238,44 @@ class _OpenStatusBadge extends StatelessWidget {
             style: TextStyle(
               color: AppColors.success,
               fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Confirms the scanned table QR was recognized — shown whenever
+/// DiningContextService holds a resolved table for this session.
+class _TableBadge extends StatelessWidget {
+  final String tableNumber;
+
+  const _TableBadge({required this.tableNumber});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primaryRed.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primaryRed.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.table_restaurant_outlined,
+            size: 16,
+            color: AppColors.primaryRedDark,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Table $tableNumber',
+            style: const TextStyle(
+              color: AppColors.primaryRedDark,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

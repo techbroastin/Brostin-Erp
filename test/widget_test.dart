@@ -7,25 +7,33 @@ import 'package:broastin_ordering/app.dart';
 import 'package:broastin_ordering/core/constants/app_constants.dart';
 import 'package:broastin_ordering/data/repositories/address_repository.dart';
 import 'package:broastin_ordering/data/repositories/customer_repository.dart';
+import 'package:broastin_ordering/data/repositories/delivery_pricing_repository.dart';
+import 'package:broastin_ordering/data/repositories/dining_repository.dart';
 import 'package:broastin_ordering/data/repositories/menu_repository.dart';
 import 'package:broastin_ordering/data/repositories/mock_address_repository.dart';
 import 'package:broastin_ordering/data/repositories/mock_customer_repository.dart';
+import 'package:broastin_ordering/data/repositories/mock_delivery_pricing_repository.dart';
+import 'package:broastin_ordering/data/repositories/mock_dining_repository.dart';
 import 'package:broastin_ordering/data/repositories/mock_menu_repository.dart';
 import 'package:broastin_ordering/data/repositories/mock_order_repository.dart';
 import 'package:broastin_ordering/data/repositories/order_repository.dart';
 import 'package:broastin_ordering/domain/address_management_usecase.dart';
 import 'package:broastin_ordering/domain/customer_identification_usecase.dart';
+import 'package:broastin_ordering/domain/delivery_pricing_usecase.dart';
 import 'package:broastin_ordering/domain/order_placement_usecase.dart';
 import 'package:broastin_ordering/mock/mock_backend.dart';
 import 'package:broastin_ordering/services/address_draft_holder.dart';
 import 'package:broastin_ordering/services/cart_service.dart';
 import 'package:broastin_ordering/services/checkout_service.dart';
+import 'package:broastin_ordering/services/dining_context_service.dart';
+import 'package:broastin_ordering/services/distance_provider.dart';
 import 'package:broastin_ordering/services/geolocation_service.dart';
 import 'package:broastin_ordering/services/session_service.dart';
 
 /// Pumps the real app wired with the same Mock* providers main.dart uses.
-/// LandingScreen now reads MenuRepository (see CHANGELOG), so every test
-/// that pumps BroastinApp needs this provider tree, not a bare widget.
+/// LandingScreen reads MenuRepository and DiningContextService, so every
+/// test that pumps BroastinApp needs this full provider tree, not a bare
+/// widget.
 Future<void> pumpBroastinApp(WidgetTester tester, {double? width}) async {
   if (width != null) {
     tester.view.physicalSize = Size(width, 900);
@@ -46,19 +54,28 @@ Future<void> pumpBroastinApp(WidgetTester tester, {double? width}) async {
     mockBackend,
   );
   final OrderRepository orderRepository = MockOrderRepository(mockBackend);
+  final DiningRepository diningRepository = MockDiningRepository();
+  final DeliveryPricingRepository deliveryPricingRepository =
+      MockDeliveryPricingRepository();
 
   await tester.pumpWidget(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CartService()),
         ChangeNotifierProvider(create: (_) => CheckoutService()),
+        ChangeNotifierProvider(create: (_) => DiningContextService()),
         Provider<SessionService>.value(value: sessionService),
         Provider<AddressDraftHolder>(create: (_) => AddressDraftHolder()),
         Provider<MenuRepository>.value(value: menuRepository),
         Provider<CustomerRepository>.value(value: customerRepository),
         Provider<AddressRepository>.value(value: addressRepository),
         Provider<OrderRepository>.value(value: orderRepository),
+        Provider<DiningRepository>.value(value: diningRepository),
+        Provider<DeliveryPricingRepository>.value(
+          value: deliveryPricingRepository,
+        ),
         Provider<GeolocationService>(create: (_) => GeolocationService()),
+        Provider<DistanceProvider>(create: (_) => HaversineDistanceProvider()),
         Provider<CustomerIdentificationUseCase>(
           create: (context) =>
               CustomerIdentificationUseCase(customerRepository, sessionService),
@@ -71,6 +88,13 @@ Future<void> pumpBroastinApp(WidgetTester tester, {double? width}) async {
         ),
         Provider<OrderPlacementUseCase>(
           create: (context) => OrderPlacementUseCase(orderRepository),
+        ),
+        Provider<DeliveryPricingUseCase>(
+          create: (context) => DeliveryPricingUseCase(
+            menuRepository,
+            deliveryPricingRepository,
+            context.read<DistanceProvider>(),
+          ),
         ),
       ],
       child: const BroastinApp(),

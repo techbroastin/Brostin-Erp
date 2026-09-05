@@ -6,6 +6,7 @@ class NewOrderInput {
   final String customerId;
   final String branchId;
   final String? addressId;
+  final String? tableId;
   final OrderType orderType;
   final double subtotal;
   final double deliveryCharge;
@@ -13,11 +14,17 @@ class NewOrderInput {
   final double grandTotal;
   final PaymentMethod paymentMethod;
   final List<CartLine> lines;
+  final Map<String, dynamic>? deliveryAddressSnapshot;
+  final double? deliveryLatitude;
+  final double? deliveryLongitude;
+  final String? deliveryInstructions;
+  final double? deliveryDistanceKm;
 
   const NewOrderInput({
     required this.customerId,
     required this.branchId,
     this.addressId,
+    this.tableId,
     required this.orderType,
     required this.subtotal,
     required this.deliveryCharge,
@@ -25,6 +32,11 @@ class NewOrderInput {
     required this.grandTotal,
     required this.paymentMethod,
     required this.lines,
+    this.deliveryAddressSnapshot,
+    this.deliveryLatitude,
+    this.deliveryLongitude,
+    this.deliveryInstructions,
+    this.deliveryDistanceKm,
   });
 }
 

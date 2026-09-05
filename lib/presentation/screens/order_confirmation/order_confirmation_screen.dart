@@ -6,6 +6,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/repositories/order_repository.dart';
 import '../../../models/order.dart';
+import '../../../services/dining_context_service.dart';
 import '../../widgets/error_state_view.dart';
 import '../../widgets/loading_view.dart';
 import '../../widgets/price_text.dart';
@@ -80,12 +81,23 @@ class OrderConfirmationScreen extends StatelessWidget {
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             children: [
-                              _Row(
-                                'Order Type',
-                                order.orderType == OrderType.delivery
-                                    ? 'Delivery'
-                                    : 'Takeaway',
-                              ),
+                              _Row('Order Type', orderTypeLabel(order.orderType)),
+                              if (order.orderType == OrderType.dining &&
+                                  context
+                                          .watch<DiningContextService>()
+                                          .tableNumber !=
+                                      null)
+                                _Row(
+                                  'Table',
+                                  context.watch<DiningContextService>().tableNumber!,
+                                ),
+                              if (order.orderType == OrderType.delivery &&
+                                  order.deliveryAddressSnapshot != null)
+                                _Row(
+                                  'Deliver To',
+                                  '${order.deliveryAddressSnapshot!['house_building'] ?? ''}, '
+                                      '${order.deliveryAddressSnapshot!['area'] ?? ''}',
+                                ),
                               _Row('Estimated Preparation', '20–30 minutes'),
                               _Row(
                                 'Payment Method',

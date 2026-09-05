@@ -56,4 +56,16 @@ class CustomerAddress {
     'delivery_notes': deliveryNotes,
     'is_default': isDefault,
   };
+
+  /// Historical text snapshot for an order's delivery_address_snapshot
+  /// column — coordinates and instructions travel as their own order
+  /// columns (see OrderReviewScreen), not inside this jsonb blob.
+  Map<String, dynamic> toDeliverySnapshot() => {
+    'label': label,
+    'house_building': houseBuilding,
+    'street': street,
+    'area': area,
+    'landmark': landmark,
+    'pincode': pincode,
+  };
 }

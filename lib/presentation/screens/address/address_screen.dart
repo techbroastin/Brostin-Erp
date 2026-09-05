@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../domain/address_management_usecase.dart';
+import '../../../domain/delivery_pricing_usecase.dart';
 import '../../../models/customer_address.dart';
 import '../../../services/address_draft_holder.dart';
 import '../../../services/checkout_service.dart';
@@ -32,6 +33,7 @@ class AddressScreen extends StatefulWidget {
 class _AddressScreenState extends State<AddressScreen> {
   late Future<List<CustomerAddress>> _future;
   bool _locating = false;
+  bool _pricing = false;
 
   @override
   void initState() {
@@ -45,7 +47,11 @@ class _AddressScreenState extends State<AddressScreen> {
     return context.read<AddressManagementUseCase>().savedAddresses(customerId);
   }
 
-  void _retry() => setState(() => _future = _load());
+  void _retry() {
+    setState(() {
+      _future = _load();
+    });
+  }
 
   Future<void> _useCurrentLocation() async {
     setState(() => _locating = true);
@@ -98,9 +104,40 @@ class _AddressScreenState extends State<AddressScreen> {
     _retry();
   }
 
-  void _select(CustomerAddress address) {
-    context.read<CheckoutService>().setAddress(address);
-    context.push(AppRoutes.checkoutReview);
+  /// Selecting an address immediately asks the database what it would
+  /// charge to deliver there (see DeliveryPricingUseCase) — the customer
+  /// never proceeds to review with an un-priced or client-guessed charge.
+  Future<void> _select(CustomerAddress address) async {
+    final checkout = context.read<CheckoutService>();
+    checkout.setAddress(address);
+    setState(() => _pricing = true);
+    try {
+      final result = await context
+          .read<DeliveryPricingUseCase>()
+          .calculateForAddress(branchId: checkout.branchId, address: address);
+      checkout.setDeliveryPricing(
+        distanceKm: result.distanceKm,
+        charge: result.charge,
+      );
+      if (!mounted) return;
+      context.push(AppRoutes.checkoutReview);
+    } on DeliveryUnavailableException catch (e) {
+      checkout.clearDeliveryPricing();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (e) {
+      checkout.clearDeliveryPricing();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not calculate the delivery charge. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _pricing = false);
+    }
   }
 
   @override
@@ -132,8 +169,12 @@ class _AddressScreenState extends State<AddressScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (_pricing) const LinearProgressIndicator(),
+                    if (_pricing) const SizedBox(height: 12),
                     ElevatedButton.icon(
-                      onPressed: _locating ? null : _useCurrentLocation,
+                      onPressed: (_locating || _pricing)
+                          ? null
+                          : _useCurrentLocation,
                       icon: _locating
                           ? const SizedBox(
                               height: 16,
@@ -185,7 +226,9 @@ class _AddressScreenState extends State<AddressScreen> {
                                         .selectedAddress
                                         ?.id ==
                                     address.id,
-                            onTap: isCheckout ? () => _select(address) : null,
+                            onTap: isCheckout && !_pricing
+                                ? () => _select(address)
+                                : null,
                             onEdit: () => _edit(address),
                             onDelete: () => _delete(address),
                           ),

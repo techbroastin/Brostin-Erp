@@ -10,6 +10,19 @@ class AppColors {
   static const Color background = Color(0xFFFFFBF5);
   static const Color surface = Color(0xFFFFFFFF);
 
+  /// Dark hero-header ground — the "black background, red + yellow accents"
+  /// brand energy from the reference menu poster, used only for the Menu
+  /// screen's header/search/category band. The rest of the app stays on the
+  /// light [background]/[surface] pair.
+  static const Color charcoal = Color(0xFF1B1310);
+  static const Color charcoalSurface = Color(0xFF2A211C);
+
+  /// Card ground on the dark Menu screen — one step lighter than
+  /// [charcoalSurface] so product cards read as distinct surfaces against
+  /// the page background rather than blending flat.
+  static const Color charcoalCard = Color(0xFF241C17);
+  static const Color charcoalBorder = Color(0x1FFFFFFF);
+
   static const Color textPrimary = Color(0xFF211A16);
   static const Color textSecondary = Color(0xFF6B615B);
 

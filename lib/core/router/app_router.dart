@@ -13,10 +13,12 @@ import '../../presentation/screens/order_review/order_review_screen.dart';
 import '../../presentation/screens/order_status/order_status_screen.dart';
 import '../../presentation/screens/order_type/order_type_screen.dart';
 import '../../presentation/screens/product_details/product_details_screen.dart';
+import '../../presentation/screens/qr_entry/qr_entry_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
 
+  static String qrEntry(String token) => '/qr/$token';
   static const landing = '/';
   static const menu = '/menu';
   static String productDetails(String productId) => '/product/$productId';
@@ -38,6 +40,11 @@ class AppRoutes {
 final appRouter = GoRouter(
   initialLocation: AppRoutes.landing,
   routes: [
+    GoRoute(
+      path: '/qr/:token',
+      builder: (context, state) =>
+          QrEntryScreen(token: state.pathParameters['token']!),
+    ),
     GoRoute(
       path: AppRoutes.landing,
       builder: (context, state) => const LandingScreen(),

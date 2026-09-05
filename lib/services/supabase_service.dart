@@ -6,6 +6,13 @@ import '../core/constants/app_constants.dart';
 class SupabaseService {
   SupabaseService._();
 
+  /// True once SUPABASE_URL/SUPABASE_ANON_KEY were supplied via
+  /// --dart-define. Lets main() skip Supabase entirely during the
+  /// mock-only UI/UX phase — including `flutter test`, which never passes
+  /// these — without duplicating this check at the call site.
+  static bool get isConfigured =>
+      SupabaseConfig.url.isNotEmpty && SupabaseConfig.anonKey.isNotEmpty;
+
   static Future<void> initialize() async {
     if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
       throw StateError(
@@ -21,4 +28,17 @@ class SupabaseService {
   }
 
   static SupabaseClient get client => Supabase.instance.client;
+
+  /// Ensures an authenticated (anonymous) Supabase session exists before any
+  /// auth.uid()-dependent operation runs. supabase_flutter restores a
+  /// persisted session automatically as part of initialize(), so this only
+  /// calls signInAnonymously() when no session survived that restore —
+  /// never unconditionally, so a normal app restart reuses the existing
+  /// anonymous identity instead of minting a new one every time.
+  static Future<void> ensureAnonymousSession() async {
+    if (client.auth.currentSession != null) {
+      return;
+    }
+    await client.auth.signInAnonymously();
+  }
 }

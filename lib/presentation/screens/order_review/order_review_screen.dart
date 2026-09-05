@@ -8,6 +8,7 @@ import '../../../domain/order_placement_usecase.dart';
 import '../../../models/order.dart';
 import '../../../services/cart_service.dart';
 import '../../../services/checkout_service.dart';
+import '../../../services/dining_context_service.dart';
 import '../../../services/session_service.dart';
 import '../../widgets/price_text.dart';
 
@@ -36,19 +37,33 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
       _error = null;
     });
     try {
+      final address = checkout.selectedAddress;
+      final isDelivery = checkout.orderType == OrderType.delivery;
       final order = await context.read<OrderPlacementUseCase>().placeOrder(
         customerId: session.customerId!,
         branchId: checkout.branchId,
-        addressId: checkout.selectedAddress?.id,
+        addressId: address?.id,
+        tableId: checkout.tableId,
         orderType: checkout.orderType!,
         paymentMethod: checkout.paymentMethod,
         cart: cart,
         deliveryCharge: checkout.deliveryCharge,
+        deliveryDistanceKm: isDelivery ? checkout.deliveryDistanceKm : null,
+        deliveryAddressSnapshot: isDelivery && address != null
+            ? address.toDeliverySnapshot()
+            : null,
+        deliveryLatitude: isDelivery ? address?.latitude : null,
+        deliveryLongitude: isDelivery ? address?.longitude : null,
+        deliveryInstructions: isDelivery ? address?.deliveryNotes : null,
       );
       cart.clear();
-      checkout.reset();
       if (!mounted) return;
+      // Navigate away before resetting checkout state: this screen watches
+      // CheckoutService, and its own null-orderType guard (below) would
+      // otherwise race checkout.reset()'s notifyListeners() and bounce the
+      // customer back to Order Type instead of Confirmation.
       context.go(AppRoutes.orderConfirmation(order.id));
+      checkout.reset();
     } on OrderValidationException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
@@ -93,16 +108,28 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                         children: [
                           _KeyValueRow(
                             'Type',
-                            checkout.orderType == OrderType.delivery
-                                ? 'Delivery'
-                                : 'Takeaway',
+                            checkout.orderType != null
+                                ? orderTypeLabel(checkout.orderType!)
+                                : '—',
                           ),
+                          if (checkout.orderType == OrderType.dining)
+                            _KeyValueRow(
+                              'Table',
+                              context.watch<DiningContextService>().tableNumber ??
+                                  '—',
+                            ),
                           if (checkout.orderType == OrderType.delivery &&
-                              checkout.selectedAddress != null)
+                              checkout.selectedAddress != null) ...[
                             _KeyValueRow(
                               'Address',
                               '${checkout.selectedAddress!.houseBuilding}, ${checkout.selectedAddress!.area ?? ''}',
                             ),
+                            if (checkout.deliveryDistanceKm != null)
+                              _KeyValueRow(
+                                'Distance',
+                                '${checkout.deliveryDistanceKm!.toStringAsFixed(1)} km',
+                              ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 12),

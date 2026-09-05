@@ -1,0 +1,22 @@
+-- PLACEHOLDER — DO NOT ADD SQL HERE. DO NOT DELETE THIS FILE.
+--
+-- Version:  20260816185928
+-- Name:     rls_helpers
+--
+-- This version is already applied on the remote project
+-- (detqohhtihlygwxjasti) by an unrelated POS/staff-PIN prototype living in
+-- the `core` schema (organizations, branches, staff, staff_branch_roles,
+-- tills, till_sessions, till_session_events, staff_pin_attempts).
+--
+-- This file exists only so the Supabase CLI's local/remote migration-version
+-- diff (`supabase db push`) matches what the remote history table already
+-- records. Supabase's CLI compares migrations by version-number prefix
+-- only — see supabase/migrations/README.md for the full mechanism. Because
+-- the remote row for this version already exists, this file's content is
+-- NEVER executed against the remote project; it is skipped as
+-- "already applied."
+--
+-- Real content is intentionally omitted. Broastin App 1 must never take
+-- ownership of, reproduce, or depend on another application's schema.
+--
+-- See: BROASTIN APP 1 — MIGRATION STRATEGY report, 2026-08-26.

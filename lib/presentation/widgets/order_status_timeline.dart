@@ -10,6 +10,9 @@ const _takeawaySteps = [
   OrderStatus.completed,
 ];
 
+// Dining is eaten in-house — no "out for delivery"/"delivered" steps.
+const _diningSteps = _takeawaySteps;
+
 const _deliverySteps = [
   OrderStatus.placed,
   OrderStatus.confirmed,
@@ -58,9 +61,11 @@ class OrderStatusTimeline extends StatelessWidget {
       );
     }
 
-    final steps = orderType == OrderType.delivery
-        ? _deliverySteps
-        : _takeawaySteps;
+    final steps = switch (orderType) {
+      OrderType.delivery => _deliverySteps,
+      OrderType.dining => _diningSteps,
+      OrderType.takeaway => _takeawaySteps,
+    };
     final currentIndex = steps.indexOf(currentStatus);
 
     return Column(

@@ -3,11 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../models/menu_category.dart';
 import '../../../models/product.dart';
 import '../../../models/product_variant.dart';
 import '../../../services/cart_service.dart';
+import '../../../services/dining_context_service.dart';
 import '../../widgets/cart_bar.dart';
 import '../../widgets/category_nav.dart';
 import '../../widgets/empty_state_view.dart';
@@ -45,10 +47,20 @@ class _MenuScreenState extends State<MenuScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartService>();
+    final dining = context.watch<DiningContextService>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Menu'),
+        title: dining.hasDiningContext
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Menu'),
+                  const SizedBox(width: 10),
+                  _TableBadge(tableNumber: dining.tableNumber!),
+                ],
+              )
+            : const Text('Menu'),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline),
@@ -218,6 +230,46 @@ class _MenuBodyState extends State<_MenuBody> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Confirms the scanned table QR was recognized — shown whenever
+/// DiningContextService holds a resolved table for this session. Mirrors
+/// LandingScreen's `_TableBadge`.
+class _TableBadge extends StatelessWidget {
+  final String tableNumber;
+
+  const _TableBadge({required this.tableNumber});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.primaryRed.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primaryRed.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.table_restaurant_outlined,
+            size: 14,
+            color: AppColors.primaryRedDark,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'Table $tableNumber',
+            style: const TextStyle(
+              color: AppColors.primaryRedDark,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

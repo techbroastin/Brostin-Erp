@@ -1,0 +1,37 @@
+-- ============================================================================
+-- Broastin App 1 — Payment Reconciliation Preparation
+--
+-- Adds a single nullable column so a future payment-gateway webhook has
+-- somewhere to record its transaction/payment id against an order. This
+-- migration does NOT integrate any gateway, does NOT collect or store card
+-- details, and does NOT change payment_method/payment_status or any
+-- existing constraint.
+--
+-- SAFETY: fully additive, single column, zero new constraints, indexes,
+-- functions, triggers, or RLS policies. Rides entirely on the existing
+-- orders_select_own / orders_insert_own policies — see rationale below.
+-- No core.* object is referenced. No t_tokens/t_results/t_snapshot object
+-- is referenced. No Auth/Storage change. No data is seeded.
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- orders.payment_reference — the gateway's transaction/payment id.
+--
+-- Deliberately just one column: a payment_gateway column to name which
+-- provider processed it is not added here, since Broastin has exactly one
+-- payment_method value ('upi') today and a second column to distinguish
+-- gateways would be speculative ahead of an actual multi-gateway need.
+--
+-- Deliberately no uniqueness constraint yet either: the right uniqueness
+-- semantics (per-attempt vs per-successful-payment) depend on the specific
+-- gateway's reference format, which isn't known until integration actually
+-- happens — adding one now would be a guess that might need reverting.
+--
+-- No RLS change: this column is only ever meant to be written by a future
+-- service-role webhook handler, which already bypasses RLS by design.
+-- Customers have no UPDATE policy on orders today and none is added here,
+-- so this column cannot be altered by a customer after order creation
+-- through any existing or new client path.
+-- ---------------------------------------------------------------------------
+alter table public.orders
+  add column payment_reference text;

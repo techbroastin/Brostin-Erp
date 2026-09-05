@@ -24,12 +24,18 @@ class SupabaseOrderRepository implements OrderRepository {
           'customer_id': input.customerId,
           'branch_id': input.branchId,
           'address_id': input.addressId,
+          'table_id': input.tableId,
           'order_type': input.orderType.name,
           'subtotal': input.subtotal,
           'delivery_charge': input.deliveryCharge,
           'discount': input.discount,
           'grand_total': input.grandTotal,
           'payment_method': input.paymentMethod.name,
+          'delivery_address_snapshot': input.deliveryAddressSnapshot,
+          'delivery_latitude': input.deliveryLatitude,
+          'delivery_longitude': input.deliveryLongitude,
+          'delivery_instructions': input.deliveryInstructions,
+          'delivery_distance_km': input.deliveryDistanceKm,
         })
         .select()
         .single();
