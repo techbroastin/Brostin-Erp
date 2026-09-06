@@ -273,7 +273,28 @@ Include:
 
 Then STOP.
 
-## 22. PRODUCT ACCEPTANCE
+## 22. BROASTIN BRAND IDENTITY
+
+**Canonical/official Broastin logo (permanent record):**
+
+`assets/branding/broastin/logo/broastin logo.png`
+
+This is the one and only official Broastin brand logo file. It is registered
+as a Flutter asset in `pubspec.yaml`.
+
+- The logo must **not** be redesigned, replaced, substituted, recreated, or
+  regenerated (including by AI image generation) under any circumstances,
+  unless the user explicitly provides a new logo file and explicitly
+  instructs that it replace the current one.
+- `assets/ui-reference/broastin-menu-reference.png` is a **UI/menu content
+  reference only** — it is NOT the logo, must never be treated as the logo,
+  and must never be used as a substitute for the logo in the app UI.
+- The on-disk folder/file casing exactly matches the path above
+  (`assets/branding/broastin/logo/broastin logo.png`) — normalized so the
+  asset also resolves correctly on case-sensitive filesystems (Linux CI,
+  strict macOS volumes), not just case-insensitive ones.
+
+## 23. PRODUCT ACCEPTANCE
 The goal is a polished Broastin customer ordering product that works from QR scan through order completion.
 
 Acceptance requires:
