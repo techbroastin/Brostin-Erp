@@ -30,11 +30,10 @@ Required mobile QA widths:
 
 Mobile must have no horizontal overflow, clipped content, unusable touch targets, broken scrolling, or broken keyboard/input behavior.
 
-### Desktop is SECONDARY
-Required desktop QA widths:
-1024px, 1280px, 1440px.
+### Desktop is NON-BLOCKING FOR THE CUSTOMER APP
+Desktop is not a customer-facing production requirement. Real customer usage is phone QR scanning; desktop-class UI is the domain of separate Admin/POS applications, not this app.
 
-Desktop must use an intentional centered customer-app layout. Do NOT simply stretch the mobile layout across the desktop viewport. Desktop must not become a POS/dashboard-style interface.
+Desktop widths (1024px, 1280px, 1440px) may still be spot-checked for basic usability (no crashes, no unusable controls), and existing desktop layout should not be regressed. But desktop visual polish — centering, layout redesign, spacing — is NOT a blocker for shipping the customer app and must not be treated as a release-gating defect. Do not spend implementation time centering or redesigning customer screens for desktop.
 
 ## 4. UI QUALITY STANDARD
 The menu and ordering experience should have:
@@ -299,8 +298,8 @@ The goal is a polished Broastin customer ordering product that works from QR sca
 
 Acceptance requires:
 - attractive customer UI
-- mobile-first experience
-- functional desktop experience
+- mobile-first experience (production requirement)
+- basic desktop usability, non-blocking (see rule 3 — desktop polish is Admin/POS scope, not a customer-app release gate)
 - QR dining
 - takeaway
 - delivery

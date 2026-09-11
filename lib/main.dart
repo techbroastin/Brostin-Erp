@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
@@ -49,7 +48,12 @@ import 'services/supabase_service.dart';
 /// domain file needs to change when the Mock/Supabase choice flips here.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  usePathUrlStrategy();
+  // Hash URL strategy (go_router/flutter_web_plugins default — no
+  // usePathUrlStrategy() call) is intentional: no production hosting
+  // platform is committed in this repo, so there is no server-side
+  // rewrite rule to fall back to `index.html` on refresh/deep-link.
+  // Hash-based URLs (e.g. /#/qr/TOKEN) work on any static host with zero
+  // server config, since the fragment is never sent to the server.
 
   var supabaseReady = false;
   if (SupabaseService.isConfigured) {
