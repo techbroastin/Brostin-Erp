@@ -105,6 +105,7 @@ class SupabaseAdminMenuRepository implements AdminMenuRepository {
     required bool isAvailable,
     required bool isFeatured,
     required int displayOrder,
+    String? imageUrl,
   }) async {
     final row = await _client
         .from('products')
@@ -116,6 +117,7 @@ class SupabaseAdminMenuRepository implements AdminMenuRepository {
           'is_available': isAvailable,
           'is_featured': isFeatured,
           'display_order': displayOrder,
+          'image_url': imageUrl,
         })
         .select()
         .single();
@@ -132,6 +134,7 @@ class SupabaseAdminMenuRepository implements AdminMenuRepository {
     required bool isAvailable,
     required bool isFeatured,
     required int displayOrder,
+    required String? imageUrl,
   }) async {
     final row = await _client
         .from('products')
@@ -143,6 +146,7 @@ class SupabaseAdminMenuRepository implements AdminMenuRepository {
           'is_available': isAvailable,
           'is_featured': isFeatured,
           'display_order': displayOrder,
+          'image_url': imageUrl,
         })
         .eq('id', id)
         .select()

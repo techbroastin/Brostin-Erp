@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../models/branch.dart';
 import '../../../models/menu_category.dart';
+import '../../../models/restaurant.dart';
 import '../../../services/checkout_service.dart';
 import '../../../services/dining_context_service.dart';
 import '../../widgets/error_state_view.dart';
@@ -37,6 +39,15 @@ class _LandingScreenState extends State<LandingScreen> {
     final repo = context.read<MenuRepository>();
     final branches = await repo.fetchActiveBranches();
     final categories = await repo.fetchCategories();
+    // Branding only — a failure here (e.g. transient network issue) should
+    // never block the whole landing screen, just fall back to the default
+    // logo treatment.
+    Restaurant? restaurant;
+    try {
+      restaurant = await repo.fetchRestaurant();
+    } catch (_) {
+      restaurant = null;
+    }
     final branch = branches.isNotEmpty ? branches.first : null;
     // Threads the real branch id into CheckoutService so takeaway/delivery
     // orders are placed against an actual branch row, not the mock-phase
@@ -45,7 +56,11 @@ class _LandingScreenState extends State<LandingScreen> {
     if (branch != null && mounted) {
       context.read<CheckoutService>().setActiveBranch(branch.id);
     }
-    return _LandingData(branch: branch, categories: categories);
+    return _LandingData(
+      branch: branch,
+      categories: categories,
+      restaurant: restaurant,
+    );
   }
 
   void _retry() {
@@ -89,7 +104,7 @@ class _LandingScreenState extends State<LandingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const SizedBox(height: 24),
-                          _Logo(),
+                          _Logo(logoUrl: data.restaurant?.logoUrl),
                           const SizedBox(height: 20),
                           Text(
                             AppConstants.appName,
@@ -186,12 +201,34 @@ class _LandingScreenState extends State<LandingScreen> {
 class _LandingData {
   final Branch? branch;
   final List<MenuCategory> categories;
+  final Restaurant? restaurant;
 
-  const _LandingData({required this.branch, required this.categories});
+  const _LandingData({
+    required this.branch,
+    required this.categories,
+    required this.restaurant,
+  });
 }
 
+const _canonicalLogoAsset = 'assets/branding/broastin/logo/broastin logo.png';
+
+/// Renders (in order): an admin-set custom logo, else the canonical
+/// Broastin asset, else the plain icon this widget always showed before
+/// Phase 15 — each only as a fallback if the previous one fails to load.
 class _Logo extends StatelessWidget {
-  const _Logo();
+  final String? logoUrl;
+
+  const _Logo({this.logoUrl});
+
+  static Widget _iconFallback() => const Center(
+    child: Icon(Icons.restaurant_menu, color: AppColors.accentYellow, size: 44),
+  );
+
+  static Widget _assetFallback() => Image.asset(
+    _canonicalLogoAsset,
+    fit: BoxFit.cover,
+    errorBuilder: (_, _, _) => _iconFallback(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -199,17 +236,19 @@ class _Logo extends StatelessWidget {
       child: Container(
         width: 96,
         height: 96,
+        clipBehavior: Clip.antiAlias,
         decoration: const BoxDecoration(
           color: AppColors.primaryRed,
           shape: BoxShape.circle,
         ),
-        child: const Center(
-          child: Icon(
-            Icons.restaurant_menu,
-            color: AppColors.accentYellow,
-            size: 44,
-          ),
-        ),
+        child: logoUrl == null
+            ? _assetFallback()
+            : CachedNetworkImage(
+                imageUrl: logoUrl!,
+                fit: BoxFit.cover,
+                placeholder: (_, _) => _assetFallback(),
+                errorWidget: (_, _, _) => _assetFallback(),
+              ),
       ),
     );
   }

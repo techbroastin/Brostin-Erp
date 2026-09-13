@@ -6,6 +6,7 @@ import '../presentation/screens/menu/admin_categories_screen.dart';
 import '../presentation/screens/menu/admin_menu_overview_screen.dart';
 import '../presentation/screens/menu/admin_products_screen.dart';
 import '../presentation/screens/placeholder/admin_placeholder_screen.dart';
+import '../presentation/screens/settings/admin_settings_screen.dart';
 import '../presentation/widgets/admin_shell.dart';
 import '../services/admin_auth_controller.dart';
 
@@ -100,12 +101,7 @@ GoRouter buildAdminRouter(AdminAuthController auth) {
           ),
           GoRoute(
             path: AdminRoutes.settings,
-            builder: (context, state) => const AdminPlaceholderScreen(
-              title: 'Settings',
-              description:
-                  'Branch and ordering settings land in the next admin '
-                  'phase.',
-            ),
+            builder: (context, state) => const AdminSettingsScreen(),
           ),
         ],
       ),

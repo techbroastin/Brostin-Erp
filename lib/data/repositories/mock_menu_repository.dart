@@ -3,6 +3,7 @@ import '../../models/branch.dart';
 import '../../models/menu_category.dart';
 import '../../models/product.dart';
 import '../../models/product_variant.dart';
+import '../../models/restaurant.dart';
 import 'menu_repository.dart';
 
 /// UI/UX phase implementation — returns the approved provisional menu from
@@ -15,6 +16,12 @@ class MockMenuRepository implements MenuRepository {
   Future<List<Branch>> fetchActiveBranches() async {
     await Future.delayed(_simulatedDelay);
     return [MockMenuData.branch];
+  }
+
+  @override
+  Future<Restaurant> fetchRestaurant() async {
+    await Future.delayed(_simulatedDelay);
+    return MockMenuData.restaurant;
   }
 
   @override

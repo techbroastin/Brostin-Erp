@@ -63,6 +63,7 @@ abstract class AdminMenuRepository {
     required bool isAvailable,
     required bool isFeatured,
     required int displayOrder,
+    String? imageUrl,
   });
 
   Future<Product> updateProduct({
@@ -74,6 +75,7 @@ abstract class AdminMenuRepository {
     required bool isAvailable,
     required bool isFeatured,
     required int displayOrder,
+    required String? imageUrl,
   });
 
   /// Throws [ProductHasVariantsException] if the product still has variants,

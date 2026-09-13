@@ -1,14 +1,20 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:broastin_ordering/admin/presentation/screens/menu/admin_products_screen.dart';
+import 'package:broastin_ordering/admin/services/image_picker_service.dart';
 import 'package:broastin_ordering/data/repositories/admin_menu_repository.dart';
+import 'package:broastin_ordering/data/repositories/admin_storage_repository.dart';
 import 'package:broastin_ordering/models/menu_category.dart';
 import 'package:broastin_ordering/models/product.dart';
 import 'package:broastin_ordering/models/product_variant.dart';
 
 import 'fake_admin_menu_repository.dart';
+import 'fake_admin_storage_repository.dart';
+import 'fake_image_picker_service.dart';
 
 const _category = MenuCategory(
   id: 'cat-1',
@@ -17,10 +23,23 @@ const _category = MenuCategory(
   isActive: true,
 );
 
-Future<void> _pump(WidgetTester tester, FakeAdminMenuRepository repo) async {
+Future<void> _pump(
+  WidgetTester tester,
+  FakeAdminMenuRepository repo, {
+  FakeAdminStorageRepository? storage,
+  ImagePickerService? picker,
+}) async {
   await tester.pumpWidget(
-    Provider<AdminMenuRepository>.value(
-      value: repo,
+    MultiProvider(
+      providers: [
+        Provider<AdminMenuRepository>.value(value: repo),
+        Provider<AdminStorageRepository>.value(
+          value: storage ?? FakeAdminStorageRepository(),
+        ),
+        Provider<ImagePickerService>.value(
+          value: picker ?? const FakeImagePickerService(null),
+        ),
+      ],
       child: const MaterialApp(home: Scaffold(body: AdminProductsScreen())),
     ),
   );
@@ -145,6 +164,109 @@ void main() {
 
       expect(repo.products, hasLength(1));
       expect(repo.products.single.name, 'Fries');
+    });
+
+    testWidgets(
+      'uploading a valid image on an existing product persists and updates the preview',
+      (tester) async {
+        final repo = FakeAdminMenuRepository(
+          categories: [_category],
+          products: [
+            const Product(
+              id: 'p1',
+              categoryId: 'cat-1',
+              name: 'Classic Burger',
+              price: 149,
+              isAvailable: true,
+              displayOrder: 1,
+              isDemo: false,
+            ),
+          ],
+        );
+        final storage = FakeAdminStorageRepository();
+        final picker = FakeImagePickerService(
+          PickedImage(bytes: Uint8List.fromList([1, 2, 3]), fileName: 'photo.png'),
+        );
+        await _pump(tester, repo, storage: storage, picker: picker);
+
+        await tester.tap(find.byIcon(Icons.edit_outlined));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Upload'));
+        await tester.tap(find.text('Upload'));
+        await tester.pumpAndSettle();
+
+        expect(storage.uploaded.keys, contains('products/p1.png'));
+        expect(repo.products.single.imageUrl, contains('products/p1.png'));
+        expect(find.text('Image updated'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'an oversized file is rejected before any repository or storage call',
+      (tester) async {
+        final repo = FakeAdminMenuRepository(
+          categories: [_category],
+          products: [
+            const Product(
+              id: 'p1',
+              categoryId: 'cat-1',
+              name: 'Classic Burger',
+              price: 149,
+              isAvailable: true,
+              displayOrder: 1,
+              isDemo: false,
+            ),
+          ],
+        );
+        final storage = FakeAdminStorageRepository();
+        final picker = FakeImagePickerService(
+          PickedImage(
+            bytes: Uint8List(4 * 1024 * 1024),
+            fileName: 'big.png',
+          ),
+        );
+        await _pump(tester, repo, storage: storage, picker: picker);
+
+        await tester.tap(find.byIcon(Icons.edit_outlined));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Upload'));
+        await tester.tap(find.text('Upload'));
+        await tester.pumpAndSettle();
+
+        expect(storage.uploaded, isEmpty);
+        expect(repo.products.single.imageUrl, isNull);
+        expect(find.text('File must be 3 MB or smaller'), findsOneWidget);
+      },
+    );
+
+    testWidgets('removing an existing image clears it', (tester) async {
+      final repo = FakeAdminMenuRepository(
+        categories: [_category],
+        products: [
+          const Product(
+            id: 'p1',
+            categoryId: 'cat-1',
+            name: 'Classic Burger',
+            price: 149,
+            isAvailable: true,
+            displayOrder: 1,
+            isDemo: false,
+            imageUrl:
+                'https://example.supabase.co/storage/v1/object/public/menu-media/products/p1.png',
+          ),
+        ],
+      );
+      final storage = FakeAdminStorageRepository();
+      await _pump(tester, repo, storage: storage);
+
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Remove'));
+      await tester.tap(find.text('Remove'));
+      await tester.pumpAndSettle();
+
+      expect(repo.products.single.imageUrl, isNull);
+      expect(storage.deleted, contains('products/p1.png'));
     });
   });
 }

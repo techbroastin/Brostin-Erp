@@ -2,6 +2,7 @@ import '../../models/branch.dart';
 import '../../models/menu_category.dart';
 import '../../models/product.dart';
 import '../../models/product_variant.dart';
+import '../../models/restaurant.dart';
 import '../../services/supabase_service.dart';
 import 'menu_repository.dart';
 
@@ -18,6 +19,12 @@ class SupabaseMenuRepository implements MenuRepository {
     return (rows as List)
         .map((e) => Branch.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  @override
+  Future<Restaurant> fetchRestaurant() async {
+    final row = await _client.from('restaurants').select().single();
+    return Restaurant.fromJson(row);
   }
 
   @override

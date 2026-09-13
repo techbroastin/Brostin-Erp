@@ -90,6 +90,7 @@ class FakeAdminMenuRepository implements AdminMenuRepository {
     required bool isAvailable,
     required bool isFeatured,
     required int displayOrder,
+    String? imageUrl,
   }) async {
     final product = Product(
       id: 'prod-${idCounter++}',
@@ -101,6 +102,7 @@ class FakeAdminMenuRepository implements AdminMenuRepository {
       isFeatured: isFeatured,
       displayOrder: displayOrder,
       isDemo: false,
+      imageUrl: imageUrl,
     );
     products.add(product);
     return product;
@@ -116,6 +118,7 @@ class FakeAdminMenuRepository implements AdminMenuRepository {
     required bool isAvailable,
     required bool isFeatured,
     required int displayOrder,
+    required String? imageUrl,
   }) async {
     final index = products.indexWhere((p) => p.id == id);
     final updated = Product(
@@ -128,6 +131,7 @@ class FakeAdminMenuRepository implements AdminMenuRepository {
       isFeatured: isFeatured,
       displayOrder: displayOrder,
       isDemo: false,
+      imageUrl: imageUrl,
     );
     products[index] = updated;
     return updated;

@@ -1,12 +1,21 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/admin_menu_repository.dart';
+import '../../../../data/repositories/admin_storage_repository.dart';
 import '../../../../models/menu_category.dart';
 import '../../../../models/product.dart';
 import '../../../../models/product_variant.dart';
+import '../../../domain/image_validators.dart';
 import '../../../domain/menu_form_validators.dart';
+import '../../../domain/storage_url_utils.dart';
+import '../../../services/image_picker_service.dart';
 import '../../widgets/admin_confirm_delete_dialog.dart';
+import '../../widgets/admin_image_field.dart';
+
+const _menuMediaBucket = 'menu-media';
 
 class AdminProductsScreen extends StatefulWidget {
   const AdminProductsScreen({super.key});
@@ -49,16 +58,23 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
 
   Future<void> _openForm({Product? existing, required List<MenuCategory> categories}) async {
     final repo = context.read<AdminMenuRepository>();
+    final storage = context.read<AdminStorageRepository>();
+    final picker = context.read<ImagePickerService>();
     final result = await showDialog<Product>(
       context: context,
       builder: (_) => _ProductFormDialog(
         existing: existing,
         categories: categories,
         repo: repo,
+        storage: storage,
+        picker: picker,
       ),
     );
+    // Always refresh, even on a plain Close with no saved field edits — an
+    // image upload/remove inside the dialog persists immediately and the
+    // list's cached Product needs to pick that up too.
+    _refresh();
     if (result != null) {
-      _refresh();
       // Freshly created — reopen immediately so the owner can add variants
       // without an extra click to find the new row.
       if (existing == null && mounted) {
@@ -119,6 +135,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
         isAvailable: isAvailable ?? product.isAvailable,
         isFeatured: isFeatured ?? product.isFeatured,
         displayOrder: product.displayOrder,
+        imageUrl: product.imageUrl,
       );
       _refresh();
     } catch (e) {
@@ -306,10 +323,14 @@ class _ProductFormDialog extends StatefulWidget {
   final Product? existing;
   final List<MenuCategory> categories;
   final AdminMenuRepository repo;
+  final AdminStorageRepository storage;
+  final ImagePickerService picker;
   const _ProductFormDialog({
     required this.existing,
     required this.categories,
     required this.repo,
+    required this.storage,
+    required this.picker,
   });
 
   @override
@@ -334,6 +355,7 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
       widget.existing?.categoryId ?? widget.categories.firstOrNull?.id;
   late bool _isAvailable = widget.existing?.isAvailable ?? true;
   late bool _isFeatured = widget.existing?.isFeatured ?? false;
+  late String? _imageUrl = widget.existing?.imageUrl;
   bool _saving = false;
   String? _error;
 
@@ -402,6 +424,7 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
           isAvailable: _isAvailable,
           isFeatured: _isFeatured,
           displayOrder: order,
+          imageUrl: _imageUrl,
         );
       }
       if (mounted) Navigator.of(context).pop(saved);
@@ -411,6 +434,52 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
         _saving = false;
       });
     }
+  }
+
+  /// Image upload/remove are independent, immediate actions (like the
+  /// Available/Featured toggles in the list) — they persist using the
+  /// product's last-known-good other fields rather than whatever is
+  /// currently, possibly unsaved, in this dialog's text fields.
+  Future<void> _uploadImage(Uint8List bytes, String fileName) async {
+    final existing = widget.existing!;
+    final ext = ImageValidators.extensionOf(fileName)!;
+    final oldPath = storagePathFromPublicUrl(_menuMediaBucket, _imageUrl);
+    if (oldPath != null) await widget.storage.deleteImage(oldPath);
+    final url = await widget.storage.uploadImage(
+      path: 'products/${existing.id}$ext',
+      bytes: bytes,
+      contentType: ImageValidators.contentTypeFor(ext),
+    );
+    await widget.repo.updateProduct(
+      id: existing.id,
+      categoryId: existing.categoryId,
+      name: existing.name,
+      description: existing.description,
+      price: existing.price,
+      isAvailable: existing.isAvailable,
+      isFeatured: existing.isFeatured,
+      displayOrder: existing.displayOrder,
+      imageUrl: url,
+    );
+    setState(() => _imageUrl = url);
+  }
+
+  Future<void> _removeImage() async {
+    final existing = widget.existing!;
+    final oldPath = storagePathFromPublicUrl(_menuMediaBucket, _imageUrl);
+    if (oldPath != null) await widget.storage.deleteImage(oldPath);
+    await widget.repo.updateProduct(
+      id: existing.id,
+      categoryId: existing.categoryId,
+      name: existing.name,
+      description: existing.description,
+      price: existing.price,
+      isAvailable: existing.isAvailable,
+      isFeatured: existing.isFeatured,
+      displayOrder: existing.displayOrder,
+      imageUrl: null,
+    );
+    setState(() => _imageUrl = null);
   }
 
   Future<void> _addOrEditVariant({ProductVariant? existing}) async {
@@ -536,6 +605,19 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
                   ),
                 ],
                 if (widget.existing != null) ...[
+                  const Divider(height: 32),
+                  Text(
+                    'Product photo',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  AdminImageField(
+                    imageUrl: _imageUrl,
+                    fallbackIcon: Icons.fastfood_outlined,
+                    picker: widget.picker,
+                    onUpload: _uploadImage,
+                    onRemove: _removeImage,
+                  ),
                   const Divider(height: 32),
                   Row(
                     children: [

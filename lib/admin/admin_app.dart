@@ -4,10 +4,15 @@ import 'package:provider/provider.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/theme/app_theme.dart';
+import '../data/repositories/admin_branding_repository.dart';
 import '../data/repositories/admin_menu_repository.dart';
+import '../data/repositories/admin_storage_repository.dart';
+import '../data/repositories/supabase_admin_branding_repository.dart';
 import '../data/repositories/supabase_admin_menu_repository.dart';
+import '../data/repositories/supabase_admin_storage_repository.dart';
 import 'core/admin_router.dart';
 import 'services/admin_auth_controller.dart';
+import 'services/image_picker_service.dart';
 
 class AdminApp extends StatefulWidget {
   const AdminApp({super.key});
@@ -45,6 +50,13 @@ class _AdminAppState extends State<AdminApp> {
         Provider<AdminMenuRepository>(
           create: (_) => SupabaseAdminMenuRepository(),
         ),
+        Provider<AdminStorageRepository>(
+          create: (_) => SupabaseAdminStorageRepository(),
+        ),
+        Provider<AdminBrandingRepository>(
+          create: (_) => SupabaseAdminBrandingRepository(),
+        ),
+        Provider<ImagePickerService>(create: (_) => ImagePickerServiceImpl()),
       ],
       child: MaterialApp.router(
         title: '${AppConstants.appName} Admin',
