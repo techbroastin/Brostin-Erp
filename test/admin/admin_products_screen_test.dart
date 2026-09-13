@@ -202,6 +202,55 @@ void main() {
     );
 
     testWidgets(
+      'a cancelled/no-op file picker leaves the upload button usable, not stuck loading',
+      (tester) async {
+        // Regression test: image_picker_for_web can fail to resolve its
+        // pick Future at all when the native file dialog is dismissed
+        // without a selection (a known plugin limitation). The fix wraps
+        // that call in a timeout inside ImagePickerServiceImpl so it always
+        // resolves; here we simulate the already-resolved "no file" case
+        // the fix produces and assert the UI recovers instead of leaving
+        // Upload permanently disabled with a spinner.
+        final repo = FakeAdminMenuRepository(
+          categories: [_category],
+          products: [
+            const Product(
+              id: 'p1',
+              categoryId: 'cat-1',
+              name: 'Classic Burger',
+              price: 149,
+              isAvailable: true,
+              displayOrder: 1,
+              isDemo: false,
+            ),
+          ],
+        );
+        final storage = FakeAdminStorageRepository();
+        const picker = FakeImagePickerService(null);
+        await _pump(tester, repo, storage: storage, picker: picker);
+
+        await tester.tap(find.byIcon(Icons.edit_outlined));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Upload'));
+        await tester.tap(find.text('Upload'));
+        await tester.pumpAndSettle();
+
+        expect(storage.uploaded, isEmpty);
+        expect(repo.products.single.imageUrl, isNull);
+        expect(
+          tester.widget<OutlinedButton>(
+            find.ancestor(
+              of: find.text('Upload'),
+              matching: find.byType(OutlinedButton),
+            ),
+          ).onPressed,
+          isNotNull,
+        );
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+      },
+    );
+
+    testWidgets(
       'an oversized file is rejected before any repository or storage call',
       (tester) async {
         final repo = FakeAdminMenuRepository(
