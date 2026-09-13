@@ -107,7 +107,9 @@ class _SidebarTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? AppColors.primaryRed.withValues(alpha: 0.18) : null,
+      color: selected
+          ? AppColors.primaryRed.withValues(alpha: 0.18)
+          : Colors.transparent,
       child: ListTile(
         leading: Icon(
           item.icon,
