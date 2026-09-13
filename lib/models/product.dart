@@ -8,6 +8,7 @@ class Product {
   final bool isAvailable;
   final int displayOrder;
   final bool isDemo;
+  final bool isFeatured;
 
   const Product({
     required this.id,
@@ -19,6 +20,7 @@ class Product {
     required this.isAvailable,
     required this.displayOrder,
     required this.isDemo,
+    this.isFeatured = false,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) => Product(
@@ -31,5 +33,6 @@ class Product {
     isAvailable: json['is_available'] as bool,
     displayOrder: json['display_order'] as int,
     isDemo: json['is_demo'] as bool? ?? false,
+    isFeatured: json['is_featured'] as bool? ?? false,
   );
 }

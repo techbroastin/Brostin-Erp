@@ -72,9 +72,7 @@ class _MenuScreenState extends State<MenuScreen> {
       productsFuture: selectedCategoryId == null
           ? null
           : repo.fetchProducts(categoryId: selectedCategoryId),
-      featuredFuture: categories.isEmpty
-          ? null
-          : repo.fetchProducts(categoryId: categories.first.id),
+      featuredFuture: categories.isEmpty ? null : repo.fetchFeaturedProducts(),
     );
   }
 

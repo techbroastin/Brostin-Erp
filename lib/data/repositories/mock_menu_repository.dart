@@ -36,6 +36,16 @@ class MockMenuRepository implements MenuRepository {
   }
 
   @override
+  Future<List<Product>> fetchFeaturedProducts() async {
+    await Future.delayed(_simulatedDelay);
+    // Mock data has no real is_featured flag (kept in exact sync with the
+    // SQL seed, which predates this field) — fall back to the first
+    // category's products, matching this repo's pre-Phase-14 behavior.
+    if (MockMenuData.categories.isEmpty) return const [];
+    return MockMenuData.productsForCategory(MockMenuData.categories.first.id);
+  }
+
+  @override
   Future<List<ProductVariant>> fetchVariants({
     required String productId,
   }) async {

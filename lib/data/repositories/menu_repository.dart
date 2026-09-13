@@ -14,6 +14,10 @@ abstract class MenuRepository {
   Future<List<Product>> fetchProducts({required String categoryId});
   Future<Product> fetchProduct(String productId);
 
+  /// Products flagged `is_featured` (admin-controlled), for the "Popular
+  /// Picks" strip — not scoped to a single category.
+  Future<List<Product>> fetchFeaturedProducts();
+
   /// Empty list means the product has no size/meal options and is sold
   /// directly at Product.price.
   Future<List<ProductVariant>> fetchVariants({required String productId});

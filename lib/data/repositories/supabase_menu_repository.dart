@@ -56,6 +56,19 @@ class SupabaseMenuRepository implements MenuRepository {
   }
 
   @override
+  Future<List<Product>> fetchFeaturedProducts() async {
+    final rows = await _client
+        .from('products')
+        .select()
+        .eq('is_featured', true)
+        .eq('is_available', true)
+        .order('display_order', ascending: true);
+    return (rows as List)
+        .map((e) => Product.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
   Future<List<ProductVariant>> fetchVariants({
     required String productId,
   }) async {

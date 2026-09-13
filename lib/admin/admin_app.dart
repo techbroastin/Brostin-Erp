@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/theme/app_theme.dart';
+import '../data/repositories/admin_menu_repository.dart';
+import '../data/repositories/supabase_admin_menu_repository.dart';
 import 'core/admin_router.dart';
 import 'services/admin_auth_controller.dart';
 
@@ -37,8 +39,13 @@ class _AdminAppState extends State<AdminApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<AdminAuthController>.value(
-      value: _auth,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AdminAuthController>.value(value: _auth),
+        Provider<AdminMenuRepository>(
+          create: (_) => SupabaseAdminMenuRepository(),
+        ),
+      ],
       child: MaterialApp.router(
         title: '${AppConstants.appName} Admin',
         debugShowCheckedModeBanner: false,

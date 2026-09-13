@@ -2,6 +2,9 @@ import 'package:go_router/go_router.dart';
 
 import '../presentation/screens/dashboard/admin_dashboard_screen.dart';
 import '../presentation/screens/login/admin_login_screen.dart';
+import '../presentation/screens/menu/admin_categories_screen.dart';
+import '../presentation/screens/menu/admin_menu_overview_screen.dart';
+import '../presentation/screens/menu/admin_products_screen.dart';
 import '../presentation/screens/placeholder/admin_placeholder_screen.dart';
 import '../presentation/widgets/admin_shell.dart';
 import '../services/admin_auth_controller.dart';
@@ -58,28 +61,15 @@ GoRouter buildAdminRouter(AdminAuthController auth) {
           ),
           GoRoute(
             path: AdminRoutes.menu,
-            builder: (context, state) => const AdminPlaceholderScreen(
-              title: 'Menu',
-              description:
-                  'Category and product management lands in the next '
-                  'admin phase.',
-            ),
+            builder: (context, state) => const AdminMenuOverviewScreen(),
           ),
           GoRoute(
             path: AdminRoutes.categories,
-            builder: (context, state) => const AdminPlaceholderScreen(
-              title: 'Categories',
-              description: 'Category CRUD lands in the next admin phase.',
-            ),
+            builder: (context, state) => const AdminCategoriesScreen(),
           ),
           GoRoute(
             path: AdminRoutes.products,
-            builder: (context, state) => const AdminPlaceholderScreen(
-              title: 'Products',
-              description:
-                  'Product CRUD, variants, images and availability land '
-                  'in the next admin phase.',
-            ),
+            builder: (context, state) => const AdminProductsScreen(),
           ),
           GoRoute(
             path: AdminRoutes.tables,
