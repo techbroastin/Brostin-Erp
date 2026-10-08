@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Broastin CRM / Growth OS (crm/) — Node/Vite related
+crm/node_modules/
+crm/dist/
+crm/dist-ssr/
+crm/.vite/
+crm/*.local
+crm/npm-debug.log*
+crm/yarn-debug.log*
+crm/yarn-error.log*
+crm/dev-dist/
