@@ -5,7 +5,7 @@ import { CustomerSearchInput } from '@/features/customers/components/shared/Cust
 import { CustomerEmptyState } from '@/features/customers/components/shared/CustomerEmptyState'
 import { CustomerErrorState } from '@/features/customers/components/shared/CustomerErrorState'
 import { CustomerTable, PAGE_SIZE } from '@/features/customers/components/desktop/CustomerTable'
-import { useDebouncedValue } from '@/features/customers/hooks/useDebouncedValue'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useCustomerList } from '@/features/customers/hooks/useCustomerList'
 import type { CustomerSortBy } from '@/features/customers/types/customer'
 

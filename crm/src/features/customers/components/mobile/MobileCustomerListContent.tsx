@@ -4,7 +4,7 @@ import { CustomerSearchInput } from '@/features/customers/components/shared/Cust
 import { CustomerEmptyState } from '@/features/customers/components/shared/CustomerEmptyState'
 import { CustomerErrorState } from '@/features/customers/components/shared/CustomerErrorState'
 import { CustomerCard, CustomerCardSkeleton } from '@/features/customers/components/mobile/CustomerCard'
-import { useDebouncedValue } from '@/features/customers/hooks/useDebouncedValue'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useCustomerList } from '@/features/customers/hooks/useCustomerList'
 
 const PAGE_SIZE_STEP = 10

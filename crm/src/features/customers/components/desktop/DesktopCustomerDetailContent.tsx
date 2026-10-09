@@ -1,16 +1,6 @@
-import type { ReactNode } from 'react'
 import { Phone, AlertCircle } from 'lucide-react'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
-
-/**
- * shadcn's CardTitle renders a plain <div>, not a heading element, so it
- * can't be used for real section headings without losing semantic
- * structure (docs/DESKTOP_UI_SPEC.md §22). This matches CardTitle's own
- * visual style without modifying the generated primitive.
- */
-function CardSectionHeading({ children }: { children: ReactNode }) {
-  return <h2 className="font-heading text-base leading-snug font-medium">{children}</h2>
-}
+import { CardSectionHeading } from '@/components/shared/CardSectionHeading'
 
 /**
  * docs/DESKTOP_UI_SPEC.md — denser two-column profile/summary, same

@@ -6,15 +6,15 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
 /**
  * Router infrastructure — docs/FRONTEND_ARCHITECTURE.md §9: "Route-level
  * screens are code-split (lazy-loaded) per feature." Dashboard, Customers
- * list and Customer detail use React Router's `lazy` route property
- * (data router API) so each resolves to its own chunk only when
- * navigated to — a Phase 4 correction; Phase 3 shipped Dashboard as an
- * eager import, which this fixes without touching the Phase 3 commit.
+ * (list/detail) and Orders (list/detail) all use React Router's `lazy`
+ * route property (data router API) so each resolves to its own chunk
+ * only when navigated to.
  *
- * No other per-module routes (/orders, /loyalty, ...) are added here.
+ * No other per-module routes (/loyalty, /campaigns, ...) are added here.
  * Those arrive module-by-module in their own future phases, one
  * hamburger/sidebar section at a time, per docs/NAVIGATION.md §33 and
- * docs/CLAUDE.md §11.
+ * docs/CLAUDE.md §11. /orders/today is explicitly excluded from Phase 5
+ * — not named as a Phase 8 deliverable in docs/IMPLEMENTATION_PLAN.md.
  */
 export const router = createBrowserRouter([
   {
@@ -42,6 +42,20 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { CustomerDetailScreen } = await import('@/features/customers')
           return { Component: CustomerDetailScreen }
+        },
+      },
+      {
+        path: 'orders',
+        lazy: async () => {
+          const { OrdersListScreen } = await import('@/features/orders')
+          return { Component: OrdersListScreen }
+        },
+      },
+      {
+        path: 'orders/:orderId',
+        lazy: async () => {
+          const { OrderDetailScreen } = await import('@/features/orders')
+          return { Component: OrderDetailScreen }
         },
       },
       { path: '*', element: <NotFoundScreen /> },
