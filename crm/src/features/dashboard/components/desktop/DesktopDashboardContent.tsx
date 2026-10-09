@@ -1,7 +1,7 @@
 import { LineChart } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
-import { KpiCard, KpiCardSkeleton } from '@/features/dashboard/components/shared/KpiCard'
+import { KpiCard, KpiCardSkeleton } from '@/components/shared/KpiCard'
 import { ActivityList, ActivityListSkeleton } from '@/features/dashboard/components/shared/ActivityList'
 import { AlertList, AlertListSkeleton } from '@/features/dashboard/components/shared/AlertList'
 import type { DashboardSummary } from '@/features/dashboard/types/dashboard'
