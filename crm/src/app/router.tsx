@@ -23,6 +23,12 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
  * sub-paths are declared before the dynamic :feedbackId route so they
  * take precedence, per docs/NAVIGATION.md §38's route-matching note.
  *
+ * Referrals (Phase 8) adds all four docs/NAVIGATION.md §14 routes
+ * (/referrals, /referrals/customers, /referrals/activity,
+ * /referrals/rewards) as four dedicated screens — no dynamic :id
+ * sibling exists for this module, so no route-ordering concern applies
+ * here the way it does for Feedback.
+ *
  * No other per-module routes (/campaigns, ...) are added here. Those
  * arrive module-by-module in their own future phases, one
  * hamburger/sidebar section at a time, per docs/NAVIGATION.md §33 and
@@ -125,6 +131,34 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { FeedbackDetailScreen } = await import('@/features/feedback')
           return { Component: FeedbackDetailScreen }
+        },
+      },
+      {
+        path: 'referrals',
+        lazy: async () => {
+          const { ReferralOverviewScreen } = await import('@/features/referrals')
+          return { Component: ReferralOverviewScreen }
+        },
+      },
+      {
+        path: 'referrals/customers',
+        lazy: async () => {
+          const { ReferralCustomersScreen } = await import('@/features/referrals')
+          return { Component: ReferralCustomersScreen }
+        },
+      },
+      {
+        path: 'referrals/activity',
+        lazy: async () => {
+          const { ReferralActivityScreen } = await import('@/features/referrals')
+          return { Component: ReferralActivityScreen }
+        },
+      },
+      {
+        path: 'referrals/rewards',
+        lazy: async () => {
+          const { ReferralRewardsScreen } = await import('@/features/referrals')
+          return { Component: ReferralRewardsScreen }
         },
       },
       { path: '*', element: <NotFoundScreen /> },
