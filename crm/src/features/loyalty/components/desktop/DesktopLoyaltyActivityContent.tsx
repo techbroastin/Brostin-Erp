@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
-import { LoyaltySearchInput } from '@/features/loyalty/components/shared/LoyaltySearchInput'
+import { SearchInput } from '@/components/shared/SearchInput'
 import { LoyaltyEmptyState } from '@/features/loyalty/components/shared/LoyaltyEmptyState'
 import { LoyaltyErrorState } from '@/features/loyalty/components/shared/LoyaltyErrorState'
 import { LoyaltyActivityTable, PAGE_SIZE } from '@/features/loyalty/components/desktop/LoyaltyActivityTable'
@@ -40,7 +40,7 @@ export function DesktopLoyaltyActivityContent() {
       </div>
 
       <div className="max-w-sm">
-        <LoyaltySearchInput
+        <SearchInput
           id="loyalty-activity-search"
           label="Search activity by customer name"
           placeholder="Search by customer name"

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { buttonVariants } from '@/components/ui/button'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
-import { LoyaltySearchInput } from '@/features/loyalty/components/shared/LoyaltySearchInput'
+import { SearchInput } from '@/components/shared/SearchInput'
 import { LoyaltyEmptyState } from '@/features/loyalty/components/shared/LoyaltyEmptyState'
 import { LoyaltyErrorState } from '@/features/loyalty/components/shared/LoyaltyErrorState'
 import {
@@ -42,7 +42,7 @@ export function MobileCustomerBalancesContent() {
     <div className="flex flex-col gap-4 p-4">
       <DemoDataBadge />
       <h2 className="text-page-title font-semibold">Customer Balances</h2>
-      <LoyaltySearchInput
+      <SearchInput
         id="loyalty-balance-search-mobile"
         label="Search customer balances by name or phone"
         placeholder="Search by name or phone"

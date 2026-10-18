@@ -2,12 +2,13 @@ import { Search, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 /**
- * Single reusable search input shared by Customer Balances and Activity
- * (docs/MOBILE_UI_SPEC.md §25 / docs/DESKTOP_UI_SPEC.md §10 pattern) —
- * identical in shape to CustomerSearchInput/OrderSearchInput, just
- * parametrized since the two screens search different fields.
+ * Generic reusable search input — identical in shape to
+ * CustomerSearchInput/OrderSearchInput, just parametrized since each
+ * consumer searches different fields with a different label/placeholder.
+ * Shared across features (Loyalty, Feedback) per
+ * docs/FRONTEND_ARCHITECTURE.md §6.
  */
-export function LoyaltySearchInput({
+export function SearchInput({
   value,
   onChange,
   id,

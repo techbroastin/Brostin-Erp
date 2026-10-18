@@ -6,17 +6,25 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
 /**
  * Router infrastructure — docs/FRONTEND_ARCHITECTURE.md §9: "Route-level
  * screens are code-split (lazy-loaded) per feature." Dashboard, Customers
- * (list/detail), Orders (list/detail) and Loyalty (overview/customers/
- * rewards/activity) all use React Router's `lazy` route property (data
- * router API) so each resolves to its own chunk only when navigated to.
+ * (list/detail), Orders (list/detail), Loyalty (overview/customers/
+ * rewards/activity) and Feedback (list ×3 route-driven filter states +
+ * detail) all use React Router's `lazy` route property (data router
+ * API) so each resolves to its own chunk only when navigated to.
  *
  * All four Loyalty routes are implemented together in Phase 6, unlike
  * Orders/Customers: docs/IMPLEMENTATION_PLAN.md §12 names all of
  * "loyalty overview, customer points/balance, rewards, activity" with no
  * exclusion, mapping 1:1 onto docs/NAVIGATION.md §10's four routes.
  *
- * No other per-module routes (/campaigns, /feedback, ...) are added
- * here. Those arrive module-by-module in their own future phases, one
+ * Feedback (Phase 7) preserves all four docs/NAVIGATION.md §13 routes
+ * (/feedback, /feedback/all, /feedback/negative, /feedback/:feedbackId)
+ * behind one underlying list implementation — see
+ * features/feedback/screens/FeedbackListScreen.tsx. The three fixed
+ * sub-paths are declared before the dynamic :feedbackId route so they
+ * take precedence, per docs/NAVIGATION.md §38's route-matching note.
+ *
+ * No other per-module routes (/campaigns, ...) are added here. Those
+ * arrive module-by-module in their own future phases, one
  * hamburger/sidebar section at a time, per docs/NAVIGATION.md §33 and
  * docs/CLAUDE.md §11. /orders/today is explicitly excluded from Phase 5
  * — not named as a Phase 8 deliverable in docs/IMPLEMENTATION_PLAN.md.
@@ -89,6 +97,34 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { LoyaltyActivityScreen } = await import('@/features/loyalty')
           return { Component: LoyaltyActivityScreen }
+        },
+      },
+      {
+        path: 'feedback',
+        lazy: async () => {
+          const { FeedbackListScreen } = await import('@/features/feedback')
+          return { Component: FeedbackListScreen }
+        },
+      },
+      {
+        path: 'feedback/all',
+        lazy: async () => {
+          const { FeedbackListScreen } = await import('@/features/feedback')
+          return { Component: FeedbackListScreen }
+        },
+      },
+      {
+        path: 'feedback/negative',
+        lazy: async () => {
+          const { FeedbackListScreen } = await import('@/features/feedback')
+          return { Component: FeedbackListScreen }
+        },
+      },
+      {
+        path: 'feedback/:feedbackId',
+        lazy: async () => {
+          const { FeedbackDetailScreen } = await import('@/features/feedback')
+          return { Component: FeedbackDetailScreen }
         },
       },
       { path: '*', element: <NotFoundScreen /> },
