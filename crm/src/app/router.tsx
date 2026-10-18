@@ -59,11 +59,24 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
  * exists). No new routes change anything inside features/orders/,
  * features/customers/ or features/loyalty/.
  *
- * No other per-module routes (/campaigns, ...) are added here. Those
- * arrive module-by-module in their own future phases, one
- * hamburger/sidebar section at a time, per docs/NAVIGATION.md §33 and
- * docs/CLAUDE.md §11. /orders/today is explicitly excluded from Phase 5
- * — not named as a Phase 8 deliverable in docs/IMPLEMENTATION_PLAN.md.
+ * Campaigns (operational Phase 12 / canonical
+ * docs/IMPLEMENTATION_PLAN.md "Phase 15 — Campaigns") adds the four
+ * docs/NAVIGATION.md §11 routes (/campaigns, /campaigns/all,
+ * /campaigns/new, /campaigns/:campaignId). Campaigns are DESKTOP ADMIN
+ * ONLY (docs/NAVIGATION.md §19) — navigation.ts already had the
+ * correct `mobileVisible: false` entry and is unchanged by this phase.
+ * The dynamic :campaignId route is declared after the fixed
+ * /campaigns/all and /campaigns/new paths, same ordering rule as
+ * Feedback above. campaignService.ts is the first service in this
+ * codebase with write/mutation functions (createCampaign,
+ * updateCampaignStatus) backed by an in-memory mock store — session-
+ * only, never a real send/dispatch.
+ *
+ * Other per-module routes not yet built (/automation, ...) arrive
+ * module-by-module in their own future phases, one hamburger/sidebar
+ * section at a time, per docs/NAVIGATION.md §33 and docs/CLAUDE.md §11.
+ * /orders/today is explicitly excluded from Phase 5 — not named as a
+ * Phase 8 deliverable in docs/IMPLEMENTATION_PLAN.md.
  */
 export const router = createBrowserRouter([
   {
@@ -273,6 +286,34 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { MarketingAnalyticsScreen } = await import('@/features/analytics')
           return { Component: MarketingAnalyticsScreen }
+        },
+      },
+      {
+        path: 'campaigns',
+        lazy: async () => {
+          const { CampaignOverviewScreen } = await import('@/features/campaigns')
+          return { Component: CampaignOverviewScreen }
+        },
+      },
+      {
+        path: 'campaigns/all',
+        lazy: async () => {
+          const { AllCampaignsScreen } = await import('@/features/campaigns')
+          return { Component: AllCampaignsScreen }
+        },
+      },
+      {
+        path: 'campaigns/new',
+        lazy: async () => {
+          const { CreateCampaignScreen } = await import('@/features/campaigns')
+          return { Component: CreateCampaignScreen }
+        },
+      },
+      {
+        path: 'campaigns/:campaignId',
+        lazy: async () => {
+          const { CampaignDetailScreen } = await import('@/features/campaigns')
+          return { Component: CampaignDetailScreen }
         },
       },
       { path: '*', element: <NotFoundScreen /> },
