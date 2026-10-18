@@ -29,6 +29,12 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
  * sibling exists for this module, so no route-ordering concern applies
  * here the way it does for Feedback.
  *
+ * Membership (operational Phase 9 / canonical docs/IMPLEMENTATION_PLAN.md
+ * "Phase 12 — Membership") adds all four docs/NAVIGATION.md §15 routes
+ * (/membership, /membership/members, /membership/plans,
+ * /membership/activity) as four dedicated screens, same shape as
+ * Referrals — no dynamic :id sibling, no route-ordering concern.
+ *
  * No other per-module routes (/campaigns, ...) are added here. Those
  * arrive module-by-module in their own future phases, one
  * hamburger/sidebar section at a time, per docs/NAVIGATION.md §33 and
@@ -159,6 +165,34 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { ReferralRewardsScreen } = await import('@/features/referrals')
           return { Component: ReferralRewardsScreen }
+        },
+      },
+      {
+        path: 'membership',
+        lazy: async () => {
+          const { MembershipOverviewScreen } = await import('@/features/membership')
+          return { Component: MembershipOverviewScreen }
+        },
+      },
+      {
+        path: 'membership/members',
+        lazy: async () => {
+          const { MembersScreen } = await import('@/features/membership')
+          return { Component: MembersScreen }
+        },
+      },
+      {
+        path: 'membership/plans',
+        lazy: async () => {
+          const { MembershipPlansScreen } = await import('@/features/membership')
+          return { Component: MembershipPlansScreen }
+        },
+      },
+      {
+        path: 'membership/activity',
+        lazy: async () => {
+          const { MembershipActivityScreen } = await import('@/features/membership')
+          return { Component: MembershipActivityScreen }
         },
       },
       { path: '*', element: <NotFoundScreen /> },
