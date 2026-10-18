@@ -46,6 +46,19 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
  * and its token/table resolution RPC are untouched and unrelated to
  * this React route group.
  *
+ * Analytics (operational Phase 11 / canonical
+ * docs/IMPLEMENTATION_PLAN.md "Phase 14 — Analytics") adds the five
+ * docs/NAVIGATION.md §17 routes (/analytics, /analytics/sales,
+ * /analytics/customers, /analytics/loyalty, /analytics/marketing).
+ * Like QR Administration, this is a pure aggregation layer over
+ * existing Orders/Customers/Loyalty data — analyticsService.ts calls
+ * orderService/customerService/loyaltyService directly and introduces
+ * no new mock dataset. Charts reuse DesktopDashboardContent.tsx's
+ * existing "charting library not yet selected" placeholder; Marketing
+ * is a static "not yet available" placeholder (no campaign data model
+ * exists). No new routes change anything inside features/orders/,
+ * features/customers/ or features/loyalty/.
+ *
  * No other per-module routes (/campaigns, ...) are added here. Those
  * arrive module-by-module in their own future phases, one
  * hamburger/sidebar section at a time, per docs/NAVIGATION.md §33 and
@@ -225,6 +238,41 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { QrSettingsScreen } = await import('@/features/qr')
           return { Component: QrSettingsScreen }
+        },
+      },
+      {
+        path: 'analytics',
+        lazy: async () => {
+          const { AnalyticsOverviewScreen } = await import('@/features/analytics')
+          return { Component: AnalyticsOverviewScreen }
+        },
+      },
+      {
+        path: 'analytics/sales',
+        lazy: async () => {
+          const { SalesAnalyticsScreen } = await import('@/features/analytics')
+          return { Component: SalesAnalyticsScreen }
+        },
+      },
+      {
+        path: 'analytics/customers',
+        lazy: async () => {
+          const { CustomerAnalyticsScreen } = await import('@/features/analytics')
+          return { Component: CustomerAnalyticsScreen }
+        },
+      },
+      {
+        path: 'analytics/loyalty',
+        lazy: async () => {
+          const { LoyaltyAnalyticsScreen } = await import('@/features/analytics')
+          return { Component: LoyaltyAnalyticsScreen }
+        },
+      },
+      {
+        path: 'analytics/marketing',
+        lazy: async () => {
+          const { MarketingAnalyticsScreen } = await import('@/features/analytics')
+          return { Component: MarketingAnalyticsScreen }
         },
       },
       { path: '*', element: <NotFoundScreen /> },
