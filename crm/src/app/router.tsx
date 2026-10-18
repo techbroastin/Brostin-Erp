@@ -72,7 +72,21 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
  * updateCampaignStatus) backed by an in-memory mock store — session-
  * only, never a real send/dispatch.
  *
- * Other per-module routes not yet built (/automation, ...) arrive
+ * Automation (operational Phase 13 / canonical
+ * docs/IMPLEMENTATION_PLAN.md "Phase 16 — Automation") adds the four
+ * docs/NAVIGATION.md §12 routes (/automation, /automation/workflows,
+ * /automation/new, /automation/:workflowId). Automation is DESKTOP
+ * ADMIN ONLY (docs/NAVIGATION.md §19) — navigation.ts already had the
+ * correct `mobileVisible: false` entry and is unchanged by this phase.
+ * The dynamic :workflowId route is declared after the fixed
+ * /automation/workflows and /automation/new paths, same ordering rule
+ * as Feedback/Campaigns above. Mock-only, same discipline as
+ * campaignService.ts: automationService.ts's createWorkflow/
+ * updateWorkflowStatus mutate an in-memory store (session-only); no
+ * automation engine, scheduler, condition evaluation, action
+ * execution, or notification delivery exists or is implied anywhere.
+ *
+ * Other per-module routes not yet built (/settings, ...) arrive
  * module-by-module in their own future phases, one hamburger/sidebar
  * section at a time, per docs/NAVIGATION.md §33 and docs/CLAUDE.md §11.
  * /orders/today is explicitly excluded from Phase 5 — not named as a
@@ -314,6 +328,34 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { CampaignDetailScreen } = await import('@/features/campaigns')
           return { Component: CampaignDetailScreen }
+        },
+      },
+      {
+        path: 'automation',
+        lazy: async () => {
+          const { AutomationOverviewScreen } = await import('@/features/automation')
+          return { Component: AutomationOverviewScreen }
+        },
+      },
+      {
+        path: 'automation/workflows',
+        lazy: async () => {
+          const { WorkflowsScreen } = await import('@/features/automation')
+          return { Component: WorkflowsScreen }
+        },
+      },
+      {
+        path: 'automation/new',
+        lazy: async () => {
+          const { CreateWorkflowScreen } = await import('@/features/automation')
+          return { Component: CreateWorkflowScreen }
+        },
+      },
+      {
+        path: 'automation/:workflowId',
+        lazy: async () => {
+          const { WorkflowDetailScreen } = await import('@/features/automation')
+          return { Component: WorkflowDetailScreen }
         },
       },
       { path: '*', element: <NotFoundScreen /> },
