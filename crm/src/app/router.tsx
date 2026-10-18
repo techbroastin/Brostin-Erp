@@ -35,6 +35,17 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
  * /membership/activity) as four dedicated screens, same shape as
  * Referrals — no dynamic :id sibling, no route-ordering concern.
  *
+ * QR Administration (operational Phase 10 / canonical
+ * docs/IMPLEMENTATION_PLAN.md "Phase 13 — QR Administration") adds the
+ * three docs/NAVIGATION.md §16 routes (/qr, /qr/orders, /qr/settings).
+ * Unlike every other module so far, this one is an operational view
+ * of the existing Orders feature, not a new entity: QrOrdersScreen
+ * reuses Orders' hook/table/card/search/empty/error components
+ * unmodified, pinning `source: 'qr'` — nothing inside
+ * features/orders/ is changed. The existing QR Ordering Flutter app
+ * and its token/table resolution RPC are untouched and unrelated to
+ * this React route group.
+ *
  * No other per-module routes (/campaigns, ...) are added here. Those
  * arrive module-by-module in their own future phases, one
  * hamburger/sidebar section at a time, per docs/NAVIGATION.md §33 and
@@ -193,6 +204,27 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { MembershipActivityScreen } = await import('@/features/membership')
           return { Component: MembershipActivityScreen }
+        },
+      },
+      {
+        path: 'qr',
+        lazy: async () => {
+          const { QrOverviewScreen } = await import('@/features/qr')
+          return { Component: QrOverviewScreen }
+        },
+      },
+      {
+        path: 'qr/orders',
+        lazy: async () => {
+          const { QrOrdersScreen } = await import('@/features/qr')
+          return { Component: QrOrdersScreen }
+        },
+      },
+      {
+        path: 'qr/settings',
+        lazy: async () => {
+          const { QrSettingsScreen } = await import('@/features/qr')
+          return { Component: QrSettingsScreen }
         },
       },
       { path: '*', element: <NotFoundScreen /> },
