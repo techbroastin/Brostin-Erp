@@ -1,19 +1,23 @@
 import { Phone, AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { CustomerTimeline } from '@/features/customers/components/shared/CustomerTimeline'
 
 /**
  * docs/MOBILE_UI_SPEC.md §13 detail sequence: Profile → Summary → Orders
- * → Loyalty → Feedback → Activity. Orders/Loyalty/Feedback/Activity are
+ * → Loyalty → Feedback → Activity. Orders/Loyalty/Feedback remain
  * placeholders — those modules don't exist yet (same technique as
  * Dashboard's "Loyalty lands with the Loyalty module" placeholder).
- * Customer 360 exact layout is NOT YET FINALIZED per docs/NAVIGATION.md
- * §8.2 / docs/MOBILE_UI_SPEC.md §14 — only currently-defined information
- * is shown.
+ * "Activity" is now the real Book 3 §5 Customer Timeline — a vertical
+ * list, per docs/MOBILE_UI_SPEC.md §14's "do not reproduce a desktop
+ * CRM table" rule. Customer 360 exact layout is NOT YET FINALIZED per
+ * docs/NAVIGATION.md §8.2 / docs/MOBILE_UI_SPEC.md §14 — only
+ * currently-defined information is shown.
  */
 export function MobileCustomerDetailContent({
   customer,
 }: {
   customer: {
+    id: string
     name: string
     phone: string
     lastOrderAt: string | null
@@ -62,7 +66,7 @@ export function MobileCustomerDetailContent({
         </p>
       </section>
 
-      {(['Orders', 'Loyalty', 'Feedback', 'Activity'] as const).map((section) => (
+      {(['Orders', 'Loyalty', 'Feedback'] as const).map((section) => (
         <section key={section} className="flex flex-col gap-2">
           <h2 className="text-section-title font-semibold">{section}</h2>
           <Card>
@@ -74,6 +78,15 @@ export function MobileCustomerDetailContent({
           </Card>
         </section>
       ))}
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-section-title font-semibold">Activity</h2>
+        <Card>
+          <CardContent>
+            <CustomerTimeline customerId={customer.id} customerName={customer.name} />
+          </CardContent>
+        </Card>
+      </section>
     </div>
   )
 }

@@ -1,17 +1,21 @@
 import { Phone, AlertCircle } from 'lucide-react'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { CardSectionHeading } from '@/components/shared/CardSectionHeading'
+import { CustomerTimeline } from '@/features/customers/components/shared/CustomerTimeline'
 
 /**
  * docs/DESKTOP_UI_SPEC.md — denser two-column profile/summary, same
  * placeholder-section technique as the mobile detail and Dashboard.
  * Customer 360 exact layout is NOT YET FINALIZED — only currently-defined
- * information is shown.
+ * information is shown. "Activity" is now the real Book 3 §5 Customer
+ * Timeline; Orders/Loyalty/Feedback remain placeholders — out of scope
+ * for this phase.
  */
 export function DesktopCustomerDetailContent({
   customer,
 }: {
   customer: {
+    id: string
     name: string
     phone: string
     lastOrderAt: string | null
@@ -73,7 +77,7 @@ export function DesktopCustomerDetailContent({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {(['Orders', 'Loyalty', 'Feedback', 'Activity'] as const).map((section) => (
+        {(['Orders', 'Loyalty', 'Feedback'] as const).map((section) => (
           <Card key={section}>
             <CardHeader>
               <CardSectionHeading>{section}</CardSectionHeading>
@@ -85,6 +89,15 @@ export function DesktopCustomerDetailContent({
             </CardContent>
           </Card>
         ))}
+
+        <Card>
+          <CardHeader>
+            <CardSectionHeading>Activity</CardSectionHeading>
+          </CardHeader>
+          <CardContent>
+            <CustomerTimeline customerId={customer.id} customerName={customer.name} />
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
