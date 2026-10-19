@@ -1,0 +1,6 @@
+export { SettingsGeneralScreen } from '@/features/settings/screens/SettingsGeneralScreen'
+export { SettingsUsersScreen } from '@/features/settings/screens/SettingsUsersScreen'
+export { SettingsRolesScreen } from '@/features/settings/screens/SettingsRolesScreen'
+export { SettingsNotificationsScreen } from '@/features/settings/screens/SettingsNotificationsScreen'
+export { SettingsIntegrationsScreen } from '@/features/settings/screens/SettingsIntegrationsScreen'
+export { SettingsSystemScreen } from '@/features/settings/screens/SettingsSystemScreen'

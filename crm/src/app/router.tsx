@@ -86,11 +86,28 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
  * automation engine, scheduler, condition evaluation, action
  * execution, or notification delivery exists or is implied anywhere.
  *
- * Other per-module routes not yet built (/settings, ...) arrive
- * module-by-module in their own future phases, one hamburger/sidebar
- * section at a time, per docs/NAVIGATION.md §33 and docs/CLAUDE.md §11.
- * /orders/today is explicitly excluded from Phase 5 — not named as a
- * Phase 8 deliverable in docs/IMPLEMENTATION_PLAN.md.
+ * Settings (operational Phase 14 / canonical
+ * docs/IMPLEMENTATION_PLAN.md "Phase 17 — Settings") adds the six
+ * docs/NAVIGATION.md §18 routes (/settings/general, /settings/users,
+ * /settings/roles, /settings/notifications, /settings/integrations,
+ * /settings/system) plus a `/settings` index redirect to
+ * `/settings/general`, mirroring the root `/` → `/dashboard` redirect
+ * below. Unlike Campaigns/Automation, Settings is DESKTOP ADMIN **and**
+ * Mobile Manager (docs/NAVIGATION.md §19: "LIMITED", not hidden) —
+ * navigation.ts already had the correct `mobileVisible: true` entry
+ * and is unchanged by this phase. All six routes render the same one
+ * simplified MobileSettingsContent on mobile (per
+ * docs/MOBILE_UI_SPEC.md §22) and six distinct desktop pages on
+ * desktop. Mock-only: settingsService.ts's update/add/remove functions
+ * mutate an in-memory store (session-only); no real account creation,
+ * authentication, notification delivery, or integration configuration
+ * exists or is implied anywhere.
+ *
+ * Other per-module routes not yet built arrive module-by-module in
+ * their own future phases, one hamburger/sidebar section at a time,
+ * per docs/NAVIGATION.md §33 and docs/CLAUDE.md §11. /orders/today is
+ * explicitly excluded from Phase 5 — not named as a Phase 8 deliverable
+ * in docs/IMPLEMENTATION_PLAN.md.
  */
 export const router = createBrowserRouter([
   {
@@ -356,6 +373,52 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { WorkflowDetailScreen } = await import('@/features/automation')
           return { Component: WorkflowDetailScreen }
+        },
+      },
+      {
+        path: 'settings',
+        element: <Navigate to="/settings/general" replace />,
+      },
+      {
+        path: 'settings/general',
+        lazy: async () => {
+          const { SettingsGeneralScreen } = await import('@/features/settings')
+          return { Component: SettingsGeneralScreen }
+        },
+      },
+      {
+        path: 'settings/users',
+        lazy: async () => {
+          const { SettingsUsersScreen } = await import('@/features/settings')
+          return { Component: SettingsUsersScreen }
+        },
+      },
+      {
+        path: 'settings/roles',
+        lazy: async () => {
+          const { SettingsRolesScreen } = await import('@/features/settings')
+          return { Component: SettingsRolesScreen }
+        },
+      },
+      {
+        path: 'settings/notifications',
+        lazy: async () => {
+          const { SettingsNotificationsScreen } = await import('@/features/settings')
+          return { Component: SettingsNotificationsScreen }
+        },
+      },
+      {
+        path: 'settings/integrations',
+        lazy: async () => {
+          const { SettingsIntegrationsScreen } = await import('@/features/settings')
+          return { Component: SettingsIntegrationsScreen }
+        },
+      },
+      {
+        path: 'settings/system',
+        lazy: async () => {
+          const { SettingsSystemScreen } = await import('@/features/settings')
+          return { Component: SettingsSystemScreen }
         },
       },
       { path: '*', element: <NotFoundScreen /> },
