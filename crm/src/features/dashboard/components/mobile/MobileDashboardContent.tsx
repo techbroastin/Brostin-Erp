@@ -28,7 +28,19 @@ export function MobileDashboardContent({
         <div className="flex flex-col gap-3">
           {isLoading
             ? [0, 1, 2, 3].map((i) => <KpiCardSkeleton key={i} />)
-            : summary?.kpis.map((kpi) => <KpiCard key={kpi.id} kpi={kpi} />)}
+            : summary?.kpis.map((kpi) =>
+                kpi.href ? (
+                  <Link
+                    key={kpi.id}
+                    to={kpi.href}
+                    className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <KpiCard kpi={kpi} />
+                  </Link>
+                ) : (
+                  <KpiCard key={kpi.id} kpi={kpi} />
+                ),
+              )}
         </div>
       </section>
 
@@ -43,11 +55,11 @@ export function MobileDashboardContent({
             Find Customer
           </Link>
           <Link
-            to="/orders/today"
+            to="/orders"
             className="flex flex-1 items-center gap-2 rounded-md border border-border px-3 py-2.5 text-body-sm font-medium"
           >
             <ClipboardList className="size-4 shrink-0" />
-            Today's Orders
+            Orders
           </Link>
         </div>
       </section>

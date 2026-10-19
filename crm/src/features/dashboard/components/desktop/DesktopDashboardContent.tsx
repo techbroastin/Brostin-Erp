@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom'
 import { LineChart } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
+import { buttonVariants } from '@/components/ui/button'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
 import { KpiCard, KpiCardSkeleton } from '@/components/shared/KpiCard'
 import { ActivityList, ActivityListSkeleton } from '@/features/dashboard/components/shared/ActivityList'
@@ -29,7 +31,19 @@ export function DesktopDashboardContent({
       <div className="grid grid-cols-4 gap-4">
         {isLoading
           ? [0, 1, 2, 3].map((i) => <KpiCardSkeleton key={i} />)
-          : summary?.kpis.map((kpi) => <KpiCard key={kpi.id} kpi={kpi} />)}
+          : summary?.kpis.map((kpi) =>
+              kpi.href ? (
+                <Link
+                  key={kpi.id}
+                  to={kpi.href}
+                  className="rounded-xl transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <KpiCard kpi={kpi} />
+                </Link>
+              ) : (
+                <KpiCard key={kpi.id} kpi={kpi} />
+              ),
+            )}
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -73,9 +87,14 @@ export function DesktopDashboardContent({
           </CardHeader>
           <CardContent>
             <p className="text-body-sm text-muted-foreground">
-              Loyalty summary lands with the Loyalty module (see docs/IMPLEMENTATION_PLAN.md Phase 9).
+              View customer points, rewards and loyalty activity.
             </p>
           </CardContent>
+          <CardFooter>
+            <Link to="/loyalty" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+              Open Loyalty
+            </Link>
+          </CardFooter>
         </Card>
       </div>
     </div>

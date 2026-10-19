@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { BellOff, Info, AlertTriangle, OctagonAlert } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DashboardEmptyState } from '@/features/dashboard/components/shared/DashboardEmptyState'
@@ -10,6 +11,7 @@ const severityConfig: Record<AlertSeverity, { icon: typeof Info; className: stri
   error: { icon: OctagonAlert, className: 'text-destructive' },
 }
 
+/** Each alert links to where it can be resolved when `href` is set — see dashboard.mock.ts. */
 export function AlertList({ items }: { items: AlertItem[] }) {
   if (items.length === 0) {
     return <DashboardEmptyState icon={BellOff} message="No alerts right now." />
@@ -19,10 +21,25 @@ export function AlertList({ items }: { items: AlertItem[] }) {
     <ul className="flex flex-col gap-3">
       {items.map((item) => {
         const { icon: Icon, className } = severityConfig[item.severity]
-        return (
-          <li key={item.id} className="flex items-start gap-2">
+        const content = (
+          <>
             <Icon className={cn('mt-0.5 size-4 shrink-0', className)} />
             <p className="text-body-sm">{item.message}</p>
+          </>
+        )
+
+        return (
+          <li key={item.id}>
+            {item.href ? (
+              <Link
+                to={item.href}
+                className="flex items-start gap-2 rounded-md -mx-1 px-1 py-0.5 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {content}
+              </Link>
+            ) : (
+              <div className="flex items-start gap-2">{content}</div>
+            )}
           </li>
         )
       })}

@@ -13,6 +13,8 @@ export type DashboardKpi = {
   value: string
   trend?: TrendDirection
   trendLabel?: string
+  /** Module this KPI opens, e.g. '/orders'. Omitted when no single destination exists. */
+  href?: string
 }
 
 export type ActivityItem = {
@@ -20,6 +22,8 @@ export type ActivityItem = {
   title: string
   detail: string
   timestamp: string
+  /** Route to the specific record this activity refers to — a real, existing order/customer id. */
+  href?: string
 }
 
 export type AlertSeverity = 'info' | 'warning' | 'error'
@@ -28,6 +32,8 @@ export type AlertItem = {
   id: string
   message: string
   severity: AlertSeverity
+  /** Route to where this alert can be resolved. */
+  href?: string
 }
 
 export type DashboardSummary = {
