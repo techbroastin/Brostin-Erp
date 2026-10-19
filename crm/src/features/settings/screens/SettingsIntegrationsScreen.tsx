@@ -1,9 +1,10 @@
-import { useIsDesktopViewport } from '@/hooks/use-viewport'
-import { MobileSettingsContent } from '@/features/settings/components/mobile/MobileSettingsContent'
-import { DesktopIntegrationsSettingsContent } from '@/features/settings/components/desktop/DesktopIntegrationsSettingsContent'
+import { PosConnectionsScreen } from '@/features/pos-integrations'
 
-/** Integrations Settings route element — /settings/integrations. */
+/**
+ * Integrations Settings route element — /settings/integrations.
+ * Delegates to the POS Integrations feature (approved Phase 18b
+ * multi-vendor POS Connections hub) — see features/pos-integrations.
+ */
 export function SettingsIntegrationsScreen() {
-  const isDesktop = useIsDesktopViewport()
-  return isDesktop ? <DesktopIntegrationsSettingsContent /> : <MobileSettingsContent />
+  return <PosConnectionsScreen />
 }

@@ -2,7 +2,6 @@ import type {
   GeneralSettings,
   SettingsUser,
   NotificationPreference,
-  IntegrationStatus,
 } from '@/features/settings/types/settings'
 
 /**
@@ -13,8 +12,9 @@ import type {
  *
  * General settings, users and notification preferences are mutable in
  * memory, same discipline as campaigns.mock.ts/automation.mock.ts —
- * session-only, lost on reload. Integrations is a static, non-mutable
- * list (nothing is configurable yet).
+ * session-only, lost on reload. POS Integrations now has its own
+ * feature-local mock store — see features/pos-integrations/mock/
+ * posIntegrations.mock.ts.
  *
  * Illustrative placeholders only — not real business records. See
  * DemoDataBadge wherever this data renders.
@@ -65,12 +65,6 @@ export function getNotificationPreferencesStore(): NotificationPreference[] {
 export function setNotificationPreferenceInStore(id: string, enabled: boolean): void {
   notificationPreferences = notificationPreferences.map((p) => (p.id === id ? { ...p, enabled } : p))
 }
-
-/** Static — nothing is configurable until the relevant integration is defined. */
-export const integrationStatuses: IntegrationStatus[] = [
-  { id: 'manageme', name: 'ManageMe' },
-  { id: 'qr-ordering', name: 'QR Ordering' },
-]
 
 export const ERROR_SCENARIO_FLAG = 'error'
 

@@ -103,6 +103,16 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
  * authentication, notification delivery, or integration configuration
  * exists or is implied anywhere.
  *
+ * /settings/integrations now delegates to features/pos-integrations
+ * (docs/IMPLEMENTATION_PLAN.md §21 "Phase 18 — ManageMe Integration
+ * Boundary", generalized to a vendor-neutral multi-POS hub per the
+ * approved Phase 18b scope). /settings/integrations/new and
+ * /settings/integrations/:connectionId are nested, non-menu routes —
+ * same pattern as /automation/new and /automation/:workflowId — and
+ * fall back to the shared MobileSettingsContent on mobile like every
+ * other /settings/* route. Mock-only throughout: no real ManageMe or
+ * Petpooja API is ever called.
+ *
  * Other per-module routes not yet built arrive module-by-module in
  * their own future phases, one hamburger/sidebar section at a time,
  * per docs/NAVIGATION.md §33 and docs/CLAUDE.md §11. /orders/today is
@@ -412,6 +422,20 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { SettingsIntegrationsScreen } = await import('@/features/settings')
           return { Component: SettingsIntegrationsScreen }
+        },
+      },
+      {
+        path: 'settings/integrations/new',
+        lazy: async () => {
+          const { AddPosConnectionScreen } = await import('@/features/pos-integrations')
+          return { Component: AddPosConnectionScreen }
+        },
+      },
+      {
+        path: 'settings/integrations/:connectionId',
+        lazy: async () => {
+          const { PosConnectionDetailScreen } = await import('@/features/pos-integrations')
+          return { Component: PosConnectionDetailScreen }
         },
       },
       {

@@ -35,11 +35,6 @@ export type NotificationPreference = {
   enabled: boolean
 }
 
-export type IntegrationStatus = {
-  id: string
-  name: string
-}
-
 export type AddSettingsUserInput = {
   name: string
   email: string
