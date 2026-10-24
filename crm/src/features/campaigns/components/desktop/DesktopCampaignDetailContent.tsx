@@ -12,6 +12,7 @@ import { CampaignPreviewCard } from '@/features/campaigns/components/desktop/Cam
 import { CampaignPerformanceCard } from '@/features/campaigns/components/desktop/CampaignPerformanceCard'
 import { Badge } from '@/components/ui/badge'
 import type { Campaign, CampaignSummary } from '@/features/campaigns/types/campaign'
+import { permissionMessage } from '@/features/auth/utils/permissionMessage'
 
 /**
  * docs/DESKTOP_UI_SPEC.md — denser multi-column layout. "Mark as Sent"
@@ -41,9 +42,10 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: CampaignS
     },
     onError: (error) =>
       setActionError(
-        error instanceof Error && /segment|already been sent/.test(error.message)
-          ? error.message
-          : 'Could not send this campaign. Please try again.',
+        permissionMessage(error) ??
+          (error instanceof Error && /segment|already been sent/.test(error.message)
+            ? error.message
+            : 'Could not send this campaign. Please try again.'),
       ),
   })
 

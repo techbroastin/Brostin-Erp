@@ -17,6 +17,7 @@ import {
   type MergeConflict,
 } from '@/features/customers/utils/customerMerge'
 import { previewImport, type ImportPreview } from '@/features/customers/utils/customerImport'
+import { requirePermission } from '@/features/auth/services/authService'
 
 const SIMULATED_LATENCY_MS = 500
 
@@ -115,6 +116,7 @@ function findCustomer(id: string): Customer {
  * drop out of lists, segments and campaigns but keep their history.
  */
 export async function archiveCustomer(id: string, reason: string): Promise<Customer> {
+  requirePermission('customers')
   await delay()
   const customer = findCustomer(id)
   if (customer.archivedAt) return customer
@@ -131,6 +133,7 @@ export async function archiveCustomer(id: string, reason: string): Promise<Custo
 
 /** Merged records stay archived — restoring one would bring the duplicate back. */
 export async function restoreCustomer(id: string): Promise<Customer> {
+  requirePermission('customers')
   await delay()
   const customer = findCustomer(id)
   if (customer.mergedIntoId) throw new Error('This record was merged into another customer and can’t be restored.')
@@ -175,6 +178,7 @@ export async function getMergePreview(primaryId: string, secondaryId: string): P
  * them is a backend step.
  */
 export async function mergeCustomers(primaryId: string, secondaryId: string, choices: MergeChoices): Promise<Customer> {
+  requirePermission('customers')
   const { primary, secondary, conflicts } = await getMergePreview(primaryId, secondaryId)
   const merged = combineCustomers(primary, secondary, choices)
   replaceCustomerInStore(merged)
@@ -220,6 +224,7 @@ export type ImportResult = {
  * never overwritten — the customer is flagged for review instead.
  */
 export async function importCustomers(text: string): Promise<ImportResult> {
+  requirePermission('customers')
   const preview = await previewCustomerImport(text)
   if (preview.missingColumns.length > 0 || preview.tooManyRows) throw new Error('This file can’t be imported.')
 

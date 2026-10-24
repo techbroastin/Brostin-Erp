@@ -13,6 +13,7 @@ import {
 import { listSegments } from '@/features/segments/services/segmentService'
 import { recordAudit } from '@/features/audit/services/auditService'
 import { OCCASION_LABELS } from '@/features/campaigns/utils/personalize'
+import { requirePermission } from '@/features/auth/services/authService'
 
 /** Resolves segment names; the Segments service also supplies the simulated latency. */
 async function withSegmentNames(templates: CampaignTemplate[]): Promise<CampaignTemplateSummary[]> {
@@ -43,6 +44,7 @@ function assertUniqueName(name: string, exceptId?: string) {
 }
 
 export async function createTemplate(input: TemplateInput): Promise<CampaignTemplate> {
+  requirePermission('campaigns')
   await listSegments()
   assertUniqueName(input.name)
   const now = new Date().toISOString()
@@ -58,6 +60,7 @@ export async function createTemplate(input: TemplateInput): Promise<CampaignTemp
 }
 
 export async function updateTemplate(id: string, input: TemplateInput): Promise<CampaignTemplate> {
+  requirePermission('campaigns')
   await listSegments()
   const existing = getTemplateStore().find((t) => t.id === id)
   if (!existing) throw new Error('Template not found.')
@@ -80,6 +83,7 @@ export async function updateTemplate(id: string, input: TemplateInput): Promise<
 
 /** Campaigns copy a template's text when created, so deleting one never changes existing campaigns. */
 export async function deleteTemplate(id: string): Promise<void> {
+  requirePermission('campaigns')
   await listSegments()
   const existing = getTemplateStore().find((t) => t.id === id)
   if (!existing) return

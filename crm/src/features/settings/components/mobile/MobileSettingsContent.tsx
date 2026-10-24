@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { buttonVariants } from '@/components/ui/button'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
+import { useSignOut } from '@/features/auth/hooks/useAuth'
 import { SettingsErrorState } from '@/features/settings/components/shared/SettingsErrorState'
 import { useSettingsGeneral, settingsGeneralQueryKey } from '@/features/settings/hooks/useSettingsGeneral'
 import {
@@ -25,11 +26,11 @@ import {
  * Notifications, Preferences, App, Logout). Account and Notifications
  * reuse the exact same shared mock data/service as Desktop Admin;
  * Preferences and App are static placeholders — nothing is invented
- * for groups with no corresponding data. Logout stays inert (no
- * session exists to tear down).
+ * for groups with no corresponding data. Logout signs out (features/auth).
  */
 export function MobileSettingsContent() {
   const queryClient = useQueryClient()
+  const signOut = useSignOut()
 
   const { data: general, isPending: generalPending, isError: generalError, refetch: refetchGeneral } =
     useSettingsGeneral()
@@ -163,6 +164,7 @@ export function MobileSettingsContent() {
       <section className="flex flex-col gap-2 border-t border-border pt-4">
         <button
           type="button"
+          onClick={signOut}
           className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-body font-medium text-foreground hover:bg-muted"
         >
           <LogOut className="size-5 shrink-0" />

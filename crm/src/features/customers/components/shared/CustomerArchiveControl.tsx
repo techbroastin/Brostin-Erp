@@ -6,6 +6,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { useArchiveCustomer, useRestoreCustomer } from '@/features/customers/hooks/useCustomerTools'
 import type { Customer } from '@/features/customers/types/customer'
 import { cn } from '@/lib/utils'
+import { permissionMessage } from '@/features/auth/utils/permissionMessage'
 
 /**
  * Book 3 §1 archive — never delete. Shows the archived banner (with the
@@ -41,7 +42,11 @@ export function CustomerArchiveControl({ customer }: { customer: Customer }) {
             {restore.isPending ? 'Restoring…' : 'Restore customer'}
           </button>
         )}
-        {restore.isError && <p className="text-caption text-destructive">Could not restore. Please try again.</p>}
+        {restore.isError && (
+          <p className="text-caption text-destructive">
+            {permissionMessage(restore.error) ?? 'Could not restore. Please try again.'}
+          </p>
+        )}
       </div>
     )
   }
@@ -91,7 +96,11 @@ export function CustomerArchiveControl({ customer }: { customer: Customer }) {
           {archive.isPending ? 'Archiving…' : 'Archive customer'}
         </button>
       </div>
-      {archive.isError && <p className="text-caption text-destructive">Could not archive. Please try again.</p>}
+      {archive.isError && (
+        <p className="text-caption text-destructive">
+          {permissionMessage(archive.error) ?? 'Could not archive. Please try again.'}
+        </p>
+      )}
     </div>
   )
 }

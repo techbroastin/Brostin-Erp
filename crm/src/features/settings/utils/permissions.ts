@@ -3,9 +3,10 @@ import type { SettingsUserRole } from '@/features/settings/types/settings'
 /**
  * Book 3 §14 MVP permission matrix — the owner-approved starting point
  * for the four fixed roles, at module level only (button/field-level
- * permissions are Phase 2). NOT ENFORCED yet: there is no sign-in, and
- * real enforcement must live in the backend/database (docs/CLAUDE.md
- * §23), with this table only shaping the UI.
+ * permissions are Phase 2). Applied in the app since demo sign-in
+ * (features/auth: menus, page access, and authService.requirePermission
+ * in every changing service). Real enforcement must still live in the
+ * backend/database (docs/CLAUDE.md §23).
  */
 
 export type AccessLevel = 'manage' | 'view' | 'none'

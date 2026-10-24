@@ -14,6 +14,7 @@ import { getSegmentDetail, listSegments } from '@/features/segments/services/seg
 import { getRewards, listLoyaltyActivity } from '@/features/loyalty/services/loyaltyService'
 import { getCustomerById } from '@/features/customers/services/customerService'
 import { recordAudit } from '@/features/audit/services/auditService'
+import { requirePermission } from '@/features/auth/services/authService'
 
 /**
  * Book 3 §2 Program Engine (MVP: loyalty programs). Programs are
@@ -82,6 +83,7 @@ function auditSummary(p: Pick<Program, 'trigger' | 'visitInterval' | 'reward' | 
 }
 
 export async function createProgram(input: ProgramInput): Promise<Program> {
+  requirePermission('loyalty')
   await listSegments()
   assertUniqueName(input.name)
   const now = new Date().toISOString()
@@ -98,6 +100,7 @@ export async function createProgram(input: ProgramInput): Promise<Program> {
 
 /** Draft and paused programs can be edited; active ones must be paused first, archived ones are final. */
 export async function updateProgram(id: string, input: ProgramInput): Promise<Program> {
+  requirePermission('loyalty')
   await listSegments()
   const existing = find(id)
   if (existing.status === 'active') throw new Error('Pause this program before editing it.')
@@ -136,6 +139,7 @@ const ALLOWED: Record<ProgramStatus, ProgramStatus[]> = {
  * is final.
  */
 export async function setProgramStatus(id: string, status: ProgramStatus): Promise<Program> {
+  requirePermission('loyalty')
   await listSegments()
   const existing = find(id)
   if (!ALLOWED[existing.status].includes(status)) {

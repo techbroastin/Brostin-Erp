@@ -1,11 +1,11 @@
 import { Search, Bell } from 'lucide-react'
+import { ProfileMenu } from '@/features/auth/components/ProfileMenu'
 
 /**
  * Desktop top header — docs/DESKTOP_UI_SPEC.md §6, styled after the
- * owner's desktop UI reference. Search, notifications and the profile
- * are still non-functional placeholders (feature work, not shell work),
- * so nothing here is presented as a working button. There is no sign-in
- * yet; the profile shows the demo identity the Audit Log records.
+ * owner's desktop UI reference. Search and notifications are still
+ * non-functional placeholders, so neither is presented as a button.
+ * The profile is the signed-in user's account menu (ProfileMenu).
  */
 export function DesktopTopHeader() {
   return (
@@ -17,15 +17,7 @@ export function DesktopTopHeader() {
 
       <div className="ml-auto flex items-center gap-5">
         <Bell className="size-5 text-foreground/70" aria-hidden="true" />
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-full bg-brand-primary text-body font-semibold text-white">
-            A
-          </span>
-          <span className="flex flex-col leading-tight">
-            <span className="text-body-sm font-semibold">Arjun Nair</span>
-            <span className="text-caption text-muted-foreground">Owner · demo</span>
-          </span>
-        </div>
+        <ProfileMenu />
       </div>
     </header>
   )

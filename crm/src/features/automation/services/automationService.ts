@@ -24,6 +24,7 @@ import { fallbackLabel, publishProblems, simulateRun } from '@/features/automati
 import { getCustomerById } from '@/features/customers/services/customerService'
 import { getGeneralSettings } from '@/features/settings/services/settingsService'
 import { recordAudit } from '@/features/audit/services/auditService'
+import { requirePermission } from '@/features/auth/services/authService'
 
 const SIMULATED_LATENCY_MS = 500
 
@@ -117,6 +118,7 @@ function describeActions(actions: WorkflowAction[]): string {
  * 'draft' — creating a workflow never activates it.
  */
 export async function createWorkflow(input: WorkflowInput): Promise<Workflow> {
+  requirePermission('automation')
   await delay()
 
   const now = new Date().toISOString()
@@ -149,6 +151,7 @@ export async function createWorkflow(input: WorkflowInput): Promise<Workflow> {
  * edit means it needs testing again before it can go live as a draft.
  */
 export async function updateWorkflow(id: string, input: WorkflowInput): Promise<Workflow> {
+  requirePermission('automation')
   await delay()
   const existing = getWorkflowStore().find((w) => w.id === id)
   if (!existing) throw new Error('Workflow not found.')
@@ -201,6 +204,7 @@ export async function getPublishProblems(id: string): Promise<string[]> {
  * monitored yet — live runs need the POS/QR event feed.
  */
 export async function updateWorkflowStatus(id: string, status: WorkflowStatus): Promise<Workflow | null> {
+  requirePermission('automation')
   await delay()
   const existing = getWorkflowStore().find((w) => w.id === id)
   if (!existing) return null

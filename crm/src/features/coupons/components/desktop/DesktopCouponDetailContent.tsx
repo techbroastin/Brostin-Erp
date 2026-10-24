@@ -12,6 +12,7 @@ import { formatCalendarDate, formatTimestampDate } from '@/features/customers/ut
 import { downloadCsv } from '@/utils/downloadCsv'
 import type { CouponDetail } from '@/features/coupons/types/coupon'
 import { cn } from '@/lib/utils'
+import { permissionMessage } from '@/features/auth/utils/permissionMessage'
 
 /**
  * Coupon detail — settings, codes and this coupon's redemptions.
@@ -45,7 +46,9 @@ export function DesktopCouponDetailContent({ detail }: { detail: CouponDetail })
         </button>
       </div>
       {setDisabled.isError && (
-        <p className="text-caption text-destructive">Could not update this coupon. Please try again.</p>
+        <p className="text-caption text-destructive">
+          {permissionMessage(setDisabled.error) ?? 'Could not update this coupon. Please try again.'}
+        </p>
       )}
 
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] items-start gap-6">

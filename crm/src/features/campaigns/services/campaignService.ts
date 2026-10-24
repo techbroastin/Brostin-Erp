@@ -26,6 +26,7 @@ import { recordAudit } from '@/features/audit/services/auditService'
 import { getGeneralSettings, getMessagingRules } from '@/features/settings/services/settingsService'
 import { MESSAGE_CHANNEL_LABELS, type MessageChannel } from '@/features/settings/types/settings'
 import { firstName, personalize } from '@/features/campaigns/utils/personalize'
+import { requirePermission } from '@/features/auth/services/authService'
 
 const ALL_CUSTOMERS_PAGE_SIZE = 1000
 
@@ -139,6 +140,7 @@ export async function getCampaignOverview(
  * (Book 3 §4: always a defined segment).
  */
 export async function createCampaign(input: CreateCampaignInput): Promise<Campaign> {
+  requirePermission('campaigns')
   const segments = await listSegments()
   if (!segments.some((s) => s.id === input.segmentId)) {
     throw new Error('Pick a segment for this campaign.')
@@ -175,6 +177,7 @@ export async function updateCampaignStatus(
   id: string,
   status: CampaignStatus,
 ): Promise<Campaign | null> {
+  requirePermission('campaigns')
   await listSegments()
   return updateCampaignStatusInStore(id, status)
 }
@@ -211,6 +214,7 @@ function scheduleNextYear(sent: Campaign): Campaign | null {
 export async function sendCampaign(
   id: string,
 ): Promise<{ campaign: Campaign; delivery: DispatchSummary; nextYear: Campaign | null }> {
+  requirePermission('campaigns')
   const campaign = getCampaignStore().find((c) => c.id === id)
   if (!campaign) throw new Error('Campaign not found.')
   if (campaign.status === 'sent') throw new Error('This campaign has already been sent.')
@@ -285,6 +289,7 @@ export type TestSendResult = {
  * it skips the weekly limit and the Message Log — but it is audited.
  */
 export async function sendTestMessage(id: string, phone: string): Promise<TestSendResult> {
+  requirePermission('campaigns')
   const campaign = getCampaignStore().find((c) => c.id === id)
   if (!campaign) throw new Error('Campaign not found.')
   const to = phone.trim()

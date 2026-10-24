@@ -16,6 +16,7 @@ import {
   type PosIntegrationsMockScenario,
 } from '@/features/pos-integrations/mock/posIntegrations.mock'
 import { getMockAdapter } from '@/features/pos-integrations/mock/mockAdapters'
+import { requirePermission } from '@/features/auth/services/authService'
 
 const SIMULATED_LATENCY_MS = 500
 
@@ -54,6 +55,7 @@ export async function getPosSyncLogs(connectionId: string): Promise<PosSyncLogEn
  * never establishes a real vendor connection.
  */
 export async function addPosConnection(input: AddPosConnectionInput): Promise<PosConnection> {
+  requirePermission('settings')
   await delay()
 
   const connection: PosConnection = {
@@ -97,6 +99,7 @@ export async function testPosConnection(connection: PosConnection): Promise<PosT
  * Test Connection must be run again.
  */
 export async function setPosConnectionDisabled(id: string, disabled: boolean): Promise<PosConnection | null> {
+  requirePermission('settings')
   await delay()
   return setConnectionStatusInStore(id, disabled ? 'disabled' : 'pending')
 }

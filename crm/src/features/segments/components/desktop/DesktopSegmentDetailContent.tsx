@@ -10,6 +10,7 @@ import { useDeleteSegment } from '@/features/segments/hooks/useSegments'
 import { formatLastCalculated } from '@/features/segments/utils/segmentFormat'
 import { formatRupees, formatTimestampDate } from '@/features/customers/utils/customerFormat'
 import type { SegmentDetail } from '@/features/segments/types/segment'
+import { permissionMessage } from '@/features/auth/utils/permissionMessage'
 
 /**
  * Desktop Segment Membership Preview — rules + stats column beside the
@@ -76,7 +77,9 @@ export function DesktopSegmentDetailContent({ detail }: { detail: SegmentDetail 
         )}
       </div>
       {deleteSegment.isError && (
-        <p className="text-caption text-destructive">Could not delete this segment. Please try again.</p>
+        <p className="text-caption text-destructive">
+          {permissionMessage(deleteSegment.error) ?? 'Could not delete this segment. Please try again.'}
+        </p>
       )}
 
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-6">

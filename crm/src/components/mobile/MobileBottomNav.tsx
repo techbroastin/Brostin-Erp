@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
 import { ClipboardList, Gift, House, LayoutGrid, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useCurrentUser } from '@/features/auth/hooks/useAuth'
+import { accessFor } from '@/features/auth/utils/access'
 
 /**
  * Mobile bottom tab bar — owner-approved (docs/NAVIGATION.md §25 named
@@ -17,7 +19,10 @@ const TABS = [
 
 export function MobileBottomNav({ onMoreClick, moreOpen }: { onMoreClick: () => void; moreOpen: boolean }) {
   const { pathname } = useLocation()
-  const tabActive = TABS.some((t) => pathname.startsWith(t.path))
+  const user = useCurrentUser()
+  // Tabs a role can't open are left out (e.g. Orders for a Marketing Operator).
+  const tabs = TABS.filter((t) => user && accessFor(user.role, t.path) !== 'none')
+  const tabActive = tabs.some((t) => pathname.startsWith(t.path))
 
   const itemClass = (active: boolean) =>
     cn(
@@ -31,7 +36,7 @@ export function MobileBottomNav({ onMoreClick, moreOpen }: { onMoreClick: () => 
       className="shrink-0 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_8px_rgba(16,24,40,0.05)]"
     >
       <ul className="flex">
-        {TABS.map(({ label, path, icon: Icon }) => {
+        {tabs.map(({ label, path, icon: Icon }) => {
           const active = pathname.startsWith(path)
           return (
             <li key={path} className="flex flex-1">

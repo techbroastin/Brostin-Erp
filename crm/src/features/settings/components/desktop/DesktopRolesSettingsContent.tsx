@@ -20,8 +20,9 @@ const LEVEL_DISPLAY: Record<AccessLevel, { label: string; icon: typeof Eye; clas
 /**
  * Desktop Roles & Access — Book 3 §14's four fixed roles and the
  * owner-approved starting matrix (utils/permissions.ts). Read-only;
- * button/field-level permissions are Phase 2. Not enforced until
- * sign-in exists, which the notice says plainly.
+ * button/field-level permissions are Phase 2. Applied by the app
+ * since demo sign-in (menus, page access, and every change in the
+ * services); server-side enforcement comes with Supabase.
  */
 export function DesktopRolesSettingsContent() {
   return (
@@ -32,8 +33,9 @@ export function DesktopRolesSettingsContent() {
       </div>
 
       <p className="max-w-3xl rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-body-sm">
-        <strong>Not enforced yet.</strong> There is no sign-in in this app yet, so everyone currently has full access.
-        These rules will be applied when sign-in is added, and checked on the server — not just by hiding buttons.
+        <strong>Applied in the app (demo sign-in).</strong> Each role sees only its menus, can't open pages marked
+        None, and can't save changes where it has View only. These checks run in the browser, so they become real
+        security once Supabase sign-in checks them on the server too.
       </p>
 
       <Card>

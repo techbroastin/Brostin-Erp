@@ -19,6 +19,7 @@ import {
   type CouponMockScenario,
   type MockRedemption,
 } from '@/features/coupons/mock/coupons.mock'
+import { requirePermission } from '@/features/auth/services/authService'
 
 const ALL_CUSTOMERS_PAGE_SIZE = 1000
 
@@ -122,6 +123,7 @@ export async function listRedemptions(
  * limit equals the number of codes.
  */
 export async function createCoupon(input: CreateCouponInput): Promise<Coupon> {
+  requirePermission('campaigns')
   await getCustomerNames()
   const taken = new Set(getCouponStore().flatMap((c) => c.codes))
 
@@ -164,6 +166,7 @@ export async function createCoupon(input: CreateCouponInput): Promise<Coupon> {
 
 /** Switch a coupon off (or back on). Past redemptions are kept. */
 export async function setCouponDisabled(id: string, disabled: boolean): Promise<Coupon> {
+  requirePermission('campaigns')
   await getCustomerNames()
   const existing = getCouponStore().find((c) => c.id === id)
   if (!existing) throw new Error('Coupon not found.')

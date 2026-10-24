@@ -21,6 +21,7 @@ import {
 } from '@/features/loyalty/mock/loyalty.mock'
 import { listCustomers } from '@/features/customers/services/customerService'
 import { recordAudit } from '@/features/audit/services/auditService'
+import { requirePermission } from '@/features/auth/services/authService'
 
 const SIMULATED_LATENCY_MS = 500
 
@@ -177,6 +178,7 @@ export async function getRewards(scenario: LoyaltyMockScenario = 'normal'): Prom
  * programs may still point at a reward.
  */
 export async function saveReward(id: string | undefined, input: RewardInput): Promise<Reward> {
+  requirePermission('loyalty')
   await delay()
 
   const name = input.name.trim()

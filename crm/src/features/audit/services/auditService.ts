@@ -1,5 +1,6 @@
-import type { AuditEntry, AuditEntryInput, AuditListParams } from '@/features/audit/types/audit'
-import { DEMO_ACTOR, appendAuditEntry, getAuditStore } from '@/features/audit/mock/audit.mock'
+import type { AuditActor, AuditEntry, AuditEntryInput, AuditListParams } from '@/features/audit/types/audit'
+import { appendAuditEntry, getAuditStore } from '@/features/audit/mock/audit.mock'
+import { getSession } from '@/features/auth/services/sessionStore'
 
 const SIMULATED_LATENCY_MS = 500
 /** Repeat views of the same record by the same person within this window are logged once. */
@@ -9,15 +10,23 @@ let nextId = 1
 
 /**
  * Book 3 §14 Audit Engine. Other features call recordAudit() after a
- * successful change; nothing here can edit or delete an entry. This is
- * a leaf module — it imports no other feature — so any service can use
- * it without circular imports.
+ * successful change; nothing here can edit or delete an entry. Imports
+ * only the auth session store (itself a leaf) for "who did it", so any
+ * service can use it without circular imports.
  */
+const SIGNED_OUT_ACTOR: AuditActor = { id: 'signed-out', name: 'Signed-out user', roleLabel: '—' }
+
+/** The signed-in person, with their role at the time of the action. */
+function currentActor(): AuditActor {
+  const session = getSession()
+  return session ? { id: session.userId, name: session.name, roleLabel: session.roleLabel } : SIGNED_OUT_ACTOR
+}
+
 export function recordAudit(input: AuditEntryInput): AuditEntry {
   const entry: AuditEntry = {
     id: `aud-${Date.now()}-${nextId++}`,
     at: new Date().toISOString(),
-    actor: DEMO_ACTOR,
+    actor: currentActor(),
     ...input,
   }
   appendAuditEntry(entry)
@@ -33,7 +42,7 @@ export function recordView(input: AuditEntryInput): void {
   const cutoff = Date.now() - VIEW_DEDUPE_MS
   const recent = getAuditStore().some(
     (e) =>
-      e.actor.id === DEMO_ACTOR.id &&
+      e.actor.id === currentActor().id &&
       e.action === input.action &&
       e.target.id === input.target.id &&
       new Date(e.at).getTime() >= cutoff,

@@ -20,6 +20,7 @@ import {
   ERROR_SCENARIO_FLAG,
   type SegmentMockScenario,
 } from '@/features/segments/mock/segments.mock'
+import { requirePermission } from '@/features/auth/services/authService'
 
 const ALL_CUSTOMERS_PAGE_SIZE = 1000
 const PREVIEW_SAMPLE_SIZE = 8
@@ -112,6 +113,7 @@ function assertCustom(id: string): Segment {
  * lastCalculatedAt until the next nightly run (Book 3 §10).
  */
 export async function createSegment(input: SegmentInput): Promise<Segment> {
+  requirePermission('segments')
   await getAllCustomers()
   assertUniqueName(input.name)
   const now = new Date().toISOString()
@@ -142,6 +144,7 @@ function describeDefinition(segment: Pick<Segment, 'match' | 'rules'>): string {
 
 /** Editing rules invalidates the last calculation until the next nightly run. */
 export async function updateSegment(id: string, input: SegmentInput): Promise<Segment> {
+  requirePermission('segments')
   await getAllCustomers()
   const existing = assertCustom(id)
   assertUniqueName(input.name, id)
@@ -170,6 +173,7 @@ export async function updateSegment(id: string, input: SegmentInput): Promise<Se
 }
 
 export async function deleteSegment(id: string): Promise<void> {
+  requirePermission('segments')
   await getAllCustomers()
   const existing = assertCustom(id)
   removeSegmentFromStore(id)

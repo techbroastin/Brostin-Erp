@@ -8,6 +8,8 @@ import type {
 } from '@/features/settings/types/settings'
 import { MESSAGE_CHANNEL_LABELS, ROLE_LABELS } from '@/features/settings/types/settings'
 import { diffFields, recordAudit } from '@/features/audit/services/auditService'
+import { requirePermission } from '@/features/auth/services/authService'
+import { getSession, notifySessionChanged } from '@/features/auth/services/sessionStore'
 import {
   getGeneralSettingsStore,
   setGeneralSettingsStore,
@@ -48,6 +50,7 @@ export async function getGeneralSettings(
 
 export async function updateGeneralSettings(input: GeneralSettings): Promise<GeneralSettings> {
   await delay()
+  requirePermission('settings')
   const before = getGeneralSettingsStore()
   const saved = setGeneralSettingsStore(input)
   const changes = diffFields(before, saved, {
@@ -77,8 +80,26 @@ export async function listSettingsUsers(
   return getUsersStore()
 }
 
+/**
+ * Synchronous lookups for sign-in (features/auth) — no simulated
+ * latency, since the auth check runs on every change.
+ */
+export function findSettingsUserById(id: string): SettingsUser | null {
+  return getUsersStore().find((u) => u.id === id) ?? null
+}
+
+export function findSettingsUserByEmail(email: string): SettingsUser | null {
+  const wanted = email.trim().toLowerCase()
+  return getUsersStore().find((u) => u.email.toLowerCase() === wanted) ?? null
+}
+
 export async function addSettingsUser(input: AddSettingsUserInput): Promise<SettingsUser> {
   await delay()
+  requirePermission('settings')
+  // The email is the sign-in name, so it must be unique.
+  if (findSettingsUserByEmail(input.email)) {
+    throw new Error(`A user with the email ${input.email.trim()} already exists.`)
+  }
   const user: SettingsUser = {
     id: `user-${Date.now()}`,
     name: input.name,
@@ -105,10 +126,13 @@ function assertNotLastOwner(user: SettingsUser) {
 export async function updateSettingsUserRole(id: string, role: SettingsUserRole): Promise<SettingsUser> {
   await delay()
   const user = getUsersStore().find((u) => u.id === id)
+  requirePermission('settings')
   if (!user) throw new Error('User not found.')
   if (user.role === role) return user
   if (role !== 'owner') assertNotLastOwner(user)
   const updated = setUserRoleInStore(id, role) as SettingsUser
+  // The signed-in user's own access may have just changed.
+  notifySessionChanged()
   recordAudit({
     category: 'user_access',
     action: 'Changed user role',
@@ -120,10 +144,13 @@ export async function updateSettingsUserRole(id: string, role: SettingsUserRole)
 
 export async function removeSettingsUser(id: string): Promise<void> {
   await delay()
+  requirePermission('settings')
   const user = getUsersStore().find((u) => u.id === id)
   if (!user) return
+  if (getSession()?.userId === id) throw new Error("You can't remove your own account.")
   assertNotLastOwner(user)
   removeUserFromStore(id)
+  notifySessionChanged()
   recordAudit({
     category: 'user_access',
     action: 'Removed user',
@@ -147,6 +174,7 @@ export async function updateNotificationPreference(
   enabled: boolean,
 ): Promise<NotificationPreference[]> {
   await delay()
+  requirePermission('settings')
   const pref = getNotificationPreferencesStore().find((p) => p.id === id)
   setNotificationPreferenceInStore(id, enabled)
   if (pref && pref.enabled !== enabled) {
@@ -173,6 +201,7 @@ const describeChannels = (rules: MessagingRules) =>
 
 export async function updateMessagingRules(rules: MessagingRules): Promise<MessagingRules> {
   await delay()
+  requirePermission('settings')
   const before = getMessagingRulesStore()
   const saved = setMessagingRulesStore(rules)
   const changes = diffFields(

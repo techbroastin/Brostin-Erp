@@ -92,7 +92,8 @@ describe('features write to the audit log', () => {
     expect(latest.changes).toEqual([{ field: 'Role', from: 'Staff', to: 'Manager' }])
 
     await expect(settings.updateSettingsUserRole('user-001', 'manager')).rejects.toThrow('at least one Owner')
-    await expect(settings.removeSettingsUser('user-001')).rejects.toThrow('at least one Owner')
+    // user-001 is also the signed-in test user, so self-removal is refused first.
+    await expect(settings.removeSettingsUser('user-001')).rejects.toThrow('your own account')
   })
 
   test('settings: saving unchanged general settings logs nothing', async () => {

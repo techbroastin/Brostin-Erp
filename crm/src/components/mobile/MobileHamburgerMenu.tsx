@@ -7,14 +7,16 @@ import {
   SheetTitle,
   SheetFooter,
 } from '@/components/ui/sheet'
-import { navigationModules } from '@/app/navigation'
+import { useCurrentUser, useSignOut } from '@/features/auth/hooks/useAuth'
+import { visibleModules } from '@/features/auth/utils/access'
 import { BrandMark } from '@/components/shared/BrandMark'
 import { cn } from '@/lib/utils'
 
 /**
  * Mobile hamburger drawer content — docs/MOBILE_UI_SPEC.md §8. Lists only
  * `mobileVisible` modules from the single shared navigation definition
- * (Campaigns and Automation are excluded here, never by a separate list).
+ * (Campaigns and Automation are excluded here, never by a separate list)
+ * that the signed-in role may open.
  * Mobile-only; never imported by desktop files.
  *
  * Opens from the left — docs/MOBILE_UI_SPEC.md §5 marks the side as NOT
@@ -28,7 +30,9 @@ export function MobileHamburgerMenu({
   onOpenChange: (open: boolean) => void
 }) {
   const location = useLocation()
-  const mobileModules = navigationModules.filter((module) => module.mobileVisible)
+  const user = useCurrentUser()
+  const signOut = useSignOut()
+  const mobileModules = (user ? visibleModules(user.role) : []).filter((module) => module.mobileVisible)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -68,6 +72,10 @@ export function MobileHamburgerMenu({
         <SheetFooter className="border-t border-border">
           <button
             type="button"
+            onClick={() => {
+              onOpenChange(false)
+              signOut()
+            }}
             className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-body font-medium text-foreground hover:bg-muted"
           >
             <LogOut className="size-5 shrink-0" />

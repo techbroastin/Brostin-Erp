@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { MobileHeader } from '@/components/mobile/MobileHeader'
 import { MobileHamburgerMenu } from '@/components/mobile/MobileHamburgerMenu'
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav'
 import { navigationModules } from '@/app/navigation'
+import { GuardedOutlet } from '@/features/auth/components/GuardedOutlet'
 
 /**
  * Mobile Manager shell — docs/MOBILE_UI_SPEC.md. Composes MobileHeader +
@@ -29,7 +30,7 @@ export function MobileShellLayout() {
       />
       <MobileHamburgerMenu open={menuOpen} onOpenChange={setMenuOpen} />
       <main className="flex-1 overflow-y-auto">
-        <Outlet />
+        <GuardedOutlet className="mx-4 mt-4" />
       </main>
       <MobileBottomNav moreOpen={menuOpen} onMoreClick={() => setMenuOpen(true)} />
     </div>

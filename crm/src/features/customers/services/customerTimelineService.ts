@@ -14,6 +14,7 @@ import { listOrders } from '@/features/orders/services/orderService'
 import { listLoyaltyActivity } from '@/features/loyalty/services/loyaltyService'
 import { listFeedback } from '@/features/feedback/services/feedbackService'
 import { listCustomers } from '@/features/customers/services/customerService'
+import { requirePermission } from '@/features/auth/services/authService'
 
 const SIMULATED_LATENCY_MS = 500
 
@@ -152,6 +153,7 @@ export async function addCustomerTimelineNote(input: {
   detail: string
   correctsEventId?: string | null
 }): Promise<CustomerTimelineEvent> {
+  requirePermission('customers')
   await delay()
 
   const event: CustomerTimelineEvent = {

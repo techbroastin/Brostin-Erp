@@ -133,6 +133,18 @@ export const router = createBrowserRouter([
       return { Component: PublicFeedbackCaptureScreen }
     },
   },
+  /**
+   * Sign-in — shell-less like the review page above (Auth Layout,
+   * docs/FRONTEND_ARCHITECTURE.md). Everything under '/' requires a
+   * signed-in user; RootLayout sends visitors here with ?next=.
+   */
+  {
+    path: 'sign-in',
+    lazy: async () => {
+      const { SignInScreen } = await import('@/features/auth')
+      return { Component: SignInScreen }
+    },
+  },
   {
     path: '/',
     element: <RootLayout />,
