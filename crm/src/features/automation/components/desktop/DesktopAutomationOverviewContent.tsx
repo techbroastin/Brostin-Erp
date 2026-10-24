@@ -7,6 +7,7 @@ import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
 import { KpiCard, KpiCardSkeleton, type KpiCardData } from '@/components/shared/KpiCard'
 import { AutomationErrorState } from '@/features/automation/components/shared/AutomationErrorState'
 import { getAutomationOverview } from '@/features/automation/services/automationService'
+import { WorkflowRunLog } from '@/features/automation/components/desktop/WorkflowRunLog'
 
 /**
  * Desktop Automation Overview — canonical docs/IMPLEMENTATION_PLAN.md
@@ -65,6 +66,8 @@ export function DesktopAutomationOverviewContent() {
               </Link>
             </CardContent>
           </Card>
+
+          <WorkflowRunLog limit={10} />
         </>
       )}
     </div>

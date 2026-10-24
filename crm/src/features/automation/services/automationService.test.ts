@@ -90,7 +90,7 @@ describe('automationService', () => {
       name: 'Test Workflow',
       triggerType: 'order_placed',
       conditionTypes: [],
-      actionTypes: ['flag_for_review'],
+      actions: [{ type: 'flag_for_review' }],
       timing: 'immediate',
       delayMinutes: null,
     })
@@ -107,7 +107,7 @@ describe('automationService', () => {
       name: 'Immediate Workflow',
       triggerType: 'order_placed',
       conditionTypes: [],
-      actionTypes: ['flag_for_review'],
+      actions: [{ type: 'flag_for_review' }],
       timing: 'immediate',
       delayMinutes: 45,
     })
@@ -116,11 +116,11 @@ describe('automationService', () => {
   })
 
   test('updateWorkflowStatus transitions an existing workflow and returns it', async () => {
-    const updated = await service.updateWorkflowStatus('wf-002', 'active')
-    expect(updated?.status).toBe('active')
+    const updated = await service.updateWorkflowStatus('wf-001', 'paused')
+    expect(updated?.status).toBe('paused')
 
-    const refetched = await service.getWorkflowById('wf-002')
-    expect(refetched?.status).toBe('active')
+    const refetched = await service.getWorkflowById('wf-001')
+    expect(refetched?.status).toBe('paused')
   })
 
   test('updateWorkflowStatus returns null for an unknown workflow id', async () => {

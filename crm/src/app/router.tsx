@@ -75,16 +75,15 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
  * Automation (operational Phase 13 / canonical
  * docs/IMPLEMENTATION_PLAN.md "Phase 16 — Automation") adds the four
  * docs/NAVIGATION.md §12 routes (/automation, /automation/workflows,
- * /automation/new, /automation/:workflowId). Automation is DESKTOP
+ * /automation/new, /automation/:workflowId, plus the non-menu
+ * /automation/:workflowId/edit). Automation is DESKTOP
  * ADMIN ONLY (docs/NAVIGATION.md §19) — navigation.ts already had the
  * correct `mobileVisible: false` entry and is unchanged by this phase.
  * The dynamic :workflowId route is declared after the fixed
  * /automation/workflows and /automation/new paths, same ordering rule
- * as Feedback/Campaigns above. Mock-only, same discipline as
- * campaignService.ts: automationService.ts's createWorkflow/
- * updateWorkflowStatus mutate an in-memory store (session-only); no
- * automation engine, scheduler, condition evaluation, action
- * execution, or notification delivery exists or is implied anywhere.
+ * as Feedback/Campaigns above. Mock-only (session-only store). Book 3
+ * §3 Workflow Engine: rules are evaluated in Test mode and every run
+ * is logged; live runs need the POS/QR event feed (backend phase).
  *
  * Settings (operational Phase 14 / canonical
  * docs/IMPLEMENTATION_PLAN.md "Phase 17 — Settings") adds the six
@@ -491,6 +490,13 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { CreateWorkflowScreen } = await import('@/features/automation')
           return { Component: CreateWorkflowScreen }
+        },
+      },
+      {
+        path: 'automation/:workflowId/edit',
+        lazy: async () => {
+          const { EditWorkflowScreen } = await import('@/features/automation')
+          return { Component: EditWorkflowScreen }
         },
       },
       {

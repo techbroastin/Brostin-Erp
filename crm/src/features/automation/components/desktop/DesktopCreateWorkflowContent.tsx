@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
@@ -7,36 +7,55 @@ import { Input } from '@/components/ui/input'
 import { buttonVariants } from '@/components/ui/button'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
 import { useCreateWorkflow } from '@/features/automation/hooks/useCreateWorkflow'
-import { workflowSchema, type WorkflowFormValues } from '@/features/automation/schemas/workflowSchema'
+import { useUpdateWorkflow } from '@/features/automation/hooks/useWorkflowEngine'
+import {
+  EMPTY_WORKFLOW_FORM,
+  toWorkflowForm,
+  toWorkflowInput,
+  workflowSchema,
+  type WorkflowFormValues,
+} from '@/features/automation/schemas/workflowSchema'
 import {
   TRIGGER_LABELS,
   CONDITION_LABELS,
   ACTION_LABELS,
   type TriggerType,
   type ConditionType,
-  type ActionType,
+  type Workflow,
 } from '@/features/automation/types/automation'
+import { fallbackLabel } from '@/features/automation/utils/workflowEngine'
+import { MESSAGE_CHANNEL_LABELS } from '@/features/settings/types/settings'
+import { TokenHint } from '@/features/campaigns/components/shared/MessagePreview'
 import { cn } from '@/lib/utils'
 
 const selectClassName =
   'h-8 rounded-lg border border-input bg-transparent px-2.5 text-body-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
 
+const textareaClassName =
+  'min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm'
+
 const STEPS = ['Trigger', 'Conditions', 'Actions', 'Timing', 'Review'] as const
 type Step = 0 | 1 | 2 | 3 | 4
 
+const STEP_FIELDS: Record<Step, (keyof WorkflowFormValues)[]> = {
+  0: ['name', 'triggerType'],
+  1: ['conditionTypes'],
+  2: ['sendMessage', 'addPoints', 'flag'],
+  3: ['timing', 'delayMinutes'],
+  4: [],
+}
+
 /**
- * Create Workflow — docs/IMPLEMENTATION_PLAN.md §19's potential
- * structure (Trigger → Conditions → Actions → Timing → Status)
- * implemented as a dedicated five-step wizard, per the approved
- * decision: no canvas, no drag-and-drop, no drawers. Validation uses
- * React Hook Form + Zod, same pattern as Create Campaign. Trigger/
- * condition/action options are explicitly illustrative (see
- * types/automation.ts) — selecting any of them never executes
- * anything.
+ * Create / Edit Workflow — Book 3 §3 MVP: simple linear rules in a
+ * five-step wizard (no canvas — that's Phase 2). Each action carries
+ * its settings; a message's fallback may be left unset in a draft, but
+ * the workflow can't go live until it's chosen (publish gate on the
+ * workflow page).
  */
-export function DesktopCreateWorkflowContent() {
+export function DesktopCreateWorkflowContent({ workflow }: { workflow?: Workflow }) {
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>(0)
+  const isEdit = workflow !== undefined
 
   const {
     register,
@@ -47,49 +66,19 @@ export function DesktopCreateWorkflowContent() {
     formState: { errors },
   } = useForm<WorkflowFormValues>({
     resolver: zodResolver(workflowSchema),
-    defaultValues: {
-      name: '',
-      triggerType: '',
-      conditionTypes: [],
-      actionTypes: [],
-      timing: 'immediate',
-      delayMinutes: null,
-    },
+    defaultValues: workflow ? toWorkflowForm(workflow) : EMPTY_WORKFLOW_FORM,
   })
 
-  const name = useWatch({ control, name: 'name' })
-  const triggerType = useWatch({ control, name: 'triggerType' })
-  const conditionTypes = useWatch({ control, name: 'conditionTypes' })
-  const actionTypes = useWatch({ control, name: 'actionTypes' })
-  const timing = useWatch({ control, name: 'timing' })
-  const delayMinutes = useWatch({ control, name: 'delayMinutes' })
-
+  const values = useWatch({ control }) as WorkflowFormValues
   const createWorkflow = useCreateWorkflow()
+  const updateWorkflow = useUpdateWorkflow(workflow?.id ?? '')
+  const save = isEdit ? updateWorkflow : createWorkflow
 
   const toggleCondition = (type: ConditionType) => {
-    const current = conditionTypes ?? []
-    setValue(
-      'conditionTypes',
-      current.includes(type) ? current.filter((c) => c !== type) : [...current, type],
-      { shouldValidate: true },
-    )
-  }
-
-  const toggleAction = (type: ActionType) => {
-    const current = actionTypes ?? []
-    setValue(
-      'actionTypes',
-      current.includes(type) ? current.filter((a) => a !== type) : [...current, type],
-      { shouldValidate: true },
-    )
-  }
-
-  const STEP_FIELDS: Record<Step, (keyof WorkflowFormValues)[]> = {
-    0: ['name', 'triggerType'],
-    1: ['conditionTypes'],
-    2: ['actionTypes'],
-    3: ['timing', 'delayMinutes'],
-    4: [],
+    const current = values.conditionTypes ?? []
+    setValue('conditionTypes', current.includes(type) ? current.filter((c) => c !== type) : [...current, type], {
+      shouldValidate: true,
+    })
   }
 
   const goNext = async () => {
@@ -97,30 +86,23 @@ export function DesktopCreateWorkflowContent() {
     if (valid && step < 4) setStep((step + 1) as Step)
   }
 
-  const goBack = () => {
-    if (step > 0) setStep((step - 1) as Step)
-  }
-
-  const onSubmit = handleSubmit((values) => {
-    createWorkflow.mutate(
-      {
-        name: values.name,
-        triggerType: values.triggerType as TriggerType,
-        conditionTypes: values.conditionTypes as ConditionType[],
-        actionTypes: values.actionTypes as ActionType[],
-        timing: values.timing,
-        delayMinutes: values.timing === 'delayed' ? values.delayMinutes : null,
-      },
-      {
-        onSuccess: (workflow) => navigate(`/automation/${workflow.id}`),
-      },
-    )
+  const onSubmit = handleSubmit((v) => {
+    save.mutate(toWorkflowInput(v), { onSuccess: (saved) => navigate(`/automation/${saved.id}`) })
   })
+
+  const actionSummary = [
+    values.sendMessage?.enabled &&
+      `${ACTION_LABELS.send_message} by ${MESSAGE_CHANNEL_LABELS[values.sendMessage.channel]} (fallback: ${fallbackLabel(
+        values.sendMessage.fallback === '' ? null : values.sendMessage.fallback,
+      )})`,
+    values.addPoints?.enabled && `${ACTION_LABELS.add_loyalty_points}: ${values.addPoints.points}`,
+    values.flag?.enabled && ACTION_LABELS.flag_for_review,
+  ].filter(Boolean) as string[]
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-page-title font-semibold">Create Workflow</h1>
+        <h1 className="text-page-title font-semibold">{isEdit ? 'Edit Workflow' : 'Create Workflow'}</h1>
         <DemoDataBadge />
       </div>
 
@@ -139,9 +121,7 @@ export function DesktopCreateWorkflowContent() {
             >
               {i + 1}
             </span>
-            <span className={cn('text-body-sm', i === step ? 'font-medium' : 'text-muted-foreground')}>
-              {label}
-            </span>
+            <span className={cn('text-body-sm', i === step ? 'font-medium' : 'text-muted-foreground')}>{label}</span>
             {i < STEPS.length - 1 && <span className="mx-1 h-px w-6 bg-border" />}
           </div>
         ))}
@@ -166,11 +146,7 @@ export function DesktopCreateWorkflowContent() {
                 <label htmlFor="workflow-trigger" className="text-body-sm font-medium">
                   Trigger
                 </label>
-                <select
-                  id="workflow-trigger"
-                  className={selectClassName}
-                  {...register('triggerType')}
-                >
+                <select id="workflow-trigger" className={selectClassName} {...register('triggerType')}>
                   <option value="">Select a trigger…</option>
                   {Object.entries(TRIGGER_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -178,12 +154,10 @@ export function DesktopCreateWorkflowContent() {
                     </option>
                   ))}
                 </select>
-                {errors.triggerType && (
-                  <p className="text-caption text-destructive">{errors.triggerType.message}</p>
-                )}
+                {errors.triggerType && <p className="text-caption text-destructive">{errors.triggerType.message}</p>}
                 <p className="text-caption text-muted-foreground">
-                  Illustrative examples only — not finalized Broastin business rules. Selecting a
-                  trigger never executes anything.
+                  Live runs start when these events arrive from the POS/QR feed (connected in a later phase). Until
+                  then you can test the workflow on a customer.
                 </p>
               </div>
             </>
@@ -192,8 +166,7 @@ export function DesktopCreateWorkflowContent() {
           {step === 1 && (
             <>
               <p className="text-caption text-muted-foreground">
-                Optional — zero or more. Illustrative examples only; conditions are never actually
-                evaluated.
+                Optional. Every ticked condition must pass, in order; the first that fails stops the run.
               </p>
               <div className="flex flex-col gap-1">
                 {Object.entries(CONDITION_LABELS).map(([value, label]) => (
@@ -201,7 +174,7 @@ export function DesktopCreateWorkflowContent() {
                     <input
                       type="checkbox"
                       className="accent-brand-primary"
-                      checked={(conditionTypes ?? []).includes(value as ConditionType)}
+                      checked={(values.conditionTypes ?? []).includes(value)}
                       onChange={() => toggleCondition(value as ConditionType)}
                     />
                     {label}
@@ -213,25 +186,98 @@ export function DesktopCreateWorkflowContent() {
 
           {step === 2 && (
             <>
-              <p className="text-caption text-muted-foreground">
-                Select at least one. Illustrative examples only; actions are never actually
-                executed.
-              </p>
-              {errors.actionTypes && (
-                <p className="text-caption text-destructive">{errors.actionTypes.message}</p>
-              )}
-              <div className="flex flex-col gap-1">
-                {Object.entries(ACTION_LABELS).map(([value, label]) => (
-                  <label key={value} className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-body-sm hover:bg-muted">
-                    <input
-                      type="checkbox"
-                      className="accent-brand-primary"
-                      checked={(actionTypes ?? []).includes(value as ActionType)}
-                      onChange={() => toggleAction(value as ActionType)}
+              <p className="text-caption text-muted-foreground">Select at least one. Actions run in this order.</p>
+              {errors.flag?.enabled && <p className="text-caption text-destructive">{errors.flag.enabled.message}</p>}
+
+              <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
+                <label className="flex items-center gap-2.5 text-body-sm font-medium">
+                  <input type="checkbox" className="accent-brand-primary" {...register('sendMessage.enabled')} />
+                  {ACTION_LABELS.send_message}
+                </label>
+                {values.sendMessage?.enabled && (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="workflow-message" className="text-body-sm">
+                        Message
+                      </label>
+                      <textarea
+                        id="workflow-message"
+                        className={textareaClassName}
+                        aria-invalid={!!errors.sendMessage?.message}
+                        {...register('sendMessage.message')}
+                      />
+                      {errors.sendMessage?.message && (
+                        <p className="text-caption text-destructive">{errors.sendMessage.message.message}</p>
+                      )}
+                      <TokenHint />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label htmlFor="workflow-channel" className="text-body-sm">
+                          Send by
+                        </label>
+                        <select id="workflow-channel" className={selectClassName} {...register('sendMessage.channel')}>
+                          {Object.entries(MESSAGE_CHANNEL_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label htmlFor="workflow-fallback" className="text-body-sm">
+                          If that fails or they opted out
+                        </label>
+                        <select id="workflow-fallback" className={selectClassName} {...register('sendMessage.fallback')}>
+                          <option value="">Choose a fallback…</option>
+                          {Object.entries(MESSAGE_CHANNEL_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              Try {label}
+                            </option>
+                          ))}
+                          <option value="log_only">Log only (don't send)</option>
+                        </select>
+                        {errors.sendMessage?.fallback && (
+                          <p className="text-caption text-destructive">{errors.sendMessage.fallback.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-caption text-muted-foreground">
+                      A fallback is required before this workflow can go live. Messages also respect each customer's
+                      weekly message limit.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
+                <label className="flex items-center gap-2.5 text-body-sm font-medium">
+                  <input type="checkbox" className="accent-brand-primary" {...register('addPoints.enabled')} />
+                  {ACTION_LABELS.add_loyalty_points}
+                </label>
+                {values.addPoints?.enabled && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      aria-label="Points to add"
+                      type="number"
+                      min={1}
+                      className="w-28"
+                      aria-invalid={!!errors.addPoints?.points}
+                      {...register('addPoints.points', { valueAsNumber: true })}
                     />
-                    {label}
-                  </label>
-                ))}
+                    <span className="text-body-sm text-muted-foreground">points</span>
+                    {errors.addPoints?.points && (
+                      <p className="text-caption text-destructive">{errors.addPoints.points.message}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-lg border border-border p-3">
+                <label className="flex items-center gap-2.5 text-body-sm font-medium">
+                  <input type="checkbox" className="accent-brand-primary" {...register('flag.enabled')} />
+                  {ACTION_LABELS.flag_for_review}
+                </label>
               </div>
             </>
           )}
@@ -239,14 +285,16 @@ export function DesktopCreateWorkflowContent() {
           {step === 3 && (
             <>
               <div className="flex flex-col gap-1.5">
-                <span className="text-body-sm font-medium">Timing</span>
+                <label htmlFor="workflow-timing" className="text-body-sm font-medium">
+                  Timing
+                </label>
                 <select id="workflow-timing" className={selectClassName} {...register('timing')}>
                   <option value="immediate">Immediate</option>
                   <option value="delayed">Delayed</option>
                 </select>
               </div>
 
-              {timing === 'delayed' && (
+              {values.timing === 'delayed' && (
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="workflow-delay" className="text-body-sm font-medium">
                     Delay (minutes)
@@ -258,15 +306,9 @@ export function DesktopCreateWorkflowContent() {
                     aria-invalid={!!errors.delayMinutes}
                     {...register('delayMinutes', { valueAsNumber: true })}
                   />
-                  {errors.delayMinutes && (
-                    <p className="text-caption text-destructive">{errors.delayMinutes.message}</p>
-                  )}
+                  {errors.delayMinutes && <p className="text-caption text-destructive">{errors.delayMinutes.message}</p>}
                 </div>
               )}
-
-              <p className="text-caption text-muted-foreground">
-                Mock configuration only — no scheduler exists, and nothing is actually delayed or run.
-              </p>
             </>
           )}
 
@@ -274,55 +316,66 @@ export function DesktopCreateWorkflowContent() {
             <div className="flex flex-col gap-3 text-body-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Name</span>
-                <span className="font-medium">{name || '—'}</span>
+                <span className="font-medium">{values.name || '—'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Trigger</span>
                 <span className="font-medium">
-                  {triggerType ? TRIGGER_LABELS[triggerType as TriggerType] : '—'}
+                  {values.triggerType ? TRIGGER_LABELS[values.triggerType as TriggerType] : '—'}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground">Conditions</span>
-                {(conditionTypes ?? []).length === 0 ? (
-                  <span>None</span>
+                {(values.conditionTypes ?? []).length === 0 ? (
+                  <span>None — runs for every customer the trigger fires for</span>
                 ) : (
-                  (conditionTypes ?? []).map((c) => <span key={c}>{CONDITION_LABELS[c as ConditionType]}</span>)
+                  values.conditionTypes.map((c) => <span key={c}>{CONDITION_LABELS[c as ConditionType]}</span>)
                 )}
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground">Actions</span>
-                {(actionTypes ?? []).map((a) => (
-                  <span key={a}>{ACTION_LABELS[a as ActionType]}</span>
+                {actionSummary.map((a) => (
+                  <span key={a}>{a}</span>
                 ))}
               </div>
               <div className="flex justify-between border-t border-border pt-2">
                 <span className="text-muted-foreground">Timing</span>
                 <span className="font-medium">
-                  {timing === 'immediate' ? 'Immediate' : `Delayed by ${delayMinutes ?? 0} minutes`}
+                  {values.timing === 'immediate' ? 'Immediate' : `Delayed by ${values.delayMinutes ?? 0} minutes`}
                 </span>
               </div>
               <p className="text-caption text-muted-foreground">
-                This workflow will be created as a draft. Activating it later only changes its mock
-                status — it never starts monitoring, evaluating, or executing anything.
+                {isEdit
+                  ? 'Saving keeps the current status. A changed draft needs a new test before it can go live.'
+                  : 'Saved as a draft. Test it on a customer from its page, then activate it.'}
               </p>
-              {createWorkflow.isError && (
+              {save.isError && (
                 <p className="text-caption text-destructive">
-                  Could not create this workflow. Please try again.
+                  {save.error instanceof Error && save.error.message.startsWith('Pause')
+                    ? save.error.message
+                    : 'Could not save this workflow. Please try again.'}
                 </p>
               )}
             </div>
           )}
         </CardContent>
         <CardFooter className="flex justify-between">
-          <button
-            type="button"
-            onClick={goBack}
-            disabled={step === 0}
-            className={buttonVariants({ variant: 'outline', size: 'sm' })}
-          >
-            Back
-          </button>
+          {step === 0 ? (
+            <Link
+              to={isEdit ? `/automation/${workflow.id}` : '/automation/workflows'}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              Cancel
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setStep((step - 1) as Step)}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              Back
+            </button>
+          )}
           {step < 4 ? (
             <button type="button" onClick={goNext} className={buttonVariants({ variant: 'default', size: 'sm' })}>
               Next
@@ -331,10 +384,10 @@ export function DesktopCreateWorkflowContent() {
             <button
               type="button"
               onClick={onSubmit}
-              disabled={createWorkflow.isPending}
+              disabled={save.isPending}
               className={buttonVariants({ variant: 'default', size: 'sm' })}
             >
-              {createWorkflow.isPending ? 'Creating…' : 'Create Workflow'}
+              {save.isPending ? 'Saving…' : isEdit ? 'Save changes' : 'Create Workflow'}
             </button>
           )}
         </CardFooter>
