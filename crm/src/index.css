@@ -54,6 +54,13 @@
     --color-brand-primary-hover: var(--brand-primary-hover);
     --color-brand-primary-active: var(--brand-primary-active);
     --color-brand-primary-soft: var(--brand-primary-soft);
+    --color-brand-primary-deep: var(--brand-primary-deep);
+    /* Accent yellow + warm canvas from the owner's desktop UI reference
+       (assets/ui-reference/broastin foods dektop ui.png). */
+    --color-brand-accent: var(--brand-accent);
+    --color-brand-accent-soft: var(--brand-accent-soft);
+    --color-brand-accent-foreground: var(--brand-accent-foreground);
+    --color-canvas: var(--canvas);
 
     /* Semantic status — docs/DESIGN_SYSTEM.md §5/§6. --destructive above
        already covers "error". */
@@ -110,7 +117,7 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
+    --primary: #a3161c;
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
@@ -121,7 +128,7 @@
     --destructive: oklch(0.577 0.245 27.325);
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --ring: #e9a8aa;
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -137,11 +144,18 @@
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
 
-    /* Brand — PLACEHOLDER burgundy, NOT the approved final hex. */
-    --brand-primary: #6b1f2a;
-    --brand-primary-hover: #7d2531;
-    --brand-primary-active: #591822;
-    --brand-primary-soft: #f3e4e6;
+    /* Brand — matched to the owner-provided desktop UI reference
+       (assets/ui-reference/broastin foods dektop ui.png): Broastin red
+       with a warm yellow accent. Still not a formal brand-guideline hex. */
+    --brand-primary: #a3161c;
+    --brand-primary-hover: #b81d24;
+    --brand-primary-active: #8a1116;
+    --brand-primary-deep: #7d0f13;
+    --brand-primary-soft: #fbe9e9;
+    --brand-accent: #f7b500;
+    --brand-accent-soft: #fff4d6;
+    --brand-accent-foreground: #3a1d00;
+    --canvas: #f6f6f7;
 
     /* Semantic status */
     --success: oklch(0.6 0.15 145);
@@ -195,6 +209,11 @@
     --brand-primary-hover: #9c333f;
     --brand-primary-active: #6b1f2a;
     --brand-primary-soft: #3a2024;
+    --brand-primary-deep: #5c1a22;
+    --brand-accent: #f2b31a;
+    --brand-accent-soft: #3d300f;
+    --brand-accent-foreground: #2a1600;
+    --canvas: oklch(0.17 0 0);
 
     /* Semantic status */
     --success: oklch(0.65 0.15 145);
