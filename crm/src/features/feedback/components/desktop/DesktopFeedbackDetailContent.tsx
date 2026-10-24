@@ -37,6 +37,31 @@ export function DesktopFeedbackDetailContent({ feedback }: { feedback: FeedbackI
             </Link>
           </CardContent>
         </Card>
+
+        {feedback.rating !== null && (
+          <Card>
+            <CardHeader>
+              <CardSectionHeading>Rating</CardSectionHeading>
+            </CardHeader>
+            <CardContent className="text-body font-medium">{feedback.rating} / 5 stars</CardContent>
+          </Card>
+        )}
+
+        {feedback.orderId && (
+          <Card>
+            <CardHeader>
+              <CardSectionHeading>Order</CardSectionHeading>
+            </CardHeader>
+            <CardContent>
+              <Link
+                to={`/orders/${feedback.orderId}`}
+                className="text-body font-medium underline-offset-4 hover:underline"
+              >
+                View order
+              </Link>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Card>

@@ -24,6 +24,9 @@ import type { FeedbackSentiment, FeedbackStatus } from '@/features/feedback/type
 export type RawFeedbackItem = {
   id: string
   customerId: string
+  /** Book 3 §9 rating, 1-5. Null for the pre-existing Phase 7 seed entries below, which predate this field. */
+  rating: number | null
+  orderId: string | null
   sentiment: FeedbackSentiment
   message: string
   status: FeedbackStatus
@@ -32,7 +35,7 @@ export type RawFeedbackItem = {
 
 const HOUR_MS = 60 * 60 * 1000
 
-const RAW_DEFS: Array<Omit<RawFeedbackItem, 'id' | 'createdAt'> & { hoursAgo: number }> = [
+const RAW_DEFS: Array<Omit<RawFeedbackItem, 'id' | 'createdAt' | 'rating' | 'orderId'> & { hoursAgo: number }> = [
   { customerId: 'cust-001', sentiment: 'negative', message: 'Order arrived cold and the wrap was soggy.', status: 'open', hoursAgo: 4 },
   { customerId: 'cust-001', sentiment: 'positive', message: 'Quick delivery, thanks!', status: 'resolved', hoursAgo: 96 },
   { customerId: 'cust-002', sentiment: 'positive', message: 'Loved the broasted chicken, will order again.', status: 'resolved', hoursAgo: 30 },
@@ -49,14 +52,38 @@ const RAW_DEFS: Array<Omit<RawFeedbackItem, 'id' | 'createdAt'> & { hoursAgo: nu
   { customerId: 'cust-022', sentiment: 'negative', message: 'App crashed while placing order.', status: 'open', hoursAgo: 2 },
 ]
 
-export const normalFeedback: RawFeedbackItem[] = RAW_DEFS.map((def, index) => ({
-  id: `fb-${String(index + 1).padStart(3, '0')}`,
-  customerId: def.customerId,
-  sentiment: def.sentiment,
-  message: def.message,
-  status: def.status,
-  createdAt: new Date(Date.now() - def.hoursAgo * HOUR_MS).toISOString(),
-}))
+function seedFeedback(): RawFeedbackItem[] {
+  return RAW_DEFS.map((def, index) => ({
+    id: `fb-${String(index + 1).padStart(3, '0')}`,
+    customerId: def.customerId,
+    rating: null,
+    orderId: null,
+    sentiment: def.sentiment,
+    message: def.message,
+    status: def.status,
+    createdAt: new Date(Date.now() - def.hoursAgo * HOUR_MS).toISOString(),
+  }))
+}
+
+/**
+ * Mutable in-session store — session-only, lost on reload, same
+ * discipline as settings.mock.ts/automation.mock.ts. Append-only in
+ * practice: addFeedbackToStore only ever appends; nothing in this
+ * file updates or removes an existing entry.
+ */
+let feedbackStore: RawFeedbackItem[] = seedFeedback()
+
+export function getFeedbackStore(): RawFeedbackItem[] {
+  return feedbackStore
+}
+
+export function addFeedbackToStore(item: RawFeedbackItem): void {
+  feedbackStore = [...feedbackStore, item]
+}
+
+export function findFeedbackByOrderIdInStore(orderId: string): RawFeedbackItem | null {
+  return feedbackStore.find((f) => f.orderId === orderId) ?? null
+}
 
 export const emptyFeedback: RawFeedbackItem[] = []
 

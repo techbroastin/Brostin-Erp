@@ -24,6 +24,8 @@ let generalSettings: GeneralSettings = {
   businessName: 'Broastin',
   contactEmail: 'hello@broastin.example',
   contactPhone: '+91 97000 00000',
+  /** Not configured — no Google/Zomato URL is invented. See types/settings.ts. */
+  publicReviewUrl: null,
 }
 
 export function getGeneralSettingsStore(): GeneralSettings {

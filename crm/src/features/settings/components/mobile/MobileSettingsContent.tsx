@@ -47,11 +47,11 @@ export function MobileSettingsContent() {
     formState: { errors },
   } = useForm<GeneralSettingsFormValues>({
     resolver: zodResolver(generalSettingsSchema),
-    defaultValues: { businessName: '', contactEmail: '', contactPhone: '' },
+    defaultValues: { businessName: '', contactEmail: '', contactPhone: '', publicReviewUrl: '' },
   })
 
   useEffect(() => {
-    if (general) reset(general)
+    if (general) reset({ ...general, publicReviewUrl: general.publicReviewUrl ?? '' })
   }, [general, reset])
 
   const updateGeneralMutation = useMutation({
@@ -65,7 +65,9 @@ export function MobileSettingsContent() {
     onSuccess: (updated) => queryClient.setQueryData(notificationPreferencesQueryKey, updated),
   })
 
-  const onSubmitGeneral = handleSubmit((values) => updateGeneralMutation.mutate(values))
+  const onSubmitGeneral = handleSubmit((values) =>
+    updateGeneralMutation.mutate({ ...values, publicReviewUrl: values.publicReviewUrl || null }),
+  )
 
   return (
     <div className="flex flex-col gap-6 p-4">

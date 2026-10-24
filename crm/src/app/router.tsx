@@ -120,6 +120,20 @@ import { RouteHydrateFallback } from '@/app/RouteHydrateFallback'
  * in docs/IMPLEMENTATION_PLAN.md.
  */
 export const router = createBrowserRouter([
+  /**
+   * Public, shell-less route — Book 3 §9 Feedback Capture, reached via
+   * QR/link, never the manager CRM. A SIBLING top-level route, not a
+   * child of RootLayout below, so it renders with no sidebar/hamburger
+   * nav at all. Deliberately placed before the '/' tree so its more
+   * specific path always wins over any ambiguity.
+   */
+  {
+    path: 'review/:orderId',
+    lazy: async () => {
+      const { PublicFeedbackCaptureScreen } = await import('@/features/feedback')
+      return { Component: PublicFeedbackCaptureScreen }
+    },
+  },
   {
     path: '/',
     element: <RootLayout />,

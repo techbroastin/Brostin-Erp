@@ -31,6 +31,17 @@ export function MobileFeedbackDetailContent({ feedback }: { feedback: FeedbackIt
             timeStyle: 'short',
           })}
         </p>
+        {feedback.rating !== null && (
+          <p className="text-body-sm font-medium">{feedback.rating} / 5 stars</p>
+        )}
+        {feedback.orderId && (
+          <Link
+            to={`/orders/${feedback.orderId}`}
+            className="text-caption text-muted-foreground underline-offset-4 hover:underline"
+          >
+            View related order
+          </Link>
+        )}
       </section>
 
       <section className="flex flex-col gap-2">

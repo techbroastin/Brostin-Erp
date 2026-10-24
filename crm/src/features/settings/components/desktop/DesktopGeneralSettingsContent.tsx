@@ -28,11 +28,11 @@ export function DesktopGeneralSettingsContent() {
     formState: { errors },
   } = useForm<GeneralSettingsFormValues>({
     resolver: zodResolver(generalSettingsSchema),
-    defaultValues: { businessName: '', contactEmail: '', contactPhone: '' },
+    defaultValues: { businessName: '', contactEmail: '', contactPhone: '', publicReviewUrl: '' },
   })
 
   useEffect(() => {
-    if (data) reset(data)
+    if (data) reset({ ...data, publicReviewUrl: data.publicReviewUrl ?? '' })
   }, [data, reset])
 
   const updateMutation = useMutation({
@@ -45,7 +45,7 @@ export function DesktopGeneralSettingsContent() {
 
   const onSubmit = handleSubmit((values) => {
     setSavedMessage(false)
-    updateMutation.mutate(values)
+    updateMutation.mutate({ ...values, publicReviewUrl: values.publicReviewUrl || null })
   })
 
   return (
@@ -112,6 +112,26 @@ export function DesktopGeneralSettingsContent() {
               {errors.contactPhone && (
                 <p className="text-caption text-destructive">{errors.contactPhone.message}</p>
               )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="general-public-review-url" className="text-body-sm font-medium">
+                Public review URL
+              </label>
+              <Input
+                id="general-public-review-url"
+                placeholder="https://g.page/r/..."
+                {...register('publicReviewUrl')}
+                aria-invalid={!!errors.publicReviewUrl}
+              />
+              {errors.publicReviewUrl && (
+                <p className="text-caption text-destructive">{errors.publicReviewUrl.message}</p>
+              )}
+              <p className="text-caption text-muted-foreground">
+                Shown to customers who leave a 4-5 star rating (Book 3 §9). Leave blank if you
+                haven't set one up yet — customers will see an honest "not configured yet" message
+                instead of a broken link.
+              </p>
             </div>
 
             {savedMessage && <p className="text-caption text-success">Saved (mock data only).</p>}

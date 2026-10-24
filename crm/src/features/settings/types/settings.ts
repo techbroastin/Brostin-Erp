@@ -13,6 +13,14 @@ export type GeneralSettings = {
   businessName: string
   contactEmail: string
   contactPhone: string
+  /**
+   * Where a customer is sent after a 4-5 star rating (Book 3 §9's
+   * "prompt to post publicly"), e.g. a Google/Zomato listing. Null
+   * until an owner configures one — no URL is invented or hardcoded
+   * anywhere; see features/feedback's public capture screen for the
+   * honest "not configured" state when this is null.
+   */
+  publicReviewUrl: string | null
 }
 
 export type SettingsUserRole = 'admin' | 'manager'

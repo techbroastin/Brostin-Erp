@@ -11,6 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { buttonVariants } from '@/components/ui/button'
 import { FeedbackSentimentBadge } from '@/features/feedback/components/shared/FeedbackSentimentBadge'
 import { FeedbackStatusBadge } from '@/features/feedback/components/shared/FeedbackStatusBadge'
+import { FeedbackPriorityBadge } from '@/features/feedback/components/shared/FeedbackPriorityBadge'
+import { isFeedbackNeedsAttention } from '@/features/feedback/services/feedbackService'
 import type { FeedbackItem } from '@/features/feedback/types/feedback'
 
 const PAGE_SIZE = 10
@@ -75,7 +77,10 @@ export function FeedbackTable({
                   </TableCell>
                   <TableCell className="max-w-sm truncate">{feedback.message}</TableCell>
                   <TableCell>
-                    <FeedbackStatusBadge status={feedback.status} />
+                    <div className="flex items-center gap-1.5">
+                      <FeedbackStatusBadge status={feedback.status} />
+                      {isFeedbackNeedsAttention(feedback) && <FeedbackPriorityBadge />}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {new Date(feedback.createdAt).toLocaleString(undefined, {

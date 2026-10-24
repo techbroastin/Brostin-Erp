@@ -10,6 +10,8 @@ export const generalSettingsSchema = z.object({
   businessName: z.string().trim().min(1, 'Business name is required.').max(120, 'Business name is too long.'),
   contactEmail: z.string().trim().min(1, 'Contact email is required.').email('Enter a valid email address.'),
   contactPhone: z.string().trim().min(1, 'Contact phone is required.').max(30, 'Phone number is too long.'),
+  /** Optional — Book 3 §9's public-review destination. Empty string means "not configured". */
+  publicReviewUrl: z.union([z.string().trim().url('Enter a valid URL.'), z.literal('')]),
 })
 
 export type GeneralSettingsFormValues = z.infer<typeof generalSettingsSchema>

@@ -3,6 +3,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FeedbackSentimentBadge } from '@/features/feedback/components/shared/FeedbackSentimentBadge'
 import { FeedbackStatusBadge } from '@/features/feedback/components/shared/FeedbackStatusBadge'
+import { FeedbackPriorityBadge } from '@/features/feedback/components/shared/FeedbackPriorityBadge'
+import { isFeedbackNeedsAttention } from '@/features/feedback/services/feedbackService'
 import type { FeedbackItem } from '@/features/feedback/types/feedback'
 
 /**
@@ -20,6 +22,7 @@ export function FeedbackCard({ feedback }: { feedback: FeedbackItem }) {
             <FeedbackSentimentBadge sentiment={feedback.sentiment} />
           </div>
           <p className="line-clamp-2 text-body-sm text-muted-foreground">{feedback.message}</p>
+          {isFeedbackNeedsAttention(feedback) && <FeedbackPriorityBadge />}
           <div className="flex items-center justify-between text-caption text-muted-foreground">
             <span>
               {new Date(feedback.createdAt).toLocaleString(undefined, {

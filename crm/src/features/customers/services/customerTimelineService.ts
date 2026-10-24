@@ -85,7 +85,7 @@ export async function getCustomerTimeline(
       id: `tl-feedback-${f.id}`,
       customerId,
       type: 'review',
-      title: `Left ${f.sentiment} feedback`,
+      title: f.rating !== null ? `Left a ${f.rating}-star review` : `Left ${f.sentiment} feedback`,
       detail: f.message,
       occurredAt: f.createdAt,
       href: `/feedback/${f.id}`,
