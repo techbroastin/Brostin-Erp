@@ -236,6 +236,35 @@ export const router = createBrowserRouter([
           return { Component: LoyaltyOverviewScreen }
         },
       },
+      // Book 3 §2 Program Engine — fixed 'new' before ':programId'.
+      {
+        path: 'loyalty/programs',
+        lazy: async () => {
+          const { ProgramsScreen } = await import('@/features/programs')
+          return { Component: ProgramsScreen }
+        },
+      },
+      {
+        path: 'loyalty/programs/new',
+        lazy: async () => {
+          const { CreateProgramScreen } = await import('@/features/programs')
+          return { Component: CreateProgramScreen }
+        },
+      },
+      {
+        path: 'loyalty/programs/:programId',
+        lazy: async () => {
+          const { ProgramDetailScreen } = await import('@/features/programs')
+          return { Component: ProgramDetailScreen }
+        },
+      },
+      {
+        path: 'loyalty/programs/:programId/edit',
+        lazy: async () => {
+          const { EditProgramScreen } = await import('@/features/programs')
+          return { Component: EditProgramScreen }
+        },
+      },
       {
         path: 'loyalty/customers',
         lazy: async () => {

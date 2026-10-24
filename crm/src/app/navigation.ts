@@ -83,6 +83,7 @@ export const navigationModules: NavModule[] = [
     mobileVisible: true,
     submenu: [
       { label: 'Overview', path: '/loyalty' },
+      { label: 'Programs', path: '/loyalty/programs' },
       { label: 'Customer Balances', path: '/loyalty/customers' },
       { label: 'Rewards', path: '/loyalty/rewards' },
       { label: 'Activity', path: '/loyalty/activity' },
