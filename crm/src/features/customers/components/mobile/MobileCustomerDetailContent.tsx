@@ -2,6 +2,7 @@ import { Phone, AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { CustomerTimeline } from '@/features/customers/components/shared/CustomerTimeline'
 import { CustomerProfileDetails } from '@/features/customers/components/shared/CustomerProfileDetails'
+import { CustomerArchiveControl } from '@/features/customers/components/shared/CustomerArchiveControl'
 import type { Customer } from '@/features/customers/types/customer'
 import { formatRupees, formatTimestampDate } from '@/features/customers/utils/customerFormat'
 
@@ -33,6 +34,11 @@ export function MobileCustomerDetailContent({
             <AlertCircle className="size-4 shrink-0" />
             {customer.alert}
           </p>
+        )}
+        {customer.archivedAt && (
+          <div className="mt-2">
+            <CustomerArchiveControl customer={customer} />
+          </div>
         )}
       </section>
 
@@ -101,6 +107,7 @@ export function MobileCustomerDetailContent({
           </CardContent>
         </Card>
       </section>
+      {!customer.archivedAt && <CustomerArchiveControl customer={customer} />}
     </div>
   )
 }

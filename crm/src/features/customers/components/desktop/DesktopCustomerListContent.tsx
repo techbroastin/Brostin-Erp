@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Copy, Upload } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
 import { CustomerSearchInput } from '@/features/customers/components/shared/CustomerSearchInput'
@@ -7,6 +10,7 @@ import { CustomerErrorState } from '@/features/customers/components/shared/Custo
 import { CustomerTable, PAGE_SIZE } from '@/features/customers/components/desktop/CustomerTable'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useCustomerList } from '@/features/customers/hooks/useCustomerList'
+import { useDuplicateGroups } from '@/features/customers/hooks/useCustomerTools'
 import type { CustomerSortBy } from '@/features/customers/types/customer'
 
 /**
@@ -19,12 +23,15 @@ export function DesktopCustomerListContent() {
   const [sortBy, setSortBy] = useState<CustomerSortBy>('name')
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebouncedValue(search)
+  const [showArchived, setShowArchived] = useState(false)
+  const duplicates = useDuplicateGroups()
 
   const { data, isPending, isError, refetch } = useCustomerList({
     search: debouncedSearch,
     page,
     pageSize: PAGE_SIZE,
     sortBy,
+    includeArchived: showArchived,
   })
 
   const items = data?.items ?? []
@@ -38,18 +45,44 @@ export function DesktopCustomerListContent() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-page-title font-semibold">Customers</h1>
-        <DemoDataBadge />
+        <div className="flex items-center gap-3">
+          <h1 className="text-page-title font-semibold">Customers</h1>
+          <DemoDataBadge />
+        </div>
+        <div className="flex items-center gap-2">
+          <Link to="/customers/duplicates" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+            <Copy className="size-4" />
+            Duplicates{duplicates.data && duplicates.data.length > 0 ? ` (${duplicates.data.length})` : ''}
+          </Link>
+          <Link to="/customers/import" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+            <Upload className="size-4" />
+            Import
+          </Link>
+        </div>
       </div>
 
-      <div className="max-w-sm">
-        <CustomerSearchInput
-          value={search}
-          onChange={(value) => {
-            setSearch(value)
-            setPage(1)
-          }}
-        />
+      <div className="flex items-center gap-4">
+        <div className="w-full max-w-sm">
+          <CustomerSearchInput
+            value={search}
+            onChange={(value) => {
+              setSearch(value)
+              setPage(1)
+            }}
+          />
+        </div>
+        <label className="flex items-center gap-2 text-body-sm">
+          <input
+            type="checkbox"
+            className="accent-brand-primary"
+            checked={showArchived}
+            onChange={(e) => {
+              setShowArchived(e.target.checked)
+              setPage(1)
+            }}
+          />
+          Show archived
+        </label>
       </div>
 
       <Card>

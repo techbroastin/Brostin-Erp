@@ -4,7 +4,12 @@ import type { Customer, CustomerSegment } from '@/features/customers/types/custo
  * Customers mock data — the single feature-local mock source, per
  * docs/FRONTEND_ARCHITECTURE.md §6/§16. Three scenarios: normal, empty,
  * error. Only src/features/customers/services/customerService.ts may
- * import this file.
+ * import this file (tests may read `normalCustomers`, the seed).
+ *
+ * MUTABLE in memory since the Book 3 §1 tools (archive, merge, bulk
+ * import) change records: changes live only for this browser session.
+ * Two seeded duplicates (same phone, different formatting and details)
+ * give the Merge Tool something real to work on.
  *
  * Illustrative placeholders only — not real customer records, not final
  * business definitions. See DemoDataBadge wherever this data renders.
@@ -86,11 +91,78 @@ function buildCustomers(): Customer[] {
       activePrograms: loyaltyPoints !== null ? ['Loyalty'] : [],
       loyaltyPoints,
       alert: index % 7 === 0 ? 'Feedback awaiting response' : null,
+      archivedAt: null,
+      archiveReason: null,
+      mergedIntoId: null,
     }
   })
 }
 
-export const normalCustomers: Customer[] = buildCustomers()
+/**
+ * Accidental second records, as created by a typo'd or re-entered phone:
+ * same number in a different format, with conflicting details that the
+ * Merge Tool must ask about (name, date of birth, WhatsApp consent).
+ */
+function buildDuplicates(base: Customer[]): Customer[] {
+  const lakshmi = base[10]
+  const rafiq = base[2]
+  const daysAgo = (d: number) => new Date(Date.now() - d * DAY_MS).toISOString()
+  return [
+    {
+      ...lakshmi,
+      id: 'cust-026',
+      name: 'Lakshmi P',
+      phone: lakshmi.phone.replace(/^\+91\s?/, ''),
+      dateOfBirth: '1990-04-12',
+      anniversaryDate: null,
+      firstVisitAt: daysAgo(300),
+      lastOrderAt: daysAgo(25),
+      orderCount: 2,
+      lifetimeSpend: 780,
+      preferenceTags: ['Spicy'],
+      segments: placeholderSegments(2, 25),
+      activePrograms: [],
+      loyaltyPoints: null,
+      alert: null,
+    },
+    {
+      ...rafiq,
+      id: 'cust-027',
+      name: 'Mohd Rafiq',
+      phone: rafiq.phone.replace(/^\+91\s?(\d{5})(\d{5})$/, '+91-$1-$2'),
+      dateOfBirth: null,
+      whatsappOptIn: !rafiq.whatsappOptIn,
+      firstVisitAt: daysAgo(120),
+      lastOrderAt: daysAgo(18),
+      orderCount: 1,
+      lifetimeSpend: 420,
+      preferenceTags: ['Family packs'],
+      segments: placeholderSegments(1, 18),
+      activePrograms: [],
+      loyaltyPoints: null,
+      alert: null,
+    },
+  ]
+}
+
+const seedBase = buildCustomers()
+
+/** The seed records (read-only reference for tests). */
+export const normalCustomers: Customer[] = [...seedBase, ...buildDuplicates(seedBase)]
+
+let customerStore: Customer[] = [...normalCustomers]
+
+export function getCustomerStore(): Customer[] {
+  return customerStore
+}
+
+export function addCustomersToStore(customers: Customer[]): void {
+  customerStore = [...customerStore, ...customers]
+}
+
+export function replaceCustomerInStore(customer: Customer): void {
+  customerStore = customerStore.map((c) => (c.id === customer.id ? customer : c))
+}
 
 export const emptyCustomers: Customer[] = []
 

@@ -21,6 +21,9 @@ const customer: Customer = {
   activePrograms: [],
   loyaltyPoints: 120,
   alert: null,
+  archivedAt: null,
+  archiveReason: null,
+  mergedIntoId: null,
 }
 
 const workflow: Workflow = {

@@ -21,6 +21,9 @@ const customer: Customer = {
   activePrograms: [],
   loyaltyPoints: null,
   alert: null,
+  archivedAt: null,
+  archiveReason: null,
+  mergedIntoId: null,
 }
 
 const rules: MessagingRules = {

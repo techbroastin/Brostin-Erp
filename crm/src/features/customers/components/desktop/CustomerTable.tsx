@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Badge } from '@/components/ui/badge'
 import { ArrowUpDown, AlertCircle } from 'lucide-react'
 import {
   Table,
@@ -90,7 +91,14 @@ export function CustomerTable({
               ))
             : items.map((customer) => (
                 <TableRow key={customer.id}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
+                  <TableCell className="font-medium">
+                    {customer.name}
+                    {customer.archivedAt && (
+                      <Badge variant="outline" className="ml-2 font-normal text-muted-foreground">
+                        Archived
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell>{customer.phone}</TableCell>
                   <TableCell>
                     {customer.lastOrderAt

@@ -153,6 +153,28 @@ export const router = createBrowserRouter([
           return { Component: CustomersListScreen }
         },
       },
+      // Book 3 §1 CRM tools — fixed paths, declared before customers/:customerId.
+      {
+        path: 'customers/duplicates',
+        lazy: async () => {
+          const { CustomerDuplicatesScreen } = await import('@/features/customers')
+          return { Component: CustomerDuplicatesScreen }
+        },
+      },
+      {
+        path: 'customers/merge',
+        lazy: async () => {
+          const { CustomerMergeScreen } = await import('@/features/customers')
+          return { Component: CustomerMergeScreen }
+        },
+      },
+      {
+        path: 'customers/import',
+        lazy: async () => {
+          const { CustomerImportScreen } = await import('@/features/customers')
+          return { Component: CustomerImportScreen }
+        },
+      },
       /**
        * Book 3 §10 Segmentation. Fixed sub-path 'segments' is declared
        * before 'customers/:customerId' so its precedence is explicit

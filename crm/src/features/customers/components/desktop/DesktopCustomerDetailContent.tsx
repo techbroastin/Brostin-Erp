@@ -3,6 +3,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { CardSectionHeading } from '@/components/shared/CardSectionHeading'
 import { CustomerTimeline } from '@/features/customers/components/shared/CustomerTimeline'
 import { CustomerProfileDetails } from '@/features/customers/components/shared/CustomerProfileDetails'
+import { CustomerArchiveControl } from '@/features/customers/components/shared/CustomerArchiveControl'
 import type { Customer } from '@/features/customers/types/customer'
 import { formatRupees, formatTimestampDate } from '@/features/customers/utils/customerFormat'
 
@@ -19,9 +20,11 @@ export function DesktopCustomerDetailContent({
 }: { customer: Customer }) {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <h1 className="text-page-title font-semibold">{customer.name}</h1>
+        {!customer.archivedAt && <CustomerArchiveControl customer={customer} />}
       </div>
+      {customer.archivedAt && <CustomerArchiveControl customer={customer} />}
 
       <div className="grid grid-cols-3 gap-4">
         <Card>

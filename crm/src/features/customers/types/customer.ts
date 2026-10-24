@@ -51,6 +51,14 @@ export type Customer = {
   activePrograms: string[]
   loyaltyPoints: number | null
   alert: string | null
+  /**
+   * Book 3 §1: customers are never deleted, only archived. Archived
+   * customers are hidden from lists, segments and campaigns.
+   */
+  archivedAt: string | null
+  archiveReason: string | null
+  /** Set when this record was merged into another customer (Merge Tool). */
+  mergedIntoId: string | null
 }
 
 export type CustomerSortBy = 'name' | 'lastOrderAt'
@@ -60,6 +68,8 @@ export type CustomerListParams = {
   page: number
   pageSize: number
   sortBy: CustomerSortBy
+  /** Archived customers are left out unless this is true. */
+  includeArchived?: boolean
 }
 
 export type CustomerListResult = {

@@ -24,6 +24,9 @@ function customer(overrides: Partial<Customer>): Customer {
     activePrograms: [],
     loyaltyPoints: null,
     alert: null,
+  archivedAt: null,
+  archiveReason: null,
+  mergedIntoId: null,
     ...overrides,
   }
 }
