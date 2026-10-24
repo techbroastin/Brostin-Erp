@@ -14,6 +14,8 @@ import {
   ERROR_SCENARIO_FLAG,
   type CampaignMockScenario,
 } from '@/features/campaigns/mock/campaigns.mock'
+import { dispatchMessages } from '@/features/notifications/services/notificationService'
+import type { DispatchSummary } from '@/features/notifications/types/message'
 
 const SIMULATED_LATENCY_MS = 500
 
@@ -119,4 +121,25 @@ export async function updateCampaignStatus(
 ): Promise<Campaign | null> {
   await delay()
   return updateCampaignStatusInStore(id, status)
+}
+
+/**
+ * Marks a campaign as sent and hands each audience member's message to
+ * the Notification Engine (Book 3 §13), which applies the weekly limit,
+ * opt-outs and channel fallback. Delivery is simulated — no provider is
+ * connected — and every result appears in the Message Log.
+ */
+export async function sendCampaign(
+  id: string,
+): Promise<{ campaign: Campaign | null; delivery: DispatchSummary | null }> {
+  const campaign = await updateCampaignStatus(id, 'sent')
+  if (!campaign) return { campaign: null, delivery: null }
+  const delivery = await dispatchMessages(
+    campaign.audienceCustomerIds.map((customerId) => ({
+      customerId,
+      source: { type: 'campaign', id: campaign.id, name: campaign.name },
+      body: campaign.message,
+    })),
+  )
+  return { campaign, delivery }
 }

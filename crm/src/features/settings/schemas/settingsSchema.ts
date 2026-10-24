@@ -23,3 +23,19 @@ export const addUserSchema = z.object({
 })
 
 export type AddUserFormValues = z.infer<typeof addUserSchema>
+
+export const MAX_WEEKLY_CAP = 14
+
+/** Book 3 §13 messaging rules. At least one channel must stay on, or every message would only be logged. */
+export const messagingRulesSchema = z.object({
+  weeklyCapPerCustomer: z
+    .number({ message: 'Enter a whole number.' })
+    .int('Enter a whole number.')
+    .min(1, 'The limit must be at least 1.')
+    .max(MAX_WEEKLY_CAP, `The limit cannot be more than ${MAX_WEEKLY_CAP}.`),
+  channelOrder: z
+    .array(z.object({ channel: z.enum(['whatsapp', 'sms', 'email']), enabled: z.boolean() }))
+    .refine((channels) => channels.some((c) => c.enabled), 'Keep at least one channel switched on.'),
+})
+
+export type MessagingRulesFormValues = z.infer<typeof messagingRulesSchema>

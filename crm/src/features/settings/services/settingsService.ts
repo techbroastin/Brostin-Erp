@@ -3,6 +3,7 @@ import type {
   SettingsUser,
   NotificationPreference,
   AddSettingsUserInput,
+  MessagingRules,
 } from '@/features/settings/types/settings'
 import {
   getGeneralSettingsStore,
@@ -12,6 +13,8 @@ import {
   removeUserFromStore,
   getNotificationPreferencesStore,
   setNotificationPreferenceInStore,
+  getMessagingRulesStore,
+  setMessagingRulesStore,
   ERROR_SCENARIO_FLAG,
   type SettingsMockScenario,
 } from '@/features/settings/mock/settings.mock'
@@ -88,4 +91,17 @@ export async function updateNotificationPreference(
   await delay()
   setNotificationPreferenceInStore(id, enabled)
   return getNotificationPreferencesStore()
+}
+
+export async function getMessagingRules(scenario: SettingsMockScenario = 'normal'): Promise<MessagingRules> {
+  await delay()
+  if (scenario === ERROR_SCENARIO_FLAG) {
+    throw new Error('Failed to load messaging rules.')
+  }
+  return getMessagingRulesStore()
+}
+
+export async function updateMessagingRules(rules: MessagingRules): Promise<MessagingRules> {
+  await delay()
+  return setMessagingRulesStore(rules)
 }

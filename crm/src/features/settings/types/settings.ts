@@ -43,6 +43,26 @@ export type NotificationPreference = {
   enabled: boolean
 }
 
+/** Customer messaging channels the Notification Engine (Book 3 §13) can route through. */
+export type MessageChannel = 'whatsapp' | 'sms' | 'email'
+
+export const MESSAGE_CHANNEL_LABELS: Record<MessageChannel, string> = {
+  whatsapp: 'WhatsApp',
+  sms: 'SMS',
+  email: 'Email',
+}
+
+/**
+ * Book 3 §13 rules shared by every program and campaign. Channels are
+ * tried in `channelOrder`, skipping disabled ones; if none works the
+ * message is only logged. The weekly cap counts messages that reached
+ * the customer in the last 7 days, across all sources combined.
+ */
+export type MessagingRules = {
+  weeklyCapPerCustomer: number
+  channelOrder: { channel: MessageChannel; enabled: boolean }[]
+}
+
 export type AddSettingsUserInput = {
   name: string
   email: string

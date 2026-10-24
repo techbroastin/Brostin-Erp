@@ -2,6 +2,7 @@ import type {
   GeneralSettings,
   SettingsUser,
   NotificationPreference,
+  MessagingRules,
 } from '@/features/settings/types/settings'
 
 /**
@@ -66,6 +67,25 @@ export function getNotificationPreferencesStore(): NotificationPreference[] {
 
 export function setNotificationPreferenceInStore(id: string, enabled: boolean): void {
   notificationPreferences = notificationPreferences.map((p) => (p.id === id ? { ...p, enabled } : p))
+}
+
+/** Book 3 §13 defaults: 2 messages per customer per week; WhatsApp first, then SMS, then email. */
+let messagingRules: MessagingRules = {
+  weeklyCapPerCustomer: 2,
+  channelOrder: [
+    { channel: 'whatsapp', enabled: true },
+    { channel: 'sms', enabled: true },
+    { channel: 'email', enabled: true },
+  ],
+}
+
+export function getMessagingRulesStore(): MessagingRules {
+  return messagingRules
+}
+
+export function setMessagingRulesStore(rules: MessagingRules): MessagingRules {
+  messagingRules = rules
+  return messagingRules
 }
 
 export const ERROR_SCENARIO_FLAG = 'error'

@@ -431,6 +431,13 @@ export const router = createBrowserRouter([
         },
       },
       {
+        path: 'campaigns/messages',
+        lazy: async () => {
+          const { MessageLogScreen } = await import('@/features/notifications')
+          return { Component: MessageLogScreen }
+        },
+      },
+      {
         path: 'campaigns/:campaignId',
         lazy: async () => {
           const { CampaignDetailScreen } = await import('@/features/campaigns')

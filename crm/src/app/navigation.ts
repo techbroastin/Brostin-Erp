@@ -100,6 +100,7 @@ export const navigationModules: NavModule[] = [
       { label: 'All Campaigns', path: '/campaigns/all' },
       { label: 'Create Campaign', path: '/campaigns/new' },
       { label: 'Coupons', path: '/campaigns/coupons' },
+      { label: 'Message Log', path: '/campaigns/messages' },
     ],
   },
   {

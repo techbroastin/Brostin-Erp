@@ -8,10 +8,12 @@ import {
   notificationPreferencesQueryKey,
 } from '@/features/settings/hooks/useNotificationPreferences'
 import { updateNotificationPreference } from '@/features/settings/services/settingsService'
+import { MessagingRulesCard } from '@/features/settings/components/desktop/MessagingRulesCard'
 
 /**
- * Desktop Notifications — mock preference toggles only, session-only
- * state. No real notification delivery exists or is implied.
+ * Desktop Notifications — staff alert toggles plus the customer
+ * messaging rules (Book 3 §13) the Notification Engine uses. Mock,
+ * session-only state; no real message is ever sent.
  */
 export function DesktopNotificationsSettingsContent() {
   const queryClient = useQueryClient()
@@ -32,6 +34,7 @@ export function DesktopNotificationsSettingsContent() {
         <DemoDataBadge />
       </div>
 
+      <h2 className="text-section-title font-semibold">Staff alerts</h2>
       {isError ? (
         <SettingsErrorState message="Couldn't load notification preferences." onRetry={() => refetch()} />
       ) : (
@@ -69,6 +72,8 @@ export function DesktopNotificationsSettingsContent() {
           </CardContent>
         </Card>
       )}
+
+      <MessagingRulesCard />
     </div>
   )
 }
