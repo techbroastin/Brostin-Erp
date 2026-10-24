@@ -687,6 +687,8 @@ A bottom navigation may be introduced for the most frequently used Manager funct
 
 **FINAL BOTTOM NAVIGATION IS NOT YET FINALIZED.** It must not be locked into the architecture until user workflow testing supports it. The hamburger menu remains the primary navigation model.
 
+**Owner-approved (Oct 2026, to match the mobile UI reference):** the Mobile Manager shows a bottom tab bar with **Home** (`/dashboard`), **Customers**, **Orders**, **Loyalty** and **More**. "More" opens the hamburger menu, which remains the complete navigation. Revisit after real-device workflow testing.
+
 ---
 
 # 26. Breadcrumbs

@@ -1,7 +1,4 @@
 import type { DashboardSummary } from '@/features/dashboard/types/dashboard'
-import { listOrders } from '@/features/orders/services/orderService'
-import { listCustomers } from '@/features/customers/services/customerService'
-import { buildInsights, type DashboardInsights } from '@/features/dashboard/utils/dashboardInsights'
 import {
   normalDashboardSummary,
   emptyDashboardSummary,
@@ -27,17 +24,4 @@ export async function getDashboardSummary(
   }
 
   return scenario === 'empty' ? emptyDashboardSummary : normalDashboardSummary
-}
-
-/**
- * Desktop dashboard insights, worked out from the Orders and Customers
- * services (see utils/dashboardInsights.ts). Those services supply the
- * simulated latency.
- */
-export async function getDashboardInsights(): Promise<DashboardInsights> {
-  const [orders, customers] = await Promise.all([
-    listOrders({ search: '', status: 'all', source: 'all', page: 1, pageSize: 1000, sortBy: 'createdAt' }),
-    listCustomers({ search: '', page: 1, pageSize: 1000, sortBy: 'name' }),
-  ])
-  return buildInsights(orders.items, customers.items)
 }

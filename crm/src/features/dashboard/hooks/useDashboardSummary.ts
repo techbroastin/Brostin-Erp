@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getDashboardInsights, getDashboardSummary } from '@/features/dashboard/services/dashboardService'
+import { getDashboardSummary } from '@/features/dashboard/services/dashboardService'
 
 /**
  * The one Dashboard query key, defined centrally here per
@@ -12,8 +12,4 @@ export function useDashboardSummary() {
     queryKey: dashboardSummaryQueryKey,
     queryFn: () => getDashboardSummary(),
   })
-}
-
-export function useDashboardInsights() {
-  return useQuery({ queryKey: ['dashboard', 'insights'], queryFn: () => getDashboardInsights() })
 }

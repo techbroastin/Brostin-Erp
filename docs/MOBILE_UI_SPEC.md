@@ -801,7 +801,7 @@ Do NOT:
 - hard-code production data
 - bypass the approved navigation architecture
 
-Bottom navigation remains **NOT YET FINALIZED** per `NAVIGATION.md`; it must not be added without approval.
+Bottom navigation: an owner-approved tab bar (Home, Customers, Orders, Loyalty, More) is in place — see `NAVIGATION.md` §25. Further changes still need approval.
 
 ---
 

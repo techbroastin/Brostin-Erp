@@ -13,7 +13,14 @@ export function CustomerCard({ customer }: { customer: Customer }) {
   return (
     <Link to={`/customers/${customer.id}`}>
       <Card>
-        <CardContent className="flex flex-col gap-1.5">
+        <CardContent className="flex items-start gap-3">
+          <span
+            aria-hidden="true"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-info/15 text-body font-semibold text-info"
+          >
+            {customer.name.charAt(0)}
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex items-center justify-between gap-2">
             <p className="truncate text-body font-medium">{customer.name}</p>
             {customer.loyaltyPoints != null && (
@@ -37,6 +44,7 @@ export function CustomerCard({ customer }: { customer: Customer }) {
               {customer.alert}
             </p>
           )}
+          </div>
         </CardContent>
       </Card>
     </Link>

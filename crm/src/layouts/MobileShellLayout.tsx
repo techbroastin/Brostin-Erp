@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { MobileHeader } from '@/components/mobile/MobileHeader'
 import { MobileHamburgerMenu } from '@/components/mobile/MobileHamburgerMenu'
+import { MobileBottomNav } from '@/components/mobile/MobileBottomNav'
 import { navigationModules } from '@/app/navigation'
 
 /**
  * Mobile Manager shell — docs/MOBILE_UI_SPEC.md. Composes MobileHeader +
- * MobileHamburgerMenu + a content outlet. Structurally independent from
- * DesktopShellLayout; shares no layout component with it.
+ * MobileHamburgerMenu + a content outlet + the owner-approved bottom tab
+ * bar (whose "More" opens the hamburger menu). Structurally independent
+ * from DesktopShellLayout; shares no layout component with it.
  */
 export function MobileShellLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -19,12 +21,17 @@ export function MobileShellLayout() {
   const title = activeModule?.label ?? 'Broastin'
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
-      <MobileHeader title={title} onMenuClick={() => setMenuOpen(true)} />
+    <div className="flex h-dvh flex-col bg-canvas">
+      <MobileHeader
+        title={title}
+        isHome={activeModule?.id === 'dashboard'}
+        onMenuClick={() => setMenuOpen(true)}
+      />
       <MobileHamburgerMenu open={menuOpen} onOpenChange={setMenuOpen} />
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
+      <MobileBottomNav moreOpen={menuOpen} onMoreClick={() => setMenuOpen(true)} />
     </div>
   )
 }

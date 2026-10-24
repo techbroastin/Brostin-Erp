@@ -8,6 +8,7 @@ import {
   SheetFooter,
 } from '@/components/ui/sheet'
 import { navigationModules } from '@/app/navigation'
+import { BrandMark } from '@/components/shared/BrandMark'
 import { cn } from '@/lib/utils'
 
 /**
@@ -32,9 +33,9 @@ export function MobileHamburgerMenu({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-3/4 p-0">
-        <SheetHeader className="border-b border-border">
-          <SheetTitle className="text-section-title font-semibold tracking-tight">
-            Broastin
+        <SheetHeader className="bg-gradient-to-br from-brand-primary-deep to-brand-primary text-white">
+          <SheetTitle className="text-white">
+            <BrandMark withLogo subtitle="Growth OS" nameClassName="text-h3 font-extrabold text-brand-accent" />
           </SheetTitle>
         </SheetHeader>
 
@@ -49,9 +50,9 @@ export function MobileHamburgerMenu({
                     to={module.path}
                     onClick={() => onOpenChange(false)}
                     className={cn(
-                      'flex items-center gap-3 rounded-md px-3 py-2.5 text-body font-medium',
+                      'flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-body font-medium',
                       isActive
-                        ? 'bg-brand-primary-soft text-brand-primary'
+                        ? 'bg-brand-accent text-brand-accent-foreground'
                         : 'text-foreground hover:bg-muted',
                     )}
                   >
