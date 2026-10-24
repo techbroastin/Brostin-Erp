@@ -22,6 +22,9 @@ import { getSegmentDetail, listSegments } from '@/features/segments/services/seg
 import { dispatchMessages } from '@/features/notifications/services/notificationService'
 import type { DispatchSummary } from '@/features/notifications/types/message'
 import { recordAudit } from '@/features/audit/services/auditService'
+import { getGeneralSettings, getMessagingRules } from '@/features/settings/services/settingsService'
+import { MESSAGE_CHANNEL_LABELS, type MessageChannel } from '@/features/settings/types/settings'
+import { firstName, personalize } from '@/features/campaigns/utils/personalize'
 
 const ALL_CUSTOMERS_PAGE_SIZE = 1000
 
@@ -191,11 +194,12 @@ export async function sendCampaign(id: string): Promise<{ campaign: Campaign; de
   }
   replaceCampaignInStore(sent)
 
+  const { businessName } = await getGeneralSettings()
   const delivery = await dispatchMessages(
     segment.members.map((customer) => ({
       customerId: customer.id,
       source: { type: 'campaign', id: sent.id, name: sent.name },
-      body: sent.message,
+      body: personalize(sent.message, { first_name: firstName(customer.name), business_name: businessName }),
     })),
   )
   recordAudit({
@@ -208,4 +212,58 @@ export async function sendCampaign(id: string): Promise<{ campaign: Campaign; de
     ],
   })
   return { campaign: sent, delivery }
+}
+
+export type CampaignPreview = {
+  text: string
+  /** Whose details filled the tokens, or null when the audience is empty. */
+  sampleCustomerName: string | null
+}
+
+/** The message as one audience member would see it ("Send preview", Book 3 §4). */
+export async function getCampaignPreview(id: string): Promise<CampaignPreview> {
+  const campaign = getCampaignStore().find((c) => c.id === id)
+  if (!campaign) throw new Error('Campaign not found.')
+  const [audience, { businessName }] = await Promise.all([getCampaignAudience(id), getGeneralSettings()])
+  const sample = audience[0] ?? null
+  return {
+    text: personalize(campaign.message, {
+      first_name: sample ? firstName(sample.name) : 'Customer',
+      business_name: businessName,
+    }),
+    sampleCustomerName: sample?.name ?? null,
+  }
+}
+
+const PHONE_PATTERN = /^(\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}$/
+
+export type TestSendResult = {
+  to: string
+  channel: MessageChannel
+  text: string
+}
+
+/**
+ * Book 3 §4 "test-send-to-self": sends one copy to a staff phone number
+ * before broadcasting. Uses the first switched-on phone channel from the
+ * messaging rules. Simulated (no provider), not a customer message — so
+ * it skips the weekly limit and the Message Log — but it is audited.
+ */
+export async function sendTestMessage(id: string, phone: string): Promise<TestSendResult> {
+  const campaign = getCampaignStore().find((c) => c.id === id)
+  if (!campaign) throw new Error('Campaign not found.')
+  const to = phone.trim()
+  if (!PHONE_PATTERN.test(to)) throw new Error('Enter a valid Indian mobile number, e.g. +91 98765 43210.')
+
+  const [rules, preview] = await Promise.all([getMessagingRules(), getCampaignPreview(id)])
+  const channel = rules.channelOrder.find((c) => c.enabled && c.channel !== 'email')?.channel
+  if (!channel) throw new Error('Switch on WhatsApp or SMS in Settings → Notifications to send a test.')
+
+  recordAudit({
+    category: 'marketing',
+    action: 'Sent test message',
+    target: { type: 'campaign', id, label: campaign.name, href: `/campaigns/${id}` },
+    changes: [{ field: 'To', from: '—', to: `${to} (${MESSAGE_CHANNEL_LABELS[channel]})` }],
+  })
+  return { to, channel, text: preview.text }
 }

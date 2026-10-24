@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
@@ -7,12 +7,21 @@ import { Input } from '@/components/ui/input'
 import { buttonVariants } from '@/components/ui/button'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
 import { useSegments } from '@/features/segments/hooks/useSegments'
+import { useSettingsGeneral } from '@/features/settings/hooks/useSettingsGeneral'
+import { useTemplate, useTemplates } from '@/features/campaigns/hooks/useTemplates'
+import { MessagePreview, TokenHint } from '@/features/campaigns/components/shared/MessagePreview'
+import { OCCASION_LABELS, TEMPLATE_OCCASIONS, personalize } from '@/features/campaigns/utils/personalize'
 import { useCreateCampaign } from '@/features/campaigns/hooks/useCreateCampaign'
 import { campaignSchema, type CampaignFormValues } from '@/features/campaigns/schemas/campaignSchema'
 import { cn } from '@/lib/utils'
 
 const textareaClassName =
   'min-h-32 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm'
+
+const selectClassName =
+  'h-8 rounded-lg border border-input bg-transparent px-2.5 text-body-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
+
+const SAMPLE_FIRST_NAME = 'Priya'
 
 const STEPS = ['Details', 'Audience', 'Content', 'Review'] as const
 type Step = 0 | 1 | 2 | 3
@@ -29,12 +38,15 @@ type Step = 0 | 1 | 2 | 3
 export function DesktopCreateCampaignContent() {
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>(0)
+  const [searchParams] = useSearchParams()
+  const templateParam = searchParams.get('template')
 
   const {
     register,
     handleSubmit,
     trigger,
     control,
+    setValue,
     clearErrors,
     formState: { errors },
   } = useForm<CampaignFormValues>({
@@ -46,6 +58,30 @@ export function DesktopCreateCampaignContent() {
   const message = useWatch({ control, name: 'message' })
   const segmentId = useWatch({ control, name: 'segmentId' })
   const scheduledAtInput = useWatch({ control, name: 'scheduledAt' })
+
+  const templates = useTemplates({ occasion: 'all' })
+  const general = useSettingsGeneral()
+  const [usedTemplateName, setUsedTemplateName] = useState<string | null>(null)
+
+  // "Use" from the Template Library: prefill once, with the template's
+  // message and (if it names one) its segment.
+  const prefillTemplate = useTemplate(templateParam)
+  const prefilled = useRef(false)
+  useEffect(() => {
+    const template = prefillTemplate.data
+    if (!template || prefilled.current) return
+    prefilled.current = true
+    setValue('message', template.body)
+    if (template.segmentId && template.segmentName) setValue('segmentId', template.segmentId)
+    setUsedTemplateName(template.name)
+  }, [prefillTemplate.data, setValue])
+
+  const applyTemplate = (id: string) => {
+    const template = templates.data?.find((t) => t.id === id)
+    if (!template) return
+    setValue('message', template.body, { shouldValidate: true })
+    setUsedTemplateName(template.name)
+  }
 
   const segments = useSegments()
   const selectedSegment = segments.data?.find((seg) => seg.id === segmentId)
@@ -180,18 +216,54 @@ export function DesktopCreateCampaignContent() {
           )}
 
           {step === 2 && (
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="campaign-message" className="text-body-sm font-medium">
-                Message content
-              </label>
-              <textarea
-                id="campaign-message"
-                className={textareaClassName}
-                aria-invalid={!!errors.message}
-                {...register('message')}
-              />
-              {errors.message && <p className="text-caption text-destructive">{errors.message.message}</p>}
-            </div>
+            <>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="campaign-template" className="text-body-sm font-medium">
+                  Start from a template (optional)
+                </label>
+                <select
+                  id="campaign-template"
+                  className={selectClassName}
+                  value=""
+                  onChange={(e) => applyTemplate(e.target.value)}
+                  disabled={!templates.data}
+                >
+                  <option value="">{usedTemplateName ? `Using: ${usedTemplateName}` : 'Choose a template…'}</option>
+                  {TEMPLATE_OCCASIONS.map((occasion) => {
+                    const group = (templates.data ?? []).filter((t) => t.occasion === occasion)
+                    return group.length === 0 ? null : (
+                      <optgroup key={occasion} label={OCCASION_LABELS[occasion]}>
+                        {group.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name}
+                            {t.segmentName ? ` (for ${t.segmentName})` : ''}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )
+                  })}
+                </select>
+                <p className="text-caption text-muted-foreground">
+                  Picking a template replaces the message below. You can still edit it.{' '}
+                  <Link to="/campaigns/templates" className="underline underline-offset-2">
+                    Manage templates
+                  </Link>
+                </p>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="campaign-message" className="text-body-sm font-medium">
+                  Message content
+                </label>
+                <textarea
+                  id="campaign-message"
+                  className={textareaClassName}
+                  aria-invalid={!!errors.message}
+                  {...register('message')}
+                />
+                {errors.message && <p className="text-caption text-destructive">{errors.message.message}</p>}
+                <TokenHint />
+              </div>
+            </>
           )}
 
           {step === 3 && (
@@ -218,8 +290,14 @@ export function DesktopCreateCampaignContent() {
                 </span>
               </div>
               <div className="flex flex-col gap-1 border-t border-border pt-2">
-                <span className="text-muted-foreground">Message</span>
-                <p className="whitespace-pre-wrap">{message || '—'}</p>
+                <span className="text-muted-foreground">Message preview</span>
+                <MessagePreview
+                  text={personalize(message ?? '', {
+                    first_name: SAMPLE_FIRST_NAME,
+                    business_name: general.data?.businessName ?? 'Broastin',
+                  })}
+                  caption={`Shown for a sample customer named ${SAMPLE_FIRST_NAME}. Each customer sees their own name. You can send yourself a test after creating the campaign.`}
+                />
               </div>
               {createCampaign.isError && (
                 <p className="text-caption text-destructive">

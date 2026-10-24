@@ -8,6 +8,7 @@ import { CampaignStatusBadge } from '@/features/campaigns/components/shared/Camp
 import { sendCampaign } from '@/features/campaigns/services/campaignService'
 import type { DispatchSummary } from '@/features/notifications/types/message'
 import { useCampaignAudience } from '@/features/campaigns/hooks/useCampaignAudience'
+import { CampaignPreviewCard } from '@/features/campaigns/components/desktop/CampaignPreviewCard'
 import type { CampaignSummary } from '@/features/campaigns/types/campaign'
 
 /**
@@ -146,14 +147,7 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: CampaignS
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardSectionHeading>Message</CardSectionHeading>
-        </CardHeader>
-        <CardContent>
-          <p className="whitespace-pre-wrap text-body-sm">{campaign.message}</p>
-        </CardContent>
-      </Card>
+      <CampaignPreviewCard campaign={campaign} />
 
       <Card>
         <CardHeader>

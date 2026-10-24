@@ -2,3 +2,4 @@ export { CampaignOverviewScreen } from '@/features/campaigns/screens/CampaignOve
 export { AllCampaignsScreen } from '@/features/campaigns/screens/AllCampaignsScreen'
 export { CreateCampaignScreen } from '@/features/campaigns/screens/CreateCampaignScreen'
 export { CampaignDetailScreen } from '@/features/campaigns/screens/CampaignDetailScreen'
+export { TemplatesScreen, CreateTemplateScreen, EditTemplateScreen } from '@/features/campaigns/screens/TemplateScreens'

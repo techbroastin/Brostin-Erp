@@ -431,6 +431,27 @@ export const router = createBrowserRouter([
         },
       },
       {
+        path: 'campaigns/templates',
+        lazy: async () => {
+          const { TemplatesScreen } = await import('@/features/campaigns')
+          return { Component: TemplatesScreen }
+        },
+      },
+      {
+        path: 'campaigns/templates/new',
+        lazy: async () => {
+          const { CreateTemplateScreen } = await import('@/features/campaigns')
+          return { Component: CreateTemplateScreen }
+        },
+      },
+      {
+        path: 'campaigns/templates/:templateId',
+        lazy: async () => {
+          const { EditTemplateScreen } = await import('@/features/campaigns')
+          return { Component: EditTemplateScreen }
+        },
+      },
+      {
         path: 'campaigns/messages',
         lazy: async () => {
           const { MessageLogScreen } = await import('@/features/notifications')
