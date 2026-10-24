@@ -3,10 +3,11 @@
  * Broastin standard data model (NOT YET FINALIZED per
  * docs/FRONTEND_ARCHITECTURE.md §16).
  *
- * `SettingsUserRole` is an illustrative label set only — no permission
- * matrix exists anywhere (docs/NAVIGATION.md §18: "exact permission
- * matrix NOT YET FINALIZED"). Nothing here is enforced; see
- * DesktopRolesSettingsContent's explicit disclaimer.
+ * `SettingsUserRole` is Book 3 §14's four fixed MVP roles. What each
+ * role may do is the owner-approved starting matrix in
+ * utils/permissions.ts. Nothing is enforced yet — there is no sign-in
+ * (Authentication phase), and enforcement must ultimately happen in the
+ * backend, not only by hiding UI.
  */
 
 export type GeneralSettings = {
@@ -23,12 +24,16 @@ export type GeneralSettings = {
   publicReviewUrl: string | null
 }
 
-export type SettingsUserRole = 'admin' | 'manager'
+export type SettingsUserRole = 'owner' | 'manager' | 'staff' | 'marketing_operator'
 
 export const ROLE_LABELS: Record<SettingsUserRole, string> = {
-  admin: 'Admin',
+  owner: 'Owner',
   manager: 'Manager',
+  staff: 'Staff',
+  marketing_operator: 'Marketing Operator',
 }
+
+export const SETTINGS_USER_ROLES = Object.keys(ROLE_LABELS) as SettingsUserRole[]
 
 export type SettingsUser = {
   id: string

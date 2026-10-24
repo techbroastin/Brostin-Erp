@@ -526,6 +526,13 @@ export const router = createBrowserRouter([
         },
       },
       {
+        path: 'settings/audit',
+        lazy: async () => {
+          const { AuditLogScreen } = await import('@/features/audit')
+          return { Component: AuditLogScreen }
+        },
+      },
+      {
         path: 'settings/system',
         lazy: async () => {
           const { SettingsSystemScreen } = await import('@/features/settings')

@@ -21,6 +21,7 @@ import { listCustomers } from '@/features/customers/services/customerService'
 import { getSegmentDetail, listSegments } from '@/features/segments/services/segmentService'
 import { dispatchMessages } from '@/features/notifications/services/notificationService'
 import type { DispatchSummary } from '@/features/notifications/types/message'
+import { recordAudit } from '@/features/audit/services/auditService'
 
 const ALL_CUSTOMERS_PAGE_SIZE = 1000
 
@@ -146,6 +147,12 @@ export async function createCampaign(input: CreateCampaignInput): Promise<Campai
   }
 
   addCampaignToStore(campaign)
+  recordAudit({
+    category: 'marketing',
+    action: 'Created campaign',
+    target: { type: 'campaign', id: campaign.id, label: campaign.name, href: `/campaigns/${campaign.id}` },
+    changes: [{ field: 'Segment', from: '—', to: segments.find((s) => s.id === input.segmentId)?.name ?? input.segmentId }],
+  })
   return campaign
 }
 
@@ -191,5 +198,14 @@ export async function sendCampaign(id: string): Promise<{ campaign: Campaign; de
       body: sent.message,
     })),
   )
+  recordAudit({
+    category: 'marketing',
+    action: 'Sent campaign',
+    target: { type: 'campaign', id: sent.id, label: sent.name, href: `/campaigns/${sent.id}` },
+    changes: [
+      { field: 'Segment', from: '—', to: segment.segment.name },
+      { field: 'Recipients', from: '—', to: String(delivery.total) },
+    ],
+  })
   return { campaign: sent, delivery }
 }

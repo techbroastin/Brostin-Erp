@@ -5,6 +5,7 @@ import {
   ERROR_SCENARIO_FLAG,
   type CustomerMockScenario,
 } from '@/features/customers/mock/customers.mock'
+import { recordAudit, recordView } from '@/features/audit/services/auditService'
 
 const SIMULATED_LATENCY_MS = 500
 
@@ -58,4 +59,32 @@ export async function getCustomerById(
 
   const source = getSourceDataset(scenario)
   return source.find((c) => c.id === id) ?? null
+}
+
+/**
+ * Opening a customer's profile — Book 3 §14 logs every customer data
+ * access. Use this for the detail screen; getCustomerById() stays
+ * un-logged for internal lookups (e.g. the public feedback page).
+ */
+export async function openCustomerProfile(id: string): Promise<Customer | null> {
+  const customer = await getCustomerById(id)
+  if (customer) {
+    recordView({
+      category: 'customer_data',
+      action: 'Viewed customer profile',
+      target: { type: 'customer', id, label: customer.name, href: `/customers/${id}` },
+      changes: [],
+    })
+  }
+  return customer
+}
+
+/** Exports leave the system, so each one is logged (no de-duplication). */
+export function recordTimelineExport(customerId: string, customerName: string, eventCount: number): void {
+  recordAudit({
+    category: 'customer_data',
+    action: 'Exported customer timeline',
+    target: { type: 'customer', id: customerId, label: customerName, href: `/customers/${customerId}` },
+    changes: [{ field: 'Events exported', from: '—', to: String(eventCount) }],
+  })
 }

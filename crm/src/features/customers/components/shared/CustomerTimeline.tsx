@@ -6,6 +6,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { useCustomerTimeline } from '@/features/customers/hooks/useCustomerTimeline'
 import { timelineEventsToCsv } from '@/features/customers/utils/customerTimelineCsv'
 import { downloadCsv } from '@/utils/downloadCsv'
+import { recordTimelineExport } from '@/features/customers/services/customerService'
 import type {
   CustomerTimelineEventFilter,
   CustomerTimelineEventType,
@@ -60,6 +61,7 @@ export function CustomerTimeline({ customerId, customerName }: { customerId: str
   const handleExport = () => {
     const filenameSafeName = customerName.trim().replace(/\s+/g, '-').toLowerCase() || customerId
     downloadCsv(`${filenameSafeName}-timeline.csv`, timelineEventsToCsv(filtered))
+    recordTimelineExport(customerId, customerName, filtered.length)
   }
 
   return (

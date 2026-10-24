@@ -200,6 +200,7 @@ export const navigationModules: NavModule[] = [
       { label: 'Notifications', path: '/settings/notifications' },
       { label: 'Integrations', path: '/settings/integrations' },
       { label: 'System', path: '/settings/system' },
+      { label: 'Audit Log', path: '/settings/audit' },
     ],
   },
 ]

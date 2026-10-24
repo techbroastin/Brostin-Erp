@@ -19,7 +19,7 @@ export type GeneralSettingsFormValues = z.infer<typeof generalSettingsSchema>
 export const addUserSchema = z.object({
   name: z.string().trim().min(1, 'Name is required.').max(120, 'Name is too long.'),
   email: z.string().trim().min(1, 'Email is required.').email('Enter a valid email address.'),
-  role: z.enum(['admin', 'manager']),
+  role: z.enum(['owner', 'manager', 'staff', 'marketing_operator']),
 })
 
 export type AddUserFormValues = z.infer<typeof addUserSchema>

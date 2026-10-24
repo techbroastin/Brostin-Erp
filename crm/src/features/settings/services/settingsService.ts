@@ -4,13 +4,17 @@ import type {
   NotificationPreference,
   AddSettingsUserInput,
   MessagingRules,
+  SettingsUserRole,
 } from '@/features/settings/types/settings'
+import { MESSAGE_CHANNEL_LABELS, ROLE_LABELS } from '@/features/settings/types/settings'
+import { diffFields, recordAudit } from '@/features/audit/services/auditService'
 import {
   getGeneralSettingsStore,
   setGeneralSettingsStore,
   getUsersStore,
   addUserToStore,
   removeUserFromStore,
+  setUserRoleInStore,
   getNotificationPreferencesStore,
   setNotificationPreferenceInStore,
   getMessagingRulesStore,
@@ -44,7 +48,23 @@ export async function getGeneralSettings(
 
 export async function updateGeneralSettings(input: GeneralSettings): Promise<GeneralSettings> {
   await delay()
-  return setGeneralSettingsStore(input)
+  const before = getGeneralSettingsStore()
+  const saved = setGeneralSettingsStore(input)
+  const changes = diffFields(before, saved, {
+    businessName: 'Business name',
+    contactEmail: 'Contact email',
+    contactPhone: 'Contact phone',
+    publicReviewUrl: 'Public review link',
+  })
+  if (changes.length > 0) {
+    recordAudit({
+      category: 'settings',
+      action: 'Updated general settings',
+      target: { type: 'settings', id: 'general', label: 'General settings', href: '/settings/general' },
+      changes,
+    })
+  }
+  return saved
 }
 
 export async function listSettingsUsers(
@@ -66,12 +86,50 @@ export async function addSettingsUser(input: AddSettingsUserInput): Promise<Sett
     role: input.role,
   }
   addUserToStore(user)
+  recordAudit({
+    category: 'user_access',
+    action: 'Added user',
+    target: { type: 'user', id: user.id, label: user.name, href: '/settings/users' },
+    changes: [{ field: 'Role', from: '—', to: ROLE_LABELS[user.role] }],
+  })
   return user
+}
+
+/** Every business needs at least one Owner, so the last one can't be removed or demoted. */
+function assertNotLastOwner(user: SettingsUser) {
+  if (user.role === 'owner' && getUsersStore().filter((u) => u.role === 'owner').length === 1) {
+    throw new Error('There must always be at least one Owner.')
+  }
+}
+
+export async function updateSettingsUserRole(id: string, role: SettingsUserRole): Promise<SettingsUser> {
+  await delay()
+  const user = getUsersStore().find((u) => u.id === id)
+  if (!user) throw new Error('User not found.')
+  if (user.role === role) return user
+  if (role !== 'owner') assertNotLastOwner(user)
+  const updated = setUserRoleInStore(id, role) as SettingsUser
+  recordAudit({
+    category: 'user_access',
+    action: 'Changed user role',
+    target: { type: 'user', id, label: user.name, href: '/settings/users' },
+    changes: [{ field: 'Role', from: ROLE_LABELS[user.role], to: ROLE_LABELS[role] }],
+  })
+  return updated
 }
 
 export async function removeSettingsUser(id: string): Promise<void> {
   await delay()
+  const user = getUsersStore().find((u) => u.id === id)
+  if (!user) return
+  assertNotLastOwner(user)
   removeUserFromStore(id)
+  recordAudit({
+    category: 'user_access',
+    action: 'Removed user',
+    target: { type: 'user', id, label: user.name },
+    changes: [{ field: 'Role', from: ROLE_LABELS[user.role], to: '—' }],
+  })
 }
 
 export async function listNotificationPreferences(
@@ -89,7 +147,16 @@ export async function updateNotificationPreference(
   enabled: boolean,
 ): Promise<NotificationPreference[]> {
   await delay()
+  const pref = getNotificationPreferencesStore().find((p) => p.id === id)
   setNotificationPreferenceInStore(id, enabled)
+  if (pref && pref.enabled !== enabled) {
+    recordAudit({
+      category: 'settings',
+      action: enabled ? 'Turned on staff alert' : 'Turned off staff alert',
+      target: { type: 'settings', id, label: pref.label, href: '/settings/notifications' },
+      changes: [{ field: 'Enabled', from: pref.enabled ? 'On' : 'Off', to: enabled ? 'On' : 'Off' }],
+    })
+  }
   return getNotificationPreferencesStore()
 }
 
@@ -101,7 +168,25 @@ export async function getMessagingRules(scenario: SettingsMockScenario = 'normal
   return getMessagingRulesStore()
 }
 
+const describeChannels = (rules: MessagingRules) =>
+  rules.channelOrder.filter((c) => c.enabled).map((c) => MESSAGE_CHANNEL_LABELS[c.channel]).join(' → ') || 'None'
+
 export async function updateMessagingRules(rules: MessagingRules): Promise<MessagingRules> {
   await delay()
-  return setMessagingRulesStore(rules)
+  const before = getMessagingRulesStore()
+  const saved = setMessagingRulesStore(rules)
+  const changes = diffFields(
+    { weeklyCap: before.weeklyCapPerCustomer, channels: describeChannels(before) },
+    { weeklyCap: saved.weeklyCapPerCustomer, channels: describeChannels(saved) },
+    { weeklyCap: 'Weekly limit', channels: 'Channel order' },
+  )
+  if (changes.length > 0) {
+    recordAudit({
+      category: 'settings',
+      action: 'Updated messaging rules',
+      target: { type: 'settings', id: 'messaging-rules', label: 'Customer messaging rules', href: '/settings/notifications' },
+      changes,
+    })
+  }
+  return saved
 }

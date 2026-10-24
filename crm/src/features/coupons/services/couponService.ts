@@ -7,7 +7,8 @@ import type {
   CouponSummary,
   CreateCouponInput,
 } from '@/features/coupons/types/coupon'
-import { couponStatus, generateBulkCodes, normalizeCode } from '@/features/coupons/utils/couponRules'
+import { couponStatus, formatDiscount, generateBulkCodes, normalizeCode } from '@/features/coupons/utils/couponRules'
+import { recordAudit } from '@/features/audit/services/auditService'
 import {
   getCouponStore,
   getRedemptionStore,
@@ -148,6 +149,16 @@ export async function createCoupon(input: CreateCouponInput): Promise<Coupon> {
     createdAt: new Date().toISOString(),
   }
   addCouponToStore(coupon)
+  recordAudit({
+    category: 'marketing',
+    action: 'Created coupon',
+    target: { type: 'coupon', id: coupon.id, label: coupon.name, href: `/campaigns/coupons/${coupon.id}` },
+    changes: [
+      { field: 'Discount', from: '—', to: formatDiscount(coupon) },
+      { field: 'Codes', from: '—', to: coupon.codeMode === 'shared' ? coupon.codes[0] : `${coupon.codes.length} unique codes` },
+      { field: 'Valid until', from: '—', to: coupon.expiresOn },
+    ],
+  })
   return coupon
 }
 
@@ -158,5 +169,13 @@ export async function setCouponDisabled(id: string, disabled: boolean): Promise<
   if (!existing) throw new Error('Coupon not found.')
   const updated = { ...existing, disabled }
   replaceCouponInStore(updated)
+  if (existing.disabled !== disabled) {
+    recordAudit({
+      category: 'marketing',
+      action: disabled ? 'Disabled coupon' : 'Enabled coupon',
+      target: { type: 'coupon', id, label: existing.name, href: `/campaigns/coupons/${id}` },
+      changes: [{ field: 'Status', from: disabled ? 'Enabled' : 'Disabled', to: disabled ? 'Disabled' : 'Enabled' }],
+    })
+  }
   return updated
 }

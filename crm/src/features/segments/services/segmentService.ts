@@ -9,7 +9,8 @@ import type {
   SegmentPreview,
   SegmentSummary,
 } from '@/features/segments/types/segment'
-import { evaluateSegment } from '@/features/segments/utils/segmentRules'
+import { describeRule, evaluateSegment } from '@/features/segments/utils/segmentRules'
+import { recordAudit } from '@/features/audit/services/auditService'
 import {
   getSegmentStore,
   addSegmentToStore,
@@ -126,7 +127,17 @@ export async function createSegment(input: SegmentInput): Promise<Segment> {
     lastCalculatedAt: null,
   }
   addSegmentToStore(segment)
+  recordAudit({
+    category: 'marketing',
+    action: 'Created segment',
+    target: { type: 'segment', id: segment.id, label: segment.name, href: `/customers/segments/${segment.id}` },
+    changes: [{ field: 'Rules', from: '—', to: describeDefinition(segment) }],
+  })
   return segment
+}
+
+function describeDefinition(segment: Pick<Segment, 'match' | 'rules'>): string {
+  return segment.rules.map(describeRule).join(segment.match === 'all' ? ' AND ' : ' OR ')
 }
 
 /** Editing rules invalidates the last calculation until the next nightly run. */
@@ -144,11 +155,28 @@ export async function updateSegment(id: string, input: SegmentInput): Promise<Se
     lastCalculatedAt: null,
   }
   replaceSegmentInStore(segment)
+  const changes = [
+    { field: 'Name', from: existing.name, to: segment.name },
+    { field: 'Description', from: existing.description || '—', to: segment.description || '—' },
+    { field: 'Rules', from: describeDefinition(existing), to: describeDefinition(segment) },
+  ].filter((c) => c.from !== c.to)
+  recordAudit({
+    category: 'marketing',
+    action: 'Edited segment',
+    target: { type: 'segment', id, label: segment.name, href: `/customers/segments/${id}` },
+    changes,
+  })
   return segment
 }
 
 export async function deleteSegment(id: string): Promise<void> {
   await getAllCustomers()
-  assertCustom(id)
+  const existing = assertCustom(id)
   removeSegmentFromStore(id)
+  recordAudit({
+    category: 'marketing',
+    action: 'Deleted segment',
+    target: { type: 'segment', id, label: existing.name },
+    changes: [{ field: 'Rules', from: describeDefinition(existing), to: '—' }],
+  })
 }

@@ -16,17 +16,23 @@ import { buttonVariants } from '@/components/ui/button'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
 import { SettingsErrorState } from '@/features/settings/components/shared/SettingsErrorState'
 import { useSettingsUsers, settingsUsersQueryKey } from '@/features/settings/hooks/useSettingsUsers'
-import { addSettingsUser, removeSettingsUser } from '@/features/settings/services/settingsService'
+import {
+  addSettingsUser,
+  removeSettingsUser,
+  updateSettingsUserRole,
+} from '@/features/settings/services/settingsService'
 import { addUserSchema, type AddUserFormValues } from '@/features/settings/schemas/settingsSchema'
-import { ROLE_LABELS } from '@/features/settings/types/settings'
+import { ROLE_LABELS, type SettingsUserRole } from '@/features/settings/types/settings'
 
 const selectClassName =
   'h-8 rounded-lg border border-input bg-transparent px-2.5 text-body-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
 
 /**
- * Desktop Users Settings — mock list + add/remove only. No real account
- * creation, invitations, or authentication. Remove is immediate (no
- * confirmation step) since this only affects session-only mock state.
+ * Desktop Users Settings — mock list, add, change role, remove. No real
+ * account creation, invitations, or authentication. Every change is
+ * written to the Audit Log. The last Owner can't be removed or demoted.
+ * Remove is immediate (no confirmation step) since this only affects
+ * session-only mock state.
  */
 export function DesktopUsersSettingsContent() {
   const queryClient = useQueryClient()
@@ -56,6 +62,15 @@ export function DesktopUsersSettingsContent() {
       queryClient.invalidateQueries({ queryKey: settingsUsersQueryKey })
     },
   })
+
+  const roleMutation = useMutation({
+    mutationFn: ({ id, role }: { id: string; role: SettingsUserRole }) => updateSettingsUserRole(id, role),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: settingsUsersQueryKey })
+    },
+  })
+
+  const actionError = [roleMutation.error, removeMutation.error].find((e) => e instanceof Error)
 
   const onSubmit = handleSubmit((values) => {
     addMutation.mutate(values)
@@ -121,6 +136,12 @@ export function DesktopUsersSettingsContent() {
             </CardContent>
           </Card>
 
+          {actionError && (
+            <p className="text-body-sm text-destructive">
+              {actionError.message.includes('Owner') ? actionError.message : 'Could not update this user. Please try again.'}
+            </p>
+          )}
+
           <Card>
             <CardContent>
               {isPending ? (
@@ -145,11 +166,31 @@ export function DesktopUsersSettingsContent() {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
-                        <TableCell>{ROLE_LABELS[user.role]}</TableCell>
+                        <TableCell>
+                          <select
+                            aria-label={`Role for ${user.name}`}
+                            className={selectClassName}
+                            value={user.role}
+                            disabled={roleMutation.isPending}
+                            onChange={(e) => {
+                              removeMutation.reset()
+                              roleMutation.mutate({ id: user.id, role: e.target.value as SettingsUserRole })
+                            }}
+                          >
+                            {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </TableCell>
                         <TableCell className="text-right">
                           <button
                             type="button"
-                            onClick={() => removeMutation.mutate(user.id)}
+                            onClick={() => {
+                              roleMutation.reset()
+                              removeMutation.mutate(user.id)
+                            }}
                             disabled={removeMutation.isPending}
                             className={buttonVariants({ variant: 'outline', size: 'sm' })}
                           >

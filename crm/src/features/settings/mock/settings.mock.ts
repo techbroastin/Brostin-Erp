@@ -39,8 +39,10 @@ export function setGeneralSettingsStore(next: GeneralSettings): GeneralSettings 
 }
 
 let users: SettingsUser[] = [
-  { id: 'user-001', name: 'Arjun Nair', email: 'arjun@broastin.example', role: 'admin' },
+  { id: 'user-001', name: 'Arjun Nair', email: 'arjun@broastin.example', role: 'owner' },
   { id: 'user-002', name: 'Divya Menon', email: 'divya@broastin.example', role: 'manager' },
+  { id: 'user-003', name: 'Rahul Das', email: 'rahul@broastin.example', role: 'staff' },
+  { id: 'user-004', name: 'Meera Joseph', email: 'meera@broastin.example', role: 'marketing_operator' },
 ]
 
 export function getUsersStore(): SettingsUser[] {
@@ -49,6 +51,16 @@ export function getUsersStore(): SettingsUser[] {
 
 export function addUserToStore(user: SettingsUser): void {
   users = [...users, user]
+}
+
+export function setUserRoleInStore(id: string, role: SettingsUser['role']): SettingsUser | null {
+  let updated: SettingsUser | null = null
+  users = users.map((u) => {
+    if (u.id !== id) return u
+    updated = { ...u, role }
+    return updated
+  })
+  return updated
 }
 
 export function removeUserFromStore(id: string): void {
