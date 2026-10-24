@@ -4,6 +4,7 @@ import type {
   CampaignListParams,
   CampaignListResult,
   CampaignOverview,
+  CampaignPerformanceRow,
   CampaignStatus,
   CampaignSummary,
   CreateCampaignInput,
@@ -19,8 +20,8 @@ import {
 } from '@/features/campaigns/mock/campaigns.mock'
 import { listCustomers } from '@/features/customers/services/customerService'
 import { getSegmentDetail, listSegments } from '@/features/segments/services/segmentService'
-import { dispatchMessages } from '@/features/notifications/services/notificationService'
-import type { DispatchSummary } from '@/features/notifications/types/message'
+import { dispatchMessages, getDeliveryBySource } from '@/features/notifications/services/notificationService'
+import type { DeliveryFunnel, DispatchSummary } from '@/features/notifications/types/message'
 import { recordAudit } from '@/features/audit/services/auditService'
 import { getGeneralSettings, getMessagingRules } from '@/features/settings/services/settingsService'
 import { MESSAGE_CHANNEL_LABELS, type MessageChannel } from '@/features/settings/types/settings'
@@ -42,12 +43,17 @@ function getSourceDataset(scenario: CampaignMockScenario): Campaign[] {
  */
 async function withAudience(campaigns: Campaign[]): Promise<CampaignSummary[]> {
   const segments = new Map((await listSegments()).map((s) => [s.id, s]))
+  const now = Date.now()
   return campaigns.map((campaign) => {
     const segment = segments.get(campaign.segmentId)
     return {
       ...campaign,
       segmentName: segment?.name ?? null,
       audienceCount: campaign.sentToCustomerIds?.length ?? segment?.memberCount ?? 0,
+      isDue:
+        campaign.status === 'scheduled' &&
+        campaign.scheduledAt !== null &&
+        new Date(campaign.scheduledAt).getTime() <= now,
     }
   })
 }
@@ -145,6 +151,8 @@ export async function createCampaign(input: CreateCampaignInput): Promise<Campai
     segmentId: input.segmentId,
     sentToCustomerIds: null,
     scheduledAt: input.scheduledAt,
+    repeatYearly: input.scheduledAt ? input.repeatYearly : false,
+    sentAt: null,
     status: input.scheduledAt ? 'scheduled' : 'draft',
     createdAt: new Date().toISOString(),
   }
@@ -172,13 +180,37 @@ export async function updateCampaignStatus(
 }
 
 /**
+ * Book 3 §4 recurring calendar campaigns: once a yearly campaign is
+ * sent, an unsent copy is scheduled for the same date and time next
+ * year, so each year keeps its own recipients and results.
+ */
+function scheduleNextYear(sent: Campaign): Campaign | null {
+  if (!sent.repeatYearly || !sent.scheduledAt) return null
+  const next = new Date(sent.scheduledAt)
+  next.setFullYear(next.getFullYear() + 1)
+  const copy: Campaign = {
+    ...sent,
+    id: `camp-${Date.now()}-next`,
+    status: 'scheduled',
+    sentToCustomerIds: null,
+    sentAt: null,
+    scheduledAt: next.toISOString(),
+    createdAt: new Date().toISOString(),
+  }
+  addCampaignToStore(copy)
+  return copy
+}
+
+/**
  * Sends a campaign to its segment's current members: freezes that list
  * on the campaign, marks it sent, and hands each message to the
  * Notification Engine (Book 3 §13), which applies the weekly limit,
  * opt-outs and channel fallback. Delivery is simulated — no provider is
  * connected — and every result appears in the Message Log.
  */
-export async function sendCampaign(id: string): Promise<{ campaign: Campaign; delivery: DispatchSummary }> {
+export async function sendCampaign(
+  id: string,
+): Promise<{ campaign: Campaign; delivery: DispatchSummary; nextYear: Campaign | null }> {
   const campaign = getCampaignStore().find((c) => c.id === id)
   if (!campaign) throw new Error('Campaign not found.')
   if (campaign.status === 'sent') throw new Error('This campaign has already been sent.')
@@ -191,8 +223,10 @@ export async function sendCampaign(id: string): Promise<{ campaign: Campaign; de
     ...campaign,
     status: 'sent',
     sentToCustomerIds: segment.members.map((c) => c.id),
+    sentAt: new Date().toISOString(),
   }
   replaceCampaignInStore(sent)
+  const nextYear = scheduleNextYear(sent)
 
   const { businessName } = await getGeneralSettings()
   const delivery = await dispatchMessages(
@@ -209,9 +243,10 @@ export async function sendCampaign(id: string): Promise<{ campaign: Campaign; de
     changes: [
       { field: 'Segment', from: '—', to: segment.segment.name },
       { field: 'Recipients', from: '—', to: String(delivery.total) },
+      ...(nextYear ? [{ field: 'Next year', from: '—', to: nextYear.scheduledAt ?? '' }] : []),
     ],
   })
-  return { campaign: sent, delivery }
+  return { campaign: sent, delivery, nextYear }
 }
 
 export type CampaignPreview = {
@@ -266,4 +301,39 @@ export async function sendTestMessage(id: string, phone: string): Promise<TestSe
     changes: [{ field: 'To', from: '—', to: `${to} (${MESSAGE_CHANNEL_LABELS[channel]})` }],
   })
   return { to, channel, text: preview.text }
+}
+
+/** Delivery funnel for one sent campaign, from the Message Log. Null before it's sent. */
+export async function getCampaignDelivery(id: string): Promise<DeliveryFunnel | null> {
+  const campaign = getCampaignStore().find((c) => c.id === id)
+  if (!campaign || campaign.status !== 'sent') return null
+  return (await getDeliveryBySource()).get(id) ?? null
+}
+
+/**
+ * Book 3 §4 Campaign Performance: delivery results for every sent
+ * campaign, newest first. Opens, clicks and coupon redemptions need a
+ * connected provider and POS, so they aren't tracked yet.
+ */
+export async function getCampaignPerformance(): Promise<CampaignPerformanceRow[]> {
+  const [delivery, summaries] = await Promise.all([
+    getDeliveryBySource(),
+    withAudience(getCampaignStore().filter((c) => c.status === 'sent')),
+  ])
+  return summaries
+    .map((c) => {
+      const f = delivery.get(c.id)
+      return {
+        campaignId: c.id,
+        name: c.name,
+        sentAt: c.sentAt ?? c.scheduledAt ?? c.createdAt,
+        segmentName: c.segmentName,
+        sentTo: c.audienceCount,
+        reached: f?.reached ?? 0,
+        delivered: f?.delivered ?? 0,
+        read: f?.read ?? 0,
+        heldBack: (f?.blocked ?? 0) + (f?.logOnly ?? 0),
+      }
+    })
+    .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
 }

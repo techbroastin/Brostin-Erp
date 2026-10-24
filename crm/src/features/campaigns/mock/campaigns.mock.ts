@@ -17,6 +17,14 @@ import type { Campaign, CampaignStatus } from '@/features/campaigns/types/campai
  * final business rules. See DemoDataBadge wherever this data renders.
  */
 
+/** Next 25 December, 10:00 local — a yearly greeting for the calendar. */
+function nextChristmas(): string {
+  const now = new Date()
+  const date = new Date(now.getFullYear(), 11, 25, 10, 0, 0)
+  if (date.getTime() <= now.getTime()) date.setFullYear(date.getFullYear() + 1)
+  return date.toISOString()
+}
+
 function seedCampaigns(): Campaign[] {
   const now = Date.now()
   return [
@@ -28,6 +36,8 @@ function seedCampaigns(): Campaign[] {
       segmentId: 'seg-repeat',
       sentToCustomerIds: ['cust-001', 'cust-002', 'cust-003', 'cust-004', 'cust-005'],
       scheduledAt: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      repeatYearly: false,
+      sentAt: new Date(now - 140 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date(now - 6 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
@@ -38,6 +48,8 @@ function seedCampaigns(): Campaign[] {
       segmentId: 'seg-vip',
       sentToCustomerIds: null,
       scheduledAt: new Date(now + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      repeatYearly: false,
+      sentAt: null,
       createdAt: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
@@ -48,7 +60,21 @@ function seedCampaigns(): Campaign[] {
       segmentId: 'seg-new',
       sentToCustomerIds: null,
       scheduledAt: null,
+      repeatYearly: false,
+      sentAt: null,
       createdAt: new Date(now - 1 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'camp-004',
+      name: 'Christmas greetings',
+      status: 'scheduled',
+      message: 'Merry Christmas, {{first_name}}! Warm wishes from all of us at {{business_name}}.',
+      segmentId: 'seg-repeat',
+      sentToCustomerIds: null,
+      scheduledAt: nextChristmas(),
+      repeatYearly: true,
+      sentAt: null,
+      createdAt: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(),
     },
   ]
 }

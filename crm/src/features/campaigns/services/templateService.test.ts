@@ -61,6 +61,7 @@ describe('campaign preview and test-send', () => {
       message: 'Hi {{first_name}}, thanks from {{business_name}}!',
       segmentId: 'seg-vip',
       scheduledAt: null,
+      repeatYearly: false,
     })
     const preview = await campaigns.getCampaignPreview(created.id)
     expect(preview.sampleCustomerName).not.toBeNull()
@@ -74,6 +75,7 @@ describe('campaign preview and test-send', () => {
       message: 'Hi {{first_name}}',
       segmentId: 'seg-new',
       scheduledAt: null,
+      repeatYearly: false,
     })
     await campaigns.sendCampaign(created.id)
     const messages = await notifications.listMessages({ search: 'Personal', status: 'all' })

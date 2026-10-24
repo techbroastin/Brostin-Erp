@@ -31,6 +31,13 @@ export type Campaign = {
   sentToCustomerIds: string[] | null
   /** ISO timestamp — when a scheduled/sent campaign is set to go out. Never an actual dispatch. */
   scheduledAt: string | null
+  /**
+   * Book 3 §4 recurring calendar campaign: when sent, next year's copy
+   * is scheduled automatically for the same date and time.
+   */
+  repeatYearly: boolean
+  /** When it was actually sent; null until then. */
+  sentAt: string | null
   createdAt: string
 }
 
@@ -41,6 +48,23 @@ export type Campaign = {
 export type CampaignSummary = Campaign & {
   segmentName: string | null
   audienceCount: number
+  /**
+   * Scheduled time has passed but it hasn't been sent. No automatic
+   * scheduler is connected yet (backend phase), so it needs sending by hand.
+   */
+  isDue: boolean
+}
+
+export type CampaignPerformanceRow = {
+  campaignId: string
+  name: string
+  sentAt: string
+  segmentName: string | null
+  sentTo: number
+  reached: number
+  delivered: number
+  read: number
+  heldBack: number
 }
 
 export type CampaignSortBy = 'createdAt' | 'name'
@@ -69,4 +93,5 @@ export type CreateCampaignInput = {
   message: string
   segmentId: string
   scheduledAt: string | null
+  repeatYearly: boolean
 }

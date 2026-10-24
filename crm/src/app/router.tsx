@@ -431,6 +431,13 @@ export const router = createBrowserRouter([
         },
       },
       {
+        path: 'campaigns/calendar',
+        lazy: async () => {
+          const { CampaignCalendarScreen } = await import('@/features/campaigns')
+          return { Component: CampaignCalendarScreen }
+        },
+      },
+      {
         path: 'campaigns/templates',
         lazy: async () => {
           const { TemplatesScreen } = await import('@/features/campaigns')

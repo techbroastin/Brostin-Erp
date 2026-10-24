@@ -2,6 +2,7 @@ import type { Customer } from '@/features/customers/types/customer'
 import type { MessageChannel, MessagingRules } from '@/features/settings/types/settings'
 import type {
   DeliveryAttempt,
+  DeliveryFunnel,
   DispatchSummary,
   MessageRecord,
   MessageStatus,
@@ -102,5 +103,13 @@ export function summarize(records: Pick<MessageRecord, 'attempts' | 'status'>[])
     usedFallback: records.filter(usedFallback).length,
     blocked: records.filter((r) => r.status === 'blocked_weekly_limit').length,
     logOnly: records.filter((r) => r.status === 'log_only').length,
+  }
+}
+
+export function funnel(records: Pick<MessageRecord, 'attempts' | 'status'>[]): DeliveryFunnel {
+  return {
+    ...summarize(records),
+    delivered: records.filter((r) => r.status === 'delivered' || r.status === 'read').length,
+    read: records.filter((r) => r.status === 'read').length,
   }
 }

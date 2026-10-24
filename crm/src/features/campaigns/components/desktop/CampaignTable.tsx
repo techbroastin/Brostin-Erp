@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ArrowUpDown } from 'lucide-react'
+import { ArrowUpDown, Repeat } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableHeader,
@@ -81,7 +82,11 @@ export function CampaignTable({
                 <TableRow key={campaign.id}>
                   <TableCell className="font-medium">{campaign.name}</TableCell>
                   <TableCell>
-                    <CampaignStatusBadge status={campaign.status} />
+                    <span className="flex items-center gap-1.5">
+                      <CampaignStatusBadge status={campaign.status} />
+                      {campaign.isDue && <Badge variant="destructive">Due</Badge>}
+                      {campaign.repeatYearly && <Repeat className="size-3.5 text-muted-foreground" aria-label="Repeats every year" />}
+                    </span>
                   </TableCell>
                   <TableCell>
                     {campaign.segmentName ?? <span className="text-destructive">Segment deleted</span>}

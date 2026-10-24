@@ -64,6 +64,13 @@ export type DispatchSummary = {
   logOnly: number
 }
 
+/** Book 3 §4 delivery funnel for one source (e.g. a campaign). */
+export type DeliveryFunnel = DispatchSummary & {
+  /** Delivered or read. */
+  delivered: number
+  read: number
+}
+
 export type MessageListParams = {
   search: string
   status: MessageStatus | 'all'

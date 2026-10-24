@@ -23,6 +23,14 @@ const selectClassName =
 
 const SAMPLE_FIRST_NAME = 'Priya'
 
+/**
+ * The Calendar's "Plan a campaign" link passes ?date=YYYY-MM-DD; it
+ * becomes 10:00 that day in a datetime-local value.
+ */
+function dateParamToLocalInput(date: string | null): string | null {
+  return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T10:00` : null
+}
+
 const STEPS = ['Details', 'Audience', 'Content', 'Review'] as const
 type Step = 0 | 1 | 2 | 3
 
@@ -51,13 +59,14 @@ export function DesktopCreateCampaignContent() {
     formState: { errors },
   } = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
-    defaultValues: { name: '', message: '', segmentId: '', scheduledAt: null },
+    defaultValues: { name: '', message: '', segmentId: '', scheduledAt: dateParamToLocalInput(searchParams.get('date')), repeatYearly: false },
   })
 
   const name = useWatch({ control, name: 'name' })
   const message = useWatch({ control, name: 'message' })
   const segmentId = useWatch({ control, name: 'segmentId' })
   const scheduledAtInput = useWatch({ control, name: 'scheduledAt' })
+  const repeatYearly = useWatch({ control, name: 'repeatYearly' })
 
   const templates = useTemplates({ occasion: 'all' })
   const general = useSettingsGeneral()
@@ -89,7 +98,7 @@ export function DesktopCreateCampaignContent() {
   const createCampaign = useCreateCampaign()
 
   const STEP_FIELDS: Record<Step, (keyof CampaignFormValues)[]> = {
-    0: ['name'],
+    0: ['name', 'scheduledAt', 'repeatYearly'],
     1: ['segmentId'],
     2: ['message'],
     3: [],
@@ -111,6 +120,7 @@ export function DesktopCreateCampaignContent() {
         message: values.message,
         segmentId: values.segmentId,
         scheduledAt: values.scheduledAt ? new Date(values.scheduledAt).toISOString() : null,
+        repeatYearly: values.repeatYearly,
       },
       {
         onSuccess: (campaign) => navigate(`/campaigns/${campaign.id}`),
@@ -167,11 +177,30 @@ export function DesktopCreateCampaignContent() {
                 <label htmlFor="campaign-scheduled-at" className="text-body-sm font-medium">
                   Schedule for (optional)
                 </label>
-                <Input id="campaign-scheduled-at" type="datetime-local" {...register('scheduledAt')} />
+                <Input
+                  id="campaign-scheduled-at"
+                  type="datetime-local"
+                  aria-invalid={!!errors.scheduledAt}
+                  {...register('scheduledAt', { setValueAs: (v: string | null) => v || null })}
+                />
+                {errors.scheduledAt && <p className="text-caption text-destructive">{errors.scheduledAt.message}</p>}
                 <p className="text-caption text-muted-foreground">
-                  Leave blank to save as a draft. This never dispatches an actual message.
+                  Leave blank to save as a draft. No automatic sender is connected yet, so scheduled campaigns are
+                  sent from their page when due.
                 </p>
               </div>
+
+              <label className="flex items-start gap-2.5 text-body-sm">
+                <input type="checkbox" className="mt-0.5 accent-brand-primary" {...register('repeatYearly')} />
+                <span>
+                  <span className="block font-medium">Repeat every year on this date</span>
+                  <span className="block text-caption text-muted-foreground">
+                    For fixed-date occasions like Christmas, New Year or your store anniversary. After it's sent, next
+                    year's campaign is scheduled for you. Festivals whose date moves (Diwali, Eid, Onam) need a new
+                    campaign each year.
+                  </span>
+                </span>
+              </label>
             </>
           )}
 
@@ -287,6 +316,7 @@ export function DesktopCreateCampaignContent() {
                         timeStyle: 'short',
                       })
                     : 'Not scheduled (saves as draft)'}
+                  {scheduledAtInput && repeatYearly && ' · repeats every year'}
                 </span>
               </div>
               <div className="flex flex-col gap-1 border-t border-border pt-2">

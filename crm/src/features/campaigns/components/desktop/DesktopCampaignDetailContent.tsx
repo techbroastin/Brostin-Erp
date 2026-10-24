@@ -9,7 +9,9 @@ import { sendCampaign } from '@/features/campaigns/services/campaignService'
 import type { DispatchSummary } from '@/features/notifications/types/message'
 import { useCampaignAudience } from '@/features/campaigns/hooks/useCampaignAudience'
 import { CampaignPreviewCard } from '@/features/campaigns/components/desktop/CampaignPreviewCard'
-import type { CampaignSummary } from '@/features/campaigns/types/campaign'
+import { CampaignPerformanceCard } from '@/features/campaigns/components/desktop/CampaignPerformanceCard'
+import { Badge } from '@/components/ui/badge'
+import type { Campaign, CampaignSummary } from '@/features/campaigns/types/campaign'
 
 /**
  * docs/DESKTOP_UI_SPEC.md — denser multi-column layout. "Mark as Sent"
@@ -24,6 +26,7 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: CampaignS
   const queryClient = useQueryClient()
   const [actionError, setActionError] = useState<string | null>(null)
   const [delivery, setDelivery] = useState<DispatchSummary | null>(null)
+  const [nextYear, setNextYear] = useState<Campaign | null>(null)
 
   const { data: audienceCustomers = [], isPending: audiencePending } = useCampaignAudience(campaign.id)
 
@@ -32,6 +35,7 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: CampaignS
     onSuccess: (result) => {
       setActionError(null)
       setDelivery(result.delivery)
+      setNextYear(result.nextYear)
       queryClient.invalidateQueries({ queryKey: ['campaigns'] })
       queryClient.invalidateQueries({ queryKey: ['messages'] })
     },
@@ -49,6 +53,7 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: CampaignS
         <div className="flex items-center gap-3">
           <h1 className="text-page-title font-semibold">{campaign.name}</h1>
           <CampaignStatusBadge status={campaign.status} />
+          {campaign.isDue && <Badge variant="destructive">Due — not sent</Badge>}
         </div>
         {campaign.status !== 'sent' && (
           <button
@@ -57,12 +62,20 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: CampaignS
             disabled={markAsSent.isPending}
             className={buttonVariants({ variant: 'default', size: 'sm' })}
           >
-            {markAsSent.isPending ? 'Updating…' : 'Mark as Sent'}
+            {markAsSent.isPending ? 'Sending…' : 'Send now'}
           </button>
         )}
       </div>
 
       {actionError && <p className="text-body-sm text-destructive">{actionError}</p>}
+
+      {campaign.isDue && (
+        <p className="max-w-2xl rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-body-sm">
+          This campaign was scheduled for{' '}
+          {new Date(campaign.scheduledAt!).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} but
+          hasn't gone out. No automatic sender is connected yet — use <strong>Send now</strong>.
+        </p>
+      )}
 
       {delivery && (
         <p className="max-w-2xl rounded-lg border border-border bg-muted/40 px-3 py-2 text-body-sm">
@@ -73,6 +86,16 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: CampaignS
           <Link to="/campaigns/messages" className="font-medium underline underline-offset-2">
             View in Message Log
           </Link>
+          {nextYear && (
+            <>
+              {' '}
+              Next year's campaign is scheduled for{' '}
+              <Link to={`/campaigns/${nextYear.id}`} className="font-medium underline underline-offset-2">
+                {new Date(nextYear.scheduledAt!).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
+              </Link>
+              .
+            </>
+          )}
         </p>
       )}
 
@@ -98,6 +121,18 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: CampaignS
                   : 'Not scheduled'}
               </span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Repeats</span>
+              <span>{campaign.repeatYearly ? 'Every year' : 'No'}</span>
+            </div>
+            {campaign.sentAt && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Sent</span>
+                <span>
+                  {new Date(campaign.sentAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-muted-foreground">Created</span>
               <span>
@@ -137,14 +172,7 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: CampaignS
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardSectionHeading>Performance</CardSectionHeading>
-          </CardHeader>
-          <CardContent className="text-body-sm text-muted-foreground">
-            Not yet available — no engagement/delivery data model exists yet.
-          </CardContent>
-        </Card>
+        <CampaignPerformanceCard campaign={campaign} />
       </div>
 
       <CampaignPreviewCard campaign={campaign} />

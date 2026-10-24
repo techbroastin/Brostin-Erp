@@ -3,12 +3,13 @@ import { listCustomers } from '@/features/customers/services/customerService'
 import { getMessagingRules } from '@/features/settings/services/settingsService'
 import type { MessageChannel, MessagingRules } from '@/features/settings/types/settings'
 import type {
+  DeliveryFunnel,
   DispatchSummary,
   MessageListParams,
   MessageRecord,
   SendRequest,
 } from '@/features/notifications/types/message'
-import { reachedInLastWeek, routeMessage, summarize } from '@/features/notifications/utils/messageRouting'
+import { funnel, reachedInLastWeek, routeMessage, summarize } from '@/features/notifications/utils/messageRouting'
 import {
   SEED_REQUESTS,
   simulateProvider,
@@ -135,4 +136,14 @@ export async function getMessageSummary(scenario: MessageMockScenario = 'normal'
   const customers = await getCustomers()
   if (scenario === ERROR_SCENARIO_FLAG) throw new Error('Failed to load message summary.')
   return summarize(scenario === 'empty' ? [] : await ensureSeeded(customers))
+}
+
+/** Delivery funnel per source id (e.g. each campaign), for performance views. */
+export async function getDeliveryBySource(): Promise<Map<string, DeliveryFunnel>> {
+  const records = await ensureSeeded(await getCustomers())
+  const bySource = new Map<string, MessageRecord[]>()
+  for (const record of records) {
+    bySource.set(record.source.id, [...(bySource.get(record.source.id) ?? []), record])
+  }
+  return new Map([...bySource].map(([id, group]) => [id, funnel(group)]))
 }

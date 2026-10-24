@@ -19,12 +19,22 @@ export const messageSchema = z
  * validation rules beyond basic required/length checks are
  * NOT YET FINALIZED (§19) and are not invented here.
  */
-export const campaignSchema = z.object({
-  name: z.string().trim().min(1, 'Campaign name is required.').max(120, 'Campaign name is too long.'),
-  message: messageSchema,
-  /** Book 3 §4: every campaign targets a segment — there is no "all customers" option. */
-  segmentId: z.string().min(1, 'Pick a segment.'),
-  scheduledAt: z.string().nullable(),
-})
+export const campaignSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Campaign name is required.').max(120, 'Campaign name is too long.'),
+    message: messageSchema,
+    /** Book 3 §4: every campaign targets a segment — there is no "all customers" option. */
+    segmentId: z.string().min(1, 'Pick a segment.'),
+    scheduledAt: z.string().nullable(),
+    repeatYearly: z.boolean(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.scheduledAt && new Date(v.scheduledAt).getTime() < Date.now()) {
+      ctx.addIssue({ code: 'custom', path: ['scheduledAt'], message: 'Pick a time in the future.' })
+    }
+    if (v.repeatYearly && !v.scheduledAt) {
+      ctx.addIssue({ code: 'custom', path: ['scheduledAt'], message: 'Pick a date to repeat every year.' })
+    }
+  })
 
 export type CampaignFormValues = z.infer<typeof campaignSchema>

@@ -25,10 +25,10 @@ describe('campaignService segment targeting', () => {
 
   test('creating a campaign requires an existing segment', async () => {
     await expect(
-      campaigns.createCampaign({ name: 'X', message: 'Hi', segmentId: 'seg-missing', scheduledAt: null }),
+      campaigns.createCampaign({ name: 'X', message: 'Hi', segmentId: 'seg-missing', scheduledAt: null, repeatYearly: false }),
     ).rejects.toThrow('Pick a segment')
 
-    const created = await campaigns.createCampaign({ name: 'X', message: 'Hi', segmentId: 'seg-new', scheduledAt: null })
+    const created = await campaigns.createCampaign({ name: 'X', message: 'Hi', segmentId: 'seg-new', scheduledAt: null, repeatYearly: false })
     expect(created).toMatchObject({ segmentId: 'seg-new', sentToCustomerIds: null, status: 'draft' })
   })
 
@@ -52,6 +52,7 @@ describe('campaignService segment targeting', () => {
       message: 'Hi',
       segmentId: 'seg-custom-001',
       scheduledAt: null,
+      repeatYearly: false,
     })
     await segments.deleteSegment('seg-custom-001')
 
@@ -67,7 +68,7 @@ describe('campaignService segment targeting', () => {
       match: 'all',
       rules: [{ field: 'order_count', operator: 'gt', value: '9999' }],
     })
-    const campaign = await campaigns.createCampaign({ name: 'Z', message: 'Hi', segmentId: empty.id, scheduledAt: null })
+    const campaign = await campaigns.createCampaign({ name: 'Z', message: 'Hi', segmentId: empty.id, scheduledAt: null, repeatYearly: false })
     await expect(campaigns.sendCampaign(campaign.id)).rejects.toThrow('no customers')
   })
 })

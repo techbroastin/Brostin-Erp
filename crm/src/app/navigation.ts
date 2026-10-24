@@ -99,6 +99,7 @@ export const navigationModules: NavModule[] = [
       { label: 'Overview', path: '/campaigns' },
       { label: 'All Campaigns', path: '/campaigns/all' },
       { label: 'Create Campaign', path: '/campaigns/new' },
+      { label: 'Calendar', path: '/campaigns/calendar' },
       { label: 'Templates', path: '/campaigns/templates' },
       { label: 'Coupons', path: '/campaigns/coupons' },
       { label: 'Message Log', path: '/campaigns/messages' },
