@@ -2,6 +2,9 @@ import { Phone, AlertCircle } from 'lucide-react'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { CardSectionHeading } from '@/components/shared/CardSectionHeading'
 import { CustomerTimeline } from '@/features/customers/components/shared/CustomerTimeline'
+import { CustomerProfileDetails } from '@/features/customers/components/shared/CustomerProfileDetails'
+import type { Customer } from '@/features/customers/types/customer'
+import { formatRupees, formatTimestampDate } from '@/features/customers/utils/customerFormat'
 
 /**
  * docs/DESKTOP_UI_SPEC.md — denser two-column profile/summary, same
@@ -13,17 +16,7 @@ import { CustomerTimeline } from '@/features/customers/components/shared/Custome
  */
 export function DesktopCustomerDetailContent({
   customer,
-}: {
-  customer: {
-    id: string
-    name: string
-    phone: string
-    lastOrderAt: string | null
-    orderCount: number
-    loyaltyPoints: number | null
-    alert: string | null
-  }
-}) {
+}: { customer: Customer }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -46,6 +39,9 @@ export function DesktopCustomerDetailContent({
                 {customer.alert}
               </p>
             )}
+            <div className="mt-3">
+              <CustomerProfileDetails customer={customer} />
+            </div>
           </CardContent>
         </Card>
 
@@ -60,16 +56,20 @@ export function DesktopCustomerDetailContent({
                 <p className="text-h3 font-semibold">{customer.orderCount}</p>
               </div>
               <div>
+                <p className="text-label text-muted-foreground">Lifetime spend</p>
+                <p className="text-h3 font-semibold">{formatRupees(customer.lifetimeSpend)}</p>
+              </div>
+              <div>
                 <p className="text-label text-muted-foreground">Loyalty points</p>
                 <p className="text-h3 font-semibold">{customer.loyaltyPoints ?? '—'}</p>
               </div>
               <div>
+                <p className="text-label text-muted-foreground">First visit</p>
+                <p className="text-h3 font-semibold">{formatTimestampDate(customer.firstVisitAt)}</p>
+              </div>
+              <div>
                 <p className="text-label text-muted-foreground">Last order</p>
-                <p className="text-h3 font-semibold">
-                  {customer.lastOrderAt
-                    ? new Date(customer.lastOrderAt).toLocaleDateString()
-                    : '—'}
-                </p>
+                <p className="text-h3 font-semibold">{formatTimestampDate(customer.lastOrderAt)}</p>
               </div>
             </div>
           </CardContent>

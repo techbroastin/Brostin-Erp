@@ -1,6 +1,9 @@
 import { Phone, AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { CustomerTimeline } from '@/features/customers/components/shared/CustomerTimeline'
+import { CustomerProfileDetails } from '@/features/customers/components/shared/CustomerProfileDetails'
+import type { Customer } from '@/features/customers/types/customer'
+import { formatRupees, formatTimestampDate } from '@/features/customers/utils/customerFormat'
 
 /**
  * docs/MOBILE_UI_SPEC.md §13 detail sequence: Profile → Summary → Orders
@@ -15,17 +18,7 @@ import { CustomerTimeline } from '@/features/customers/components/shared/Custome
  */
 export function MobileCustomerDetailContent({
   customer,
-}: {
-  customer: {
-    id: string
-    name: string
-    phone: string
-    lastOrderAt: string | null
-    orderCount: number
-    loyaltyPoints: number | null
-    alert: string | null
-  }
-}) {
+}: { customer: Customer }) {
   return (
     <div className="flex flex-col gap-6 p-4">
       <section className="flex flex-col gap-1">
@@ -54,16 +47,37 @@ export function MobileCustomerDetailContent({
           </Card>
           <Card>
             <CardContent>
+              <p className="text-label text-muted-foreground">Lifetime spend</p>
+              <p className="text-h3 font-semibold">{formatRupees(customer.lifetimeSpend)}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
               <p className="text-label text-muted-foreground">Loyalty points</p>
               <p className="text-h3 font-semibold">{customer.loyaltyPoints ?? '—'}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <p className="text-label text-muted-foreground">First visit</p>
+              <p className="text-h3 font-semibold">{formatTimestampDate(customer.firstVisitAt)}</p>
             </CardContent>
           </Card>
         </div>
         <p className="text-body-sm text-muted-foreground">
           {customer.lastOrderAt
-            ? `Last order ${new Date(customer.lastOrderAt).toLocaleDateString()}`
+            ? `Last order ${formatTimestampDate(customer.lastOrderAt)}`
             : 'No orders yet'}
         </p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-section-title font-semibold">Profile</h2>
+        <Card>
+          <CardContent>
+            <CustomerProfileDetails customer={customer} />
+          </CardContent>
+        </Card>
       </section>
 
       {(['Orders', 'Loyalty', 'Feedback'] as const).map((section) => (
