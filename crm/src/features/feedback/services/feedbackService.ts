@@ -3,6 +3,7 @@ import type {
   FeedbackListParams,
   FeedbackListResult,
   FeedbackSentiment,
+  FeedbackSummary,
   SubmitFeedbackRatingInput,
 } from '@/features/feedback/types/feedback'
 import {
@@ -93,6 +94,13 @@ export async function listFeedback(
   if (params.sentiment !== 'all') {
     filtered = filtered.filter((f) => f.sentiment === params.sentiment)
   }
+  if (params.status && params.status !== 'all') {
+    filtered = filtered.filter((f) => f.status === params.status)
+  }
+  if (params.rating && params.rating !== 'all') {
+    const rating = params.rating === 'unrated' ? null : Number(params.rating)
+    filtered = filtered.filter((f) => f.rating === rating)
+  }
   const search = params.search.trim().toLowerCase()
   if (search) {
     filtered = filtered.filter((f) => (nameById.get(f.customerId) ?? '').toLowerCase().includes(search))
@@ -114,6 +122,23 @@ export async function listFeedback(
   }))
 
   return { items, total: sorted.length }
+}
+
+/** Counts across all feedback for the Feedback overview's summary strip. */
+export async function getFeedbackSummary(scenario: FeedbackMockScenario = 'normal'): Promise<FeedbackSummary> {
+  await delay()
+
+  const source = getSourceDataset(scenario)
+  const ratings = source.flatMap((f) => (f.rating !== null ? [f.rating] : []))
+
+  return {
+    total: source.length,
+    open: source.filter((f) => f.status === 'open').length,
+    needsAttention: source.filter(needsAttention).length,
+    negative: source.filter((f) => f.sentiment === 'negative').length,
+    averageRating: ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : null,
+    ratedCount: ratings.length,
+  }
 }
 
 export async function getFeedbackById(

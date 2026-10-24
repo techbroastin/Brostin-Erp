@@ -45,7 +45,7 @@ export function FeedbackEmptyState({
         <SearchX className="size-8 text-muted-foreground" />
         <div>
           <p className="text-body font-medium">No feedback matches the selected filter.</p>
-          <p className="mt-1 text-body-sm text-muted-foreground">Try a different sentiment filter.</p>
+          <p className="mt-1 text-body-sm text-muted-foreground">Try different filters.</p>
         </div>
         <button
           type="button"

@@ -4,16 +4,37 @@ import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { FeedbackEmptyState } from '@/features/feedback/components/shared/FeedbackEmptyState'
 import { FeedbackErrorState } from '@/features/feedback/components/shared/FeedbackErrorState'
+import { FeedbackSummaryStrip } from '@/features/feedback/components/shared/FeedbackSummaryStrip'
 import { FeedbackTable, PAGE_SIZE } from '@/features/feedback/components/desktop/FeedbackTable'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useFeedbackList } from '@/features/feedback/hooks/useFeedbackList'
-import type { FeedbackSentimentFilter } from '@/features/feedback/types/feedback'
+import type {
+  FeedbackRatingFilter,
+  FeedbackSentimentFilter,
+  FeedbackStatusFilter,
+} from '@/features/feedback/types/feedback'
 
 const SENTIMENT_OPTIONS: { value: FeedbackSentimentFilter; label: string }[] = [
   { value: 'all', label: 'All sentiments' },
   { value: 'positive', label: 'Positive' },
   { value: 'neutral', label: 'Neutral' },
   { value: 'negative', label: 'Negative' },
+]
+
+const STATUS_OPTIONS: { value: FeedbackStatusFilter; label: string }[] = [
+  { value: 'all', label: 'All statuses' },
+  { value: 'open', label: 'Open' },
+  { value: 'resolved', label: 'Resolved' },
+]
+
+const RATING_OPTIONS: { value: FeedbackRatingFilter; label: string }[] = [
+  { value: 'all', label: 'All ratings' },
+  { value: '5', label: '5 stars' },
+  { value: '4', label: '4 stars' },
+  { value: '3', label: '3 stars' },
+  { value: '2', label: '2 stars' },
+  { value: '1', label: '1 star' },
+  { value: 'unrated', label: 'No rating' },
 ]
 
 const selectClassName =
@@ -24,23 +45,30 @@ const selectClassName =
  * list routes (/feedback, /feedback/all, /feedback/negative). The route
  * sets the initial title/sentiment filter (see FeedbackListScreen); the
  * sentiment select remains freely adjustable afterward, same as
- * Orders'/Loyalty's desktop filters.
+ * Orders'/Loyalty's desktop filters. Status and rating filters combine
+ * with it (Phase 10: "filters, ratings, status").
  */
 export function DesktopFeedbackListContent({
   title,
   initialSentiment,
+  showSummary = false,
 }: {
   title: string
   initialSentiment: FeedbackSentimentFilter
+  showSummary?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [sentiment, setSentiment] = useState<FeedbackSentimentFilter>(initialSentiment)
+  const [status, setStatus] = useState<FeedbackStatusFilter>('all')
+  const [rating, setRating] = useState<FeedbackRatingFilter>('all')
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebouncedValue(search)
 
   const { data, isPending, isError, refetch } = useFeedbackList({
     search: debouncedSearch,
     sentiment,
+    status,
+    rating,
     page,
     pageSize: PAGE_SIZE,
   })
@@ -51,6 +79,8 @@ export function DesktopFeedbackListContent({
   const handleClearFilters = () => {
     setSearch('')
     setSentiment('all')
+    setStatus('all')
+    setRating('all')
     setPage(1)
   }
 
@@ -60,6 +90,8 @@ export function DesktopFeedbackListContent({
         <h1 className="text-page-title font-semibold">{title}</h1>
         <DemoDataBadge />
       </div>
+
+      {showSummary && <FeedbackSummaryStrip />}
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="max-w-sm flex-1">
@@ -89,6 +121,36 @@ export function DesktopFeedbackListContent({
             </option>
           ))}
         </select>
+        <select
+          aria-label="Filter by status"
+          className={selectClassName}
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value as FeedbackStatusFilter)
+            setPage(1)
+          }}
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label="Filter by rating"
+          className={selectClassName}
+          value={rating}
+          onChange={(e) => {
+            setRating(e.target.value as FeedbackRatingFilter)
+            setPage(1)
+          }}
+        >
+          {RATING_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <Card>
@@ -98,7 +160,7 @@ export function DesktopFeedbackListContent({
           ) : !isPending && items.length === 0 ? (
             <FeedbackEmptyState
               search={debouncedSearch}
-              hasOtherFilters={sentiment !== 'all'}
+              hasOtherFilters={sentiment !== 'all' || status !== 'all' || rating !== 'all'}
               message="No feedback yet."
               onClearSearch={handleClearFilters}
             />

@@ -27,10 +27,12 @@ export function FeedbackListScreen() {
   const location = useLocation()
   const isDesktop = useIsDesktopViewport()
   const { title, initialSentiment } = resolveView(location.pathname)
+  // The overview route adds the summary strip; All/Negative are plain lists.
+  const showSummary = location.pathname === '/feedback'
 
   return isDesktop ? (
-    <DesktopFeedbackListContent key={location.pathname} title={title} initialSentiment={initialSentiment} />
+    <DesktopFeedbackListContent key={location.pathname} title={title} initialSentiment={initialSentiment} showSummary={showSummary} />
   ) : (
-    <MobileFeedbackListContent key={location.pathname} title={title} initialSentiment={initialSentiment} />
+    <MobileFeedbackListContent key={location.pathname} title={title} initialSentiment={initialSentiment} showSummary={showSummary} />
   )
 }

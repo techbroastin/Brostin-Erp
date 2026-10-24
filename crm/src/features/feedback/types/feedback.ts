@@ -46,11 +46,29 @@ export type SubmitFeedbackRatingInput = {
 
 export type FeedbackSentimentFilter = FeedbackSentiment | 'all'
 
+export type FeedbackStatusFilter = FeedbackStatus | 'all'
+
+/** A star value 1-5, 'unrated' for legacy feedback with no rating, or 'all'. */
+export type FeedbackRatingFilter = 'all' | 'unrated' | '1' | '2' | '3' | '4' | '5'
+
 export type FeedbackListParams = {
   search: string
   sentiment: FeedbackSentimentFilter
+  status?: FeedbackStatusFilter
+  rating?: FeedbackRatingFilter
   page: number
   pageSize: number
+}
+
+/** Feedback overview summary (docs/IMPLEMENTATION_PLAN.md Phase 10 "feedback summary"). */
+export type FeedbackSummary = {
+  total: number
+  open: number
+  needsAttention: number
+  negative: number
+  /** Mean of rated feedback only, or null when nothing is rated yet. */
+  averageRating: number | null
+  ratedCount: number
 }
 
 export type FeedbackListResult = {

@@ -4,6 +4,7 @@ import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { FeedbackEmptyState } from '@/features/feedback/components/shared/FeedbackEmptyState'
 import { FeedbackErrorState } from '@/features/feedback/components/shared/FeedbackErrorState'
+import { FeedbackSummaryStrip } from '@/features/feedback/components/shared/FeedbackSummaryStrip'
 import { FeedbackCard, FeedbackCardSkeleton } from '@/features/feedback/components/mobile/FeedbackCard'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useFeedbackList } from '@/features/feedback/hooks/useFeedbackList'
@@ -23,9 +24,11 @@ const PAGE_SIZE_STEP = 10
 export function MobileFeedbackListContent({
   title,
   initialSentiment,
+  showSummary = false,
 }: {
   title: string
   initialSentiment: FeedbackSentimentFilter
+  showSummary?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [pageSize, setPageSize] = useState(PAGE_SIZE_STEP)
@@ -51,6 +54,7 @@ export function MobileFeedbackListContent({
     <div className="flex flex-col gap-4 p-4">
       <DemoDataBadge />
       <h2 className="text-page-title font-semibold">{title}</h2>
+      {showSummary && <FeedbackSummaryStrip />}
       <SearchInput
         id="feedback-search-mobile"
         label="Search feedback by customer name"

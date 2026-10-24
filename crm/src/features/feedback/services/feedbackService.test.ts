@@ -109,4 +109,40 @@ describe('feedbackService', () => {
       service.listFeedback({ search: '', sentiment: 'all', page: 1, pageSize: 10 }, 'error'),
     ).rejects.toThrow('Failed to load feedback.')
   })
+
+  test('listFeedback filters by status and rating', async () => {
+    const base = { search: '', sentiment: 'all' as const, page: 1, pageSize: 1000 }
+    const all = await service.listFeedback(base)
+
+    const open = await service.listFeedback({ ...base, status: 'open' })
+    expect(open.items.every((f) => f.status === 'open')).toBe(true)
+    expect(open.total).toBe(all.items.filter((f) => f.status === 'open').length)
+
+    await service.submitFeedbackRating({ customerId: 'cust-002', orderId: 'ord-002', rating: 2 })
+    const twoStar = await service.listFeedback({ ...base, rating: '2' })
+    expect(twoStar.total).toBeGreaterThan(0)
+    expect(twoStar.items.every((f) => f.rating === 2)).toBe(true)
+
+    const unrated = await service.listFeedback({ ...base, rating: 'unrated' })
+    expect(unrated.items.every((f) => f.rating === null)).toBe(true)
+  }, 20_000)
+
+  test('getFeedbackSummary agrees with the list', async () => {
+    await service.submitFeedbackRating({ customerId: 'cust-002', orderId: 'ord-002', rating: 4 })
+    const summary = await service.getFeedbackSummary()
+    const { items } = await service.listFeedback({ search: '', sentiment: 'all', page: 1, pageSize: 1000 })
+    const rated = items.flatMap((f) => (f.rating !== null ? [f.rating] : []))
+
+    expect(summary.total).toBe(items.length)
+    expect(summary.open).toBe(items.filter((f) => f.status === 'open').length)
+    expect(summary.negative).toBe(items.filter((f) => f.sentiment === 'negative').length)
+    expect(summary.needsAttention).toBe(items.filter(service.isFeedbackNeedsAttention).length)
+    expect(summary.ratedCount).toBe(rated.length)
+    expect(summary.averageRating).toBeCloseTo(rated.reduce((a, b) => a + b, 0) / rated.length)
+  }, 20_000)
+
+  test('getFeedbackSummary of an empty dataset has no average', async () => {
+    const summary = await service.getFeedbackSummary('empty')
+    expect(summary).toEqual({ total: 0, open: 0, needsAttention: 0, negative: 0, averageRating: null, ratedCount: 0 })
+  })
 })
