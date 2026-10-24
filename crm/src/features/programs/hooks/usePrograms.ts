@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createProgram,
   getProgram,
+  getProgramPerformance,
   getProgramProblems,
   listPrograms,
   setProgramStatus,
@@ -16,6 +17,10 @@ export function usePrograms(status: ProgramStatus | 'all' = 'all') {
 
 export function useProgram(id: string) {
   return useQuery({ queryKey: ['programs', 'detail', id], queryFn: () => getProgram(id) })
+}
+
+export function useProgramPerformance(id: string) {
+  return useQuery({ queryKey: ['programs', 'performance', id], queryFn: () => getProgramPerformance(id) })
 }
 
 export function useProgramProblems(id: string) {

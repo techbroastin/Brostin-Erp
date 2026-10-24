@@ -7,16 +7,20 @@ import type {
   LoyaltyEvent,
   LoyaltyOverview,
   Reward,
+  RewardInput,
 } from '@/features/loyalty/types/loyalty'
 import {
-  normalRewards,
+  getRewardStore,
+  setRewardStore,
   emptyRewards,
   normalActivityRaw,
   emptyActivityRaw,
   ERROR_SCENARIO_FLAG,
   type LoyaltyMockScenario,
+  type RawLoyaltyEvent,
 } from '@/features/loyalty/mock/loyalty.mock'
 import { listCustomers } from '@/features/customers/services/customerService'
+import { recordAudit } from '@/features/audit/services/auditService'
 
 const SIMULATED_LATENCY_MS = 500
 
@@ -50,6 +54,40 @@ async function fetchAllCustomers() {
 }
 
 /**
+ * The ledger as it applies to today's customers: events of a customer
+ * merged into another move to that customer (the Merge Tool adds the
+ * two balances together), and events of archived customers drop out,
+ * the same way Customer Balances hides them (unless asked to keep
+ * them). Names come along so
+ * callers don't fetch customers twice.
+ */
+async function resolveLedger(rawSource: RawLoyaltyEvent[], includeArchived = false) {
+  const { items: customers } = await listCustomers({
+    search: '',
+    page: 1,
+    pageSize: ALL_CUSTOMERS_PAGE_SIZE,
+    sortBy: 'name',
+    includeArchived: true,
+  })
+  const byId = new Map(customers.map((c) => [c.id, c] as const))
+  const ownerOf = (id: string) => {
+    let customer = byId.get(id)
+    const seen = new Set<string>()
+    while (customer?.mergedIntoId && !seen.has(customer.id)) {
+      seen.add(customer.id)
+      customer = byId.get(customer.mergedIntoId)
+    }
+    return customer
+  }
+
+  return rawSource.flatMap((e): LoyaltyEvent[] => {
+    const owner = ownerOf(e.customerId)
+    if (!owner || (owner.archivedAt && !includeArchived)) return []
+    return [{ ...e, customerId: owner.id, customerName: owner.name }]
+  })
+}
+
+/**
  * The swap point for real data later — nothing above this file (hooks,
  * components, screens) knows the data is mocked. `scenario` lets the
  * normal/empty/error states be exercised without changing any component;
@@ -71,12 +109,13 @@ export async function getLoyaltyOverview(
   const customers = await fetchAllCustomers()
   const withPoints = customers.filter((c) => (c.loyaltyPoints ?? 0) > 0)
   const totalPointsOutstanding = withPoints.reduce((sum, c) => sum + (c.loyaltyPoints ?? 0), 0)
-  const rewardsRedeemed = normalActivityRaw.filter((e) => e.type === 'redeemed').length
+  const ledger = await resolveLedger(normalActivityRaw)
+  const rewardsRedeemed = ledger.filter((e) => e.type === 'redeemed').length
 
   return {
     totalPointsOutstanding,
     customersWithPoints: withPoints.length,
-    rewardsAvailable: normalRewards.length,
+    rewardsAvailable: getRewardStore().length,
     rewardsRedeemed,
   }
 }
@@ -128,7 +167,46 @@ export async function getRewards(scenario: LoyaltyMockScenario = 'normal'): Prom
     throw new Error('Failed to load rewards.')
   }
 
-  return scenario === 'empty' ? emptyRewards : normalRewards
+  return scenario === 'empty' ? emptyRewards : getRewardStore()
+}
+
+/**
+ * Adds a reward (no `id`) or edits one. Names are unique so programs and
+ * staff never confuse two rewards. Programs refer to rewards by id, so
+ * renaming or repricing shows up in them straight away. No delete —
+ * programs may still point at a reward.
+ */
+export async function saveReward(id: string | undefined, input: RewardInput): Promise<Reward> {
+  await delay()
+
+  const name = input.name.trim()
+  const store = getRewardStore()
+  if (store.some((r) => r.id !== id && r.name.toLowerCase() === name.toLowerCase())) {
+    throw new Error(`A reward named "${name}" already exists.`)
+  }
+  if (!Number.isInteger(input.pointCost) || input.pointCost < 1) {
+    throw new Error('Point cost must be a whole number of at least 1.')
+  }
+
+  const reward: Reward = { id: id ?? `rwd-${Date.now()}`, name, description: input.description.trim(), pointCost: input.pointCost }
+  const existing = id ? store.find((r) => r.id === id) : undefined
+  if (id && !existing) throw new Error(`Unknown reward: ${id}`)
+
+  setRewardStore(existing ? store.map((r) => (r.id === id ? reward : r)) : [...store, reward])
+
+  recordAudit({
+    category: 'marketing',
+    action: existing ? 'Edited reward' : 'Created reward',
+    target: { type: 'reward', id: reward.id, label: reward.name, href: '/loyalty/rewards' },
+    changes: existing
+      ? [
+          { field: 'Name', from: existing.name, to: reward.name },
+          { field: 'Point cost', from: String(existing.pointCost), to: String(reward.pointCost) },
+        ].filter((c) => c.from !== c.to)
+      : [{ field: 'Point cost', from: '—', to: String(reward.pointCost) }],
+  })
+
+  return reward
 }
 
 export async function listLoyaltyActivity(
@@ -141,14 +219,13 @@ export async function listLoyaltyActivity(
     throw new Error('Failed to load loyalty activity.')
   }
 
-  const rawSource = scenario === 'empty' ? emptyActivityRaw : normalActivityRaw
-  const customers = await fetchAllCustomers()
-  const nameById = new Map(customers.map((c) => [c.id, c.name] as const))
+  const ledger = await resolveLedger(scenario === 'empty' ? emptyActivityRaw : normalActivityRaw, params.includeArchived)
 
   const search = params.search.trim().toLowerCase()
-  const filtered = search
-    ? rawSource.filter((e) => (nameById.get(e.customerId) ?? '').toLowerCase().includes(search))
-    : rawSource
+  let filtered = search ? ledger.filter((e) => e.customerName.toLowerCase().includes(search)) : ledger
+  if (params.programId) {
+    filtered = filtered.filter((e) => e.programId === params.programId)
+  }
 
   const sorted = [...filtered].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -157,10 +234,5 @@ export async function listLoyaltyActivity(
   const start = (params.page - 1) * params.pageSize
   const pageItems = sorted.slice(start, start + params.pageSize)
 
-  const items: LoyaltyEvent[] = pageItems.map((e) => ({
-    ...e,
-    customerName: nameById.get(e.customerId) ?? 'Unknown customer',
-  }))
-
-  return { items, total: sorted.length }
+  return { items: pageItems, total: sorted.length }
 }

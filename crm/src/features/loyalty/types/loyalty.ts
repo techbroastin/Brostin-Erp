@@ -14,7 +14,10 @@
  *
  * `CustomerBalance.points` is sourced from the existing
  * `Customer.loyaltyPoints` field (customers feature) — never an
- * independent balance — so Customers and Loyalty always agree.
+ * independent balance — so Customers and Loyalty always agree; the
+ * activity ledger adds up to the same balances (see loyalty.mock.ts).
+ * The reward catalogue is owner-editable (name, description, point
+ * cost) — a configurable structure, not a finalized reward model.
  */
 
 export type LoyaltyEventType = 'earned' | 'redeemed'
@@ -27,6 +30,8 @@ export type LoyaltyEvent = {
   /** Positive for 'earned', negative for 'redeemed'. */
   points: number
   description: string
+  /** The program that awarded these points; null for redemptions. */
+  programId: string | null
   createdAt: string
 }
 
@@ -37,6 +42,8 @@ export type Reward = {
   description: string
   pointCost: number
 }
+
+export type RewardInput = Omit<Reward, 'id'>
 
 export type CustomerBalance = {
   id: string
@@ -61,6 +68,10 @@ export type CustomerBalanceListResult = {
 
 export type LoyaltyActivityListParams = {
   search: string
+  /** Only events awarded by this program. */
+  programId?: string
+  /** Keep events of archived customers (their own timeline still shows them). */
+  includeArchived?: boolean
   page: number
   pageSize: number
 }

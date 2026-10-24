@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { CardSectionHeading } from '@/components/shared/CardSectionHeading'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
 import { ProgramRuleSummary, ProgramStatusBadge } from '@/features/programs/components/shared/ProgramParts'
-import { usePrograms, useProgramProblems, useSetProgramStatus } from '@/features/programs/hooks/usePrograms'
+import { usePrograms, useProgramPerformance, useProgramProblems, useSetProgramStatus } from '@/features/programs/hooks/usePrograms'
 import type { ProgramStatus, ProgramSummary } from '@/features/programs/types/program'
 import { cn } from '@/lib/utils'
 
@@ -126,18 +127,62 @@ export function ProgramDetailContent({ program, isDesktop }: { program: ProgramS
             </CardHeader>
             <CardContent className="text-body-sm whitespace-pre-wrap">"{program.message.body}"</CardContent>
           </Card>
-          <Card>
-            <CardHeader>
-              <CardSectionHeading>Results</CardSectionHeading>
-            </CardHeader>
-            <CardContent className="text-body-sm text-muted-foreground">
-              Rewards earned, redemptions and cost appear here once real orders arrive from the POS/QR feed (a later
-              phase).
-              {isDesktop && ' Use "Try a visit" on the Programs page to check how this program behaves.'}
-            </CardContent>
-          </Card>
+          <ProgramResultsCard programId={program.id} />
         </div>
       </div>
     </div>
+  )
+}
+
+/** Book 3 §2 Program Detail performance — from the loyalty points ledger (demo data until the POS/QR feed). */
+function ProgramResultsCard({ programId }: { programId: string }) {
+  const { data, isPending, isError, refetch } = useProgramPerformance(programId)
+
+  const stats = data
+    ? [
+        { label: 'Times applied', value: String(data.timesApplied) },
+        { label: 'Customers rewarded', value: String(data.customersRewarded) },
+        { label: 'Points given', value: String(data.pointsAwarded) },
+        {
+          label: 'Last applied',
+          value: data.lastAppliedAt
+            ? new Date(data.lastAppliedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+            : '—',
+        },
+      ]
+    : []
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardSectionHeading>Results</CardSectionHeading>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        {isError ? (
+          <button type="button" onClick={() => refetch()} className="self-start text-body-sm underline">
+            Couldn't load results — retry
+          </button>
+        ) : isPending ? (
+          <Skeleton className="h-16" />
+        ) : (
+          <>
+            <dl className="grid grid-cols-2 gap-3">
+              {stats.map((s) => (
+                <div key={s.label}>
+                  <dt className="text-caption text-muted-foreground">{s.label}</dt>
+                  <dd className="text-h3 font-semibold">{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+            {data?.timesApplied === 0 && (
+              <p className="text-body-sm text-muted-foreground">This program hasn't rewarded anyone yet.</p>
+            )}
+            <p className="text-caption text-muted-foreground">
+              From the loyalty points ledger (demo data until real orders arrive from the POS/QR feed).
+            </p>
+          </>
+        )}
+      </CardContent>
+    </Card>
   )
 }

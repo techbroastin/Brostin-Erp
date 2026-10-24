@@ -95,3 +95,11 @@ export const COST_OWNER_LABELS: Record<CostOwner, string> = {
   brand: 'Brand-funded (Broastin)',
   outlet: 'Outlet-funded (franchisee)',
 }
+
+/** Book 3 §2 Program Detail results, from the loyalty points ledger. */
+export type ProgramPerformance = {
+  timesApplied: number
+  customersRewarded: number
+  pointsAwarded: number
+  lastAppliedAt: string | null
+}

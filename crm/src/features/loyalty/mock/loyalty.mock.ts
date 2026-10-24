@@ -44,20 +44,35 @@ const REWARD_DEFS: Array<Omit<Reward, 'id'>> = [
   },
 ]
 
-export const normalRewards: Reward[] = REWARD_DEFS.map((reward, index) => ({
+const seedRewards: Reward[] = REWARD_DEFS.map((reward, index) => ({
   id: `rwd-${String(index + 1).padStart(3, '0')}`,
   ...reward,
 }))
+
+/** Mutable session-only catalogue — owners can add and edit rewards on desktop. */
+let rewardStore: Reward[] = [...seedRewards]
+
+export function getRewardStore(): Reward[] {
+  return rewardStore
+}
+
+export function setRewardStore(next: Reward[]) {
+  rewardStore = next
+}
 
 export const emptyRewards: Reward[] = []
 
 /**
  * Raw activity events — customerName is intentionally absent; it is
  * attached by loyaltyService from the real customer records so names
- * never drift out of sync with the customers feature. Not a reconciled
- * ledger against each customer's current balance (no earn/redeem
- * calculation rule exists yet per docs/IMPLEMENTATION_PLAN.md §12) —
- * illustrative examples only.
+ * never drift out of sync with the customers feature.
+ *
+ * This is the points ledger: each customer's events add up exactly to
+ * their seed balance (customers.mock.ts: `index % 3 === 0 ?
+ * (index % 12) * 40 : null`), so Customer Balances and Activity always
+ * agree — loyaltyActivity.test.ts guards this. Earned events name the
+ * program that awarded them, which feeds each program's results.
+ * Illustrative amounts only; no earn/redeem rule is finalized.
  */
 export type RawLoyaltyEvent = {
   id: string
@@ -65,44 +80,56 @@ export type RawLoyaltyEvent = {
   type: LoyaltyEventType
   points: number
   description: string
+  /** The program that awarded the points; null for redemptions. */
+  programId: string | null
   createdAt: string
 }
 
-/** Customers known to have a non-null loyaltyPoints value, per customers.mock.ts's `index % 3 === 0` rule. */
-const EVENT_CUSTOMER_IDS = [
-  'cust-001',
-  'cust-004',
-  'cust-007',
-  'cust-010',
-  'cust-013',
-  'cust-016',
-  'cust-019',
-  'cust-022',
-  'cust-025',
+/** [customerId, seed balance] for every customer with a non-null balance in customers.mock.ts. */
+const SEED_BALANCES: Array<[string, number]> = [
+  ['cust-001', 0],
+  ['cust-004', 120],
+  ['cust-007', 240],
+  ['cust-010', 360],
+  ['cust-013', 0],
+  ['cust-016', 120],
+  ['cust-019', 240],
+  ['cust-022', 360],
+  ['cust-025', 0],
 ]
+
+const ORDER_POINTS = 120
+const SOFT_DRINK_COST = 150
+const EARN_PROGRAM_ID = 'prog-001'
+const DAY_MS = 24 * 60 * 60 * 1000
 
 function buildActivity(): RawLoyaltyEvent[] {
   const events: RawLoyaltyEvent[] = []
-  EVENT_CUSTOMER_IDS.forEach((customerId, index) => {
-    const daysAgoEarned = index * 2 + 1
+  const add = (event: Omit<RawLoyaltyEvent, 'id' | 'createdAt'>, daysAgo: number) =>
     events.push({
-      id: `lev-${String(index * 2 + 1).padStart(3, '0')}`,
-      customerId,
-      type: 'earned',
-      points: 40,
-      description: 'Earned points on an order',
-      createdAt: new Date(Date.now() - daysAgoEarned * 24 * 60 * 60 * 1000).toISOString(),
+      ...event,
+      id: `lev-${String(events.length + 1).padStart(3, '0')}`,
+      createdAt: new Date(Date.now() - daysAgo * DAY_MS).toISOString(),
     })
+
+  SEED_BALANCES.forEach(([customerId, balance], index) => {
+    const base = index * 3
+    // Every other customer earned a soft drink's worth and spent it.
     if (index % 2 === 0) {
-      const daysAgoRedeemed = index * 2
-      events.push({
-        id: `lev-${String(index * 2 + 2).padStart(3, '0')}`,
-        customerId,
-        type: 'redeemed',
-        points: -150,
-        description: 'Redeemed: Free Soft Drink',
-        createdAt: new Date(Date.now() - daysAgoRedeemed * 24 * 60 * 60 * 1000).toISOString(),
-      })
+      add(
+        { customerId, type: 'earned', points: SOFT_DRINK_COST, description: 'Earned points on an order', programId: EARN_PROGRAM_ID },
+        base + 3,
+      )
+      add(
+        { customerId, type: 'redeemed', points: -SOFT_DRINK_COST, description: 'Redeemed: Free Soft Drink', programId: null },
+        base + 2,
+      )
+    }
+    for (let k = 0; k < balance / ORDER_POINTS; k++) {
+      add(
+        { customerId, type: 'earned', points: ORDER_POINTS, description: 'Earned points on an order', programId: EARN_PROGRAM_ID },
+        base + 1 - k * 0.25,
+      )
     }
   })
   return events

@@ -68,7 +68,7 @@ const newestFirst = (a: CustomerTimelineEvent, b: CustomerTimelineEvent) =>
 async function collectEvents(customerId: string | null): Promise<CustomerTimelineEvent[]> {
   const [orders, loyalty, feedback] = await Promise.all([
     listOrders({ search: '', status: 'all', source: 'all', page: 1, pageSize: BULK_PAGE_SIZE, sortBy: 'createdAt' }),
-    listLoyaltyActivity({ search: '', page: 1, pageSize: BULK_PAGE_SIZE }),
+    listLoyaltyActivity({ search: '', page: 1, pageSize: BULK_PAGE_SIZE, includeArchived: true }),
     listFeedback({ search: '', sentiment: 'all', page: 1, pageSize: BULK_PAGE_SIZE }),
   ])
   const mine = (id: string) => customerId === null || id === customerId

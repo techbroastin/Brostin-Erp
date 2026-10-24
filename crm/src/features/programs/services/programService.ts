@@ -3,6 +3,7 @@ import type {
   ProgramInput,
   ProgramOutcome,
   ProgramEvent,
+  ProgramPerformance,
   ProgramStatus,
   ProgramSummary,
 } from '@/features/programs/types/program'
@@ -10,7 +11,7 @@ import { COST_OWNER_LABELS, STATUS_LABELS } from '@/features/programs/types/prog
 import { getProgramStore, setProgramStore } from '@/features/programs/mock/programs.mock'
 import { describeReward, describeTrigger, evaluateVisit, publishProblems } from '@/features/programs/utils/programRules'
 import { getSegmentDetail, listSegments } from '@/features/segments/services/segmentService'
-import { getRewards } from '@/features/loyalty/services/loyaltyService'
+import { getRewards, listLoyaltyActivity } from '@/features/loyalty/services/loyaltyService'
 import { getCustomerById } from '@/features/customers/services/customerService'
 import { recordAudit } from '@/features/audit/services/auditService'
 
@@ -169,4 +170,20 @@ export async function simulateVisit(event: ProgramEvent): Promise<ProgramOutcome
     segmentIds.map((id, i) => [id, new Set((details[i]?.members ?? []).map((c) => c.id))] as const),
   )
   return evaluateVisit(programs, customer, event, members, rewards)
+}
+
+/**
+ * Book 3 §2 "Program Detail (performance dashboard)": what this program
+ * has awarded so far, read from the loyalty points ledger — so it always
+ * agrees with Loyalty → Activity and Customer Balances.
+ */
+export async function getProgramPerformance(id: string): Promise<ProgramPerformance> {
+  const { items } = await listLoyaltyActivity({ search: '', page: 1, pageSize: 100_000, programId: id })
+  return {
+    timesApplied: items.length,
+    customersRewarded: new Set(items.map((e) => e.customerId)).size,
+    pointsAwarded: items.reduce((sum, e) => sum + e.points, 0),
+    // listLoyaltyActivity returns newest first.
+    lastAppliedAt: items[0]?.createdAt ?? null,
+  }
 }
