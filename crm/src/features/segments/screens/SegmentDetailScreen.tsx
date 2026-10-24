@@ -6,9 +6,16 @@ import { SegmentErrorState, SegmentNotFound } from '@/features/segments/componen
 import { MobileSegmentDetailContent } from '@/features/segments/components/mobile/MobileSegmentDetailContent'
 import { DesktopSegmentDetailContent } from '@/features/segments/components/desktop/DesktopSegmentDetailContent'
 
-/** Segment Membership route element — /customers/segments/:segmentId. Not a menu item. */
-export function SegmentDetailScreen() {
-  const { segmentId } = useParams<{ segmentId: string }>()
+/**
+ * Segment Membership route element — /customers/segments/:segmentId. Not
+ * a menu item. With `segmentId` given it shows that fixed segment: the
+ * Customers menu's "VIP Customers" and "At Risk" entries are the
+ * pre-built Loyal / VIP and At risk segments (docs/NAVIGATION.md §8.4/§8.5
+ * leave the exact rules unfinalized; Book 3 §10 defines these segments).
+ */
+export function SegmentDetailScreen({ segmentId: fixedId }: { segmentId?: string } = {}) {
+  const params = useParams<{ segmentId: string }>()
+  const segmentId = fixedId ?? params.segmentId
   const isDesktop = useIsDesktopViewport()
   const { data: detail, isPending, isError, refetch } = useSegmentDetail(segmentId ?? '')
 
@@ -28,4 +35,14 @@ export function SegmentDetailScreen() {
   if (!detail) return <SegmentNotFound />
 
   return isDesktop ? <DesktopSegmentDetailContent detail={detail} /> : <MobileSegmentDetailContent detail={detail} />
+}
+
+/** /customers/vip — Customers menu "VIP Customers". */
+export function VipCustomersScreen() {
+  return <SegmentDetailScreen segmentId="seg-vip" />
+}
+
+/** /customers/at-risk — Customers menu "At Risk". */
+export function AtRiskCustomersScreen() {
+  return <SegmentDetailScreen segmentId="seg-at-risk" />
 }

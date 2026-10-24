@@ -12,3 +12,9 @@ export function OrdersListScreen() {
   const isDesktop = useIsDesktopViewport()
   return isDesktop ? <DesktopOrderListContent /> : <MobileOrderListContent />
 }
+
+/** /orders/today — docs/NAVIGATION.md §9.2: today's orders only, same list otherwise. */
+export function OrdersTodayScreen() {
+  const isDesktop = useIsDesktopViewport()
+  return isDesktop ? <DesktopOrderListContent todayOnly /> : <MobileOrderListContent todayOnly />
+}

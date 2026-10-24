@@ -5,3 +5,4 @@ export {
   CustomerMergeScreen,
   CustomerImportScreen,
 } from '@/features/customers/screens/CustomerToolScreens'
+export { CustomerActivityScreen } from '@/features/customers/screens/CustomerActivityScreen'

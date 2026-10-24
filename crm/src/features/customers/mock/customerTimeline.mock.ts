@@ -57,6 +57,10 @@ export function getNativeEventsForCustomerFromStore(customerId: string): Custome
 }
 
 /** Append-only: adds a new event. There is no corresponding update/remove function. */
+export function getAllNativeEventsFromStore(): CustomerTimelineEvent[] {
+  return nativeEventStore
+}
+
 export function addNativeTimelineEventToStore(event: CustomerTimelineEvent): void {
   nativeEventStore = [...nativeEventStore, event]
 }

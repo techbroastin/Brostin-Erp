@@ -153,6 +153,28 @@ export const router = createBrowserRouter([
           return { Component: CustomersListScreen }
         },
       },
+      // Customers menu: VIP Customers, At Risk, Customer Activity (docs/NAVIGATION.md §8.4–8.6).
+      {
+        path: 'customers/vip',
+        lazy: async () => {
+          const { VipCustomersScreen } = await import('@/features/segments')
+          return { Component: VipCustomersScreen }
+        },
+      },
+      {
+        path: 'customers/at-risk',
+        lazy: async () => {
+          const { AtRiskCustomersScreen } = await import('@/features/segments')
+          return { Component: AtRiskCustomersScreen }
+        },
+      },
+      {
+        path: 'customers/activity',
+        lazy: async () => {
+          const { CustomerActivityScreen } = await import('@/features/customers')
+          return { Component: CustomerActivityScreen }
+        },
+      },
       // Book 3 §1 CRM tools — fixed paths, declared before customers/:customerId.
       {
         path: 'customers/duplicates',
@@ -220,6 +242,14 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { OrdersListScreen } = await import('@/features/orders')
           return { Component: OrdersListScreen }
+        },
+      },
+      // Orders menu "Today" (docs/NAVIGATION.md §9.2), before orders/:orderId.
+      {
+        path: 'orders/today',
+        lazy: async () => {
+          const { OrdersTodayScreen } = await import('@/features/orders')
+          return { Component: OrdersTodayScreen }
         },
       },
       {

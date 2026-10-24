@@ -23,13 +23,20 @@ const VALID_STATUSES = new Set<string>([
   'cancelled',
 ])
 
+/** Start of today (local time), for the "Today" view (docs/NAVIGATION.md §9.2). */
+function startOfToday(): string {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
 /**
  * Mobile Order list — search → cards → Load more, same pattern as
  * Customers. No status filter UI exists on mobile, but `?status=` is
  * still honored when deep-linked (e.g. from Dashboard) so the data
  * shown matches what the link promised.
  */
-export function MobileOrderListContent() {
+export function MobileOrderListContent({ todayOnly = false }: { todayOnly?: boolean }) {
   const [searchParams] = useSearchParams()
   const statusParam = searchParams.get('status')
   const status: OrderStatus | 'all' =
@@ -46,6 +53,7 @@ export function MobileOrderListContent() {
     page: 1,
     pageSize,
     sortBy: 'createdAt',
+    createdFrom: todayOnly ? startOfToday() : undefined,
   })
 
   const items = data?.items ?? []
@@ -59,7 +67,10 @@ export function MobileOrderListContent() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <DemoDataBadge />
+      <div className="flex items-center justify-between gap-2">
+        {todayOnly && <h2 className="text-section-title font-semibold">Today's Orders</h2>}
+        <DemoDataBadge />
+      </div>
       <OrderSearchInput
         value={search}
         onChange={(value) => {

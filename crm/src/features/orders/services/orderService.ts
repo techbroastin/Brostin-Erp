@@ -39,6 +39,10 @@ export async function listOrders(
   if (params.source !== 'all') {
     filtered = filtered.filter((o) => o.source === params.source)
   }
+  if (params.createdFrom) {
+    const from = new Date(params.createdFrom).getTime()
+    filtered = filtered.filter((o) => new Date(o.createdAt).getTime() >= from)
+  }
 
   const sorted = [...filtered].sort((a, b) => {
     if (params.sortBy === 'grandTotal') return b.grandTotal - a.grandTotal

@@ -1,5 +1,10 @@
-import type { CustomerTimelineEvent } from '@/features/customers/types/customerTimeline'
+import type {
+  CustomerActivityEvent,
+  CustomerTimelineEvent,
+  CustomerTimelineEventFilter,
+} from '@/features/customers/types/customerTimeline'
 import {
+  getAllNativeEventsFromStore,
   getNativeEventsForCustomerFromStore,
   addNativeTimelineEventToStore,
   ERROR_SCENARIO_FLAG,
@@ -8,6 +13,7 @@ import {
 import { listOrders } from '@/features/orders/services/orderService'
 import { listLoyaltyActivity } from '@/features/loyalty/services/loyaltyService'
 import { listFeedback } from '@/features/feedback/services/feedbackService'
+import { listCustomers } from '@/features/customers/services/customerService'
 
 const SIMULATED_LATENCY_MS = 500
 
@@ -47,17 +53,31 @@ export async function getCustomerTimeline(
     return []
   }
 
+  return collectEvents(customerId)
+}
+
+const newestFirst = (a: CustomerTimelineEvent, b: CustomerTimelineEvent) =>
+  new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime()
+
+/**
+ * Builds timeline events from Orders, Loyalty, Feedback and the native
+ * store — for one customer, or for everyone when `customerId` is null.
+ * Shared by the per-customer timeline and the Customer Activity feed so
+ * both always agree.
+ */
+async function collectEvents(customerId: string | null): Promise<CustomerTimelineEvent[]> {
   const [orders, loyalty, feedback] = await Promise.all([
     listOrders({ search: '', status: 'all', source: 'all', page: 1, pageSize: BULK_PAGE_SIZE, sortBy: 'createdAt' }),
     listLoyaltyActivity({ search: '', page: 1, pageSize: BULK_PAGE_SIZE }),
     listFeedback({ search: '', sentiment: 'all', page: 1, pageSize: BULK_PAGE_SIZE }),
   ])
+  const mine = (id: string) => customerId === null || id === customerId
 
   const visitEvents: CustomerTimelineEvent[] = orders.items
-    .filter((o) => o.customerId === customerId)
+    .filter((o) => mine(o.customerId))
     .map((o) => ({
       id: `tl-order-${o.id}`,
-      customerId,
+      customerId: o.customerId,
       type: 'visit',
       title: `Order ${o.orderNumber}`,
       detail: `${o.orderType} · ₹${o.grandTotal} · ${o.status}`,
@@ -67,10 +87,10 @@ export async function getCustomerTimeline(
     }))
 
   const pointsEvents: CustomerTimelineEvent[] = loyalty.items
-    .filter((e) => e.customerId === customerId)
+    .filter((e) => mine(e.customerId))
     .map((e) => ({
       id: `tl-loyalty-${e.id}`,
-      customerId,
+      customerId: e.customerId,
       type: 'points',
       title: e.type === 'earned' ? `Earned ${e.points} points` : `Redeemed ${Math.abs(e.points)} points`,
       detail: e.description,
@@ -80,10 +100,10 @@ export async function getCustomerTimeline(
     }))
 
   const reviewEvents: CustomerTimelineEvent[] = feedback.items
-    .filter((f) => f.customerId === customerId)
+    .filter((f) => mine(f.customerId))
     .map((f) => ({
       id: `tl-feedback-${f.id}`,
-      customerId,
+      customerId: f.customerId,
       type: 'review',
       title: f.rating !== null ? `Left a ${f.rating}-star review` : `Left ${f.sentiment} feedback`,
       detail: f.message,
@@ -92,11 +112,30 @@ export async function getCustomerTimeline(
       correctsEventId: null,
     }))
 
-  const nativeEvents = getNativeEventsForCustomerFromStore(customerId)
+  const nativeEvents = customerId === null ? getAllNativeEventsFromStore() : getNativeEventsForCustomerFromStore(customerId)
 
-  return [...visitEvents, ...pointsEvents, ...reviewEvents, ...nativeEvents].sort(
-    (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
-  )
+  return [...visitEvents, ...pointsEvents, ...reviewEvents, ...nativeEvents].sort(newestFirst)
+}
+
+/**
+ * Customer Activity (docs/NAVIGATION.md §8.6): the timeline events of
+ * every customer together, newest first, optionally one event type.
+ * Archived customers' events are left out, like everywhere else.
+ */
+export async function listCustomerActivity(params: {
+  type: CustomerTimelineEventFilter
+  limit: number
+}): Promise<CustomerActivityEvent[]> {
+  await delay()
+  const [events, customers] = await Promise.all([
+    collectEvents(null),
+    listCustomers({ search: '', page: 1, pageSize: BULK_PAGE_SIZE, sortBy: 'name' }),
+  ])
+  const names = new Map(customers.items.map((c) => [c.id, c.name]))
+  return events
+    .filter((e) => names.has(e.customerId) && (params.type === 'all' || e.type === params.type))
+    .slice(0, params.limit)
+    .map((e) => ({ ...e, customerName: names.get(e.customerId) as string }))
 }
 
 /**

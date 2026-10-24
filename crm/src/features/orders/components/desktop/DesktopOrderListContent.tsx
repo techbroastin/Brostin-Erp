@@ -38,6 +38,13 @@ function statusFromSearchParams(params: URLSearchParams): OrderStatus | 'all' {
   return value && VALID_STATUSES.has(value as OrderStatus | 'all') ? (value as OrderStatus | 'all') : 'all'
 }
 
+/** Start of today (local time), for the "Today" view (docs/NAVIGATION.md §9.2). */
+function startOfToday(): string {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
 /**
  * Desktop Order list — docs/DESKTOP_UI_SPEC.md §9/§10: persistent filter
  * bar (search + status + source — no date-range filter, explicitly
@@ -46,7 +53,7 @@ function statusFromSearchParams(params: URLSearchParams): OrderStatus | 'all' {
  * deep-linkable via `?status=` (e.g. from Dashboard) — the Functional
  * Navigation task requires it to survive refresh/back/forward.
  */
-export function DesktopOrderListContent() {
+export function DesktopOrderListContent({ todayOnly = false }: { todayOnly?: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
   const [status, setStatusState] = useState<OrderStatus | 'all'>(() => statusFromSearchParams(searchParams))
@@ -81,6 +88,7 @@ export function DesktopOrderListContent() {
     page,
     pageSize: PAGE_SIZE,
     sortBy,
+    createdFrom: todayOnly ? startOfToday() : undefined,
   })
 
   const items = data?.items ?? []
@@ -96,7 +104,7 @@ export function DesktopOrderListContent() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-page-title font-semibold">Orders</h1>
+        <h1 className="text-page-title font-semibold">{todayOnly ? "Today's Orders" : 'Orders'}</h1>
         <DemoDataBadge />
       </div>
 

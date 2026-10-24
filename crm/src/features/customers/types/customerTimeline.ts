@@ -40,3 +40,6 @@ export type CustomerTimelineEvent = {
    */
   correctsEventId: string | null
 }
+
+/** A timeline event with its customer's name, for the cross-customer Activity feed. */
+export type CustomerActivityEvent = CustomerTimelineEvent & { customerName: string }

@@ -72,6 +72,8 @@ export type OrderListParams = {
   page: number
   pageSize: number
   sortBy: OrderSortBy
+  /** ISO timestamp; only orders created at or after it (e.g. start of today for "Today"). */
+  createdFrom?: string
 }
 
 export type OrderListResult = {
