@@ -397,6 +397,39 @@ export const router = createBrowserRouter([
           return { Component: CreateCampaignScreen }
         },
       },
+      /**
+       * Book 3 §12 Coupons, under Campaigns (Desktop Admin only). Fixed
+       * 'coupons' paths come before 'campaigns/:campaignId' so their
+       * precedence is explicit.
+       */
+      {
+        path: 'campaigns/coupons',
+        lazy: async () => {
+          const { CouponsScreen } = await import('@/features/coupons')
+          return { Component: CouponsScreen }
+        },
+      },
+      {
+        path: 'campaigns/coupons/new',
+        lazy: async () => {
+          const { CreateCouponScreen } = await import('@/features/coupons')
+          return { Component: CreateCouponScreen }
+        },
+      },
+      {
+        path: 'campaigns/coupons/redemptions',
+        lazy: async () => {
+          const { RedemptionLogScreen } = await import('@/features/coupons')
+          return { Component: RedemptionLogScreen }
+        },
+      },
+      {
+        path: 'campaigns/coupons/:couponId',
+        lazy: async () => {
+          const { CouponDetailScreen } = await import('@/features/coupons')
+          return { Component: CouponDetailScreen }
+        },
+      },
       {
         path: 'campaigns/:campaignId',
         lazy: async () => {

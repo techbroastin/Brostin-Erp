@@ -4,7 +4,8 @@ import { ShoppingBag, Gift, MessageSquare, Star, StickyNote, History } from 'luc
 import { Skeleton } from '@/components/ui/skeleton'
 import { buttonVariants } from '@/components/ui/button'
 import { useCustomerTimeline } from '@/features/customers/hooks/useCustomerTimeline'
-import { timelineEventsToCsv, downloadCsv } from '@/features/customers/utils/customerTimelineCsv'
+import { timelineEventsToCsv } from '@/features/customers/utils/customerTimelineCsv'
+import { downloadCsv } from '@/utils/downloadCsv'
 import type {
   CustomerTimelineEventFilter,
   CustomerTimelineEventType,
