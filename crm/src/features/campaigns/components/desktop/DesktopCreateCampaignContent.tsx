@@ -1,20 +1,15 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQuery } from '@tanstack/react-query'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { buttonVariants } from '@/components/ui/button'
 import { DemoDataBadge } from '@/components/shared/DemoDataBadge'
-import { SearchInput } from '@/components/shared/SearchInput'
-import { listCustomers } from '@/features/customers/services/customerService'
+import { useSegments } from '@/features/segments/hooks/useSegments'
 import { useCreateCampaign } from '@/features/campaigns/hooks/useCreateCampaign'
 import { campaignSchema, type CampaignFormValues } from '@/features/campaigns/schemas/campaignSchema'
-import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { cn } from '@/lib/utils'
-
-const ALL_CUSTOMERS_PAGE_SIZE = 1000
 
 const textareaClassName =
   'min-h-32 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm'
@@ -27,59 +22,39 @@ type Step = 0 | 1 | 2 | 3
  * multi-step flow (details → audience → content → review) on a
  * dedicated screen, not a dialog. Validation uses React Hook Form +
  * Zod per docs/FRONTEND_ARCHITECTURE.md §19 (already-installed, first
- * actual use in this codebase). No new shadcn UI primitive is added —
- * audience selection uses plain checkboxes and message content uses a
- * plain styled <textarea>, matching the existing native-<select>
- * precedent in DesktopOrderListContent.tsx.
+ * actual use in this codebase). The audience is always a segment
+ * (Book 3 §4) — there is no "all customers" option; message content
+ * uses a plain styled <textarea>.
  */
 export function DesktopCreateCampaignContent() {
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>(0)
-  const [audienceSearch, setAudienceSearch] = useState('')
-  const debouncedAudienceSearch = useDebouncedValue(audienceSearch)
 
   const {
     register,
     handleSubmit,
     trigger,
     control,
-    setValue,
+    clearErrors,
     formState: { errors },
   } = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
-    defaultValues: { name: '', message: '', audienceCustomerIds: [], scheduledAt: null },
+    defaultValues: { name: '', message: '', segmentId: '', scheduledAt: null },
   })
 
   const name = useWatch({ control, name: 'name' })
   const message = useWatch({ control, name: 'message' })
-  const audienceCustomerIds = useWatch({ control, name: 'audienceCustomerIds' })
+  const segmentId = useWatch({ control, name: 'segmentId' })
   const scheduledAtInput = useWatch({ control, name: 'scheduledAt' })
 
-  const { data: customersResult, isPending: customersPending } = useQuery({
-    queryKey: ['customers', 'list', { search: '', page: 1, pageSize: ALL_CUSTOMERS_PAGE_SIZE, sortBy: 'name' }],
-    queryFn: () =>
-      listCustomers({ search: '', page: 1, pageSize: ALL_CUSTOMERS_PAGE_SIZE, sortBy: 'name' }),
-  })
-
-  const allCustomers = customersResult?.items ?? []
-  const visibleCustomers = debouncedAudienceSearch
-    ? allCustomers.filter((c) => c.name.toLowerCase().includes(debouncedAudienceSearch.toLowerCase()))
-    : allCustomers
+  const segments = useSegments()
+  const selectedSegment = segments.data?.find((seg) => seg.id === segmentId)
 
   const createCampaign = useCreateCampaign()
 
-  const toggleCustomer = (id: string) => {
-    const current = audienceCustomerIds ?? []
-    setValue(
-      'audienceCustomerIds',
-      current.includes(id) ? current.filter((c) => c !== id) : [...current, id],
-      { shouldValidate: true },
-    )
-  }
-
   const STEP_FIELDS: Record<Step, (keyof CampaignFormValues)[]> = {
     0: ['name'],
-    1: ['audienceCustomerIds'],
+    1: ['segmentId'],
     2: ['message'],
     3: [],
   }
@@ -98,7 +73,7 @@ export function DesktopCreateCampaignContent() {
       {
         name: values.name,
         message: values.message,
-        audienceCustomerIds: values.audienceCustomerIds,
+        segmentId: values.segmentId,
         scheduledAt: values.scheduledAt ? new Date(values.scheduledAt).toISOString() : null,
       },
       {
@@ -165,45 +140,43 @@ export function DesktopCreateCampaignContent() {
           )}
 
           {step === 1 && (
-            <>
-              <SearchInput
-                id="audience-search"
-                label="Search customers"
-                placeholder="Search customers…"
-                value={audienceSearch}
-                onChange={setAudienceSearch}
-              />
-              {errors.audienceCustomerIds && (
-                <p className="text-caption text-destructive">{errors.audienceCustomerIds.message}</p>
-              )}
-              <p className="text-caption text-muted-foreground">
-                {audienceCustomerIds?.length ?? 0} selected — picked individually; no customer
-                segment/tag model exists yet.
-              </p>
-              <div className="flex max-h-72 flex-col gap-1 overflow-y-auto rounded-md border border-border p-1">
-                {customersPending ? (
-                  <p className="p-2 text-body-sm text-muted-foreground">Loading customers…</p>
-                ) : visibleCustomers.length === 0 ? (
-                  <p className="p-2 text-body-sm text-muted-foreground">No customers match your search.</p>
-                ) : (
-                  visibleCustomers.map((c) => (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-1 text-body-sm text-muted-foreground">
+                Who should get this campaign? Pick one segment.{' '}
+                <Link to="/customers/segments/new" className="font-medium text-foreground underline underline-offset-2">
+                  Create a segment
+                </Link>
+              </legend>
+              {errors.segmentId && <p className="text-caption text-destructive">{errors.segmentId.message}</p>}
+              {segments.isPending ? (
+                <p className="text-body-sm text-muted-foreground">Loading segments…</p>
+              ) : segments.isError ? (
+                <p className="text-body-sm text-destructive">Couldn't load segments.</p>
+              ) : (
+                <div className="flex max-h-80 flex-col gap-1.5 overflow-y-auto">
+                  {segments.data.map((seg) => (
                     <label
-                      key={c.id}
-                      className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-body-sm hover:bg-muted"
+                      key={seg.id}
+                      className={cn(
+                        'flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-body-sm',
+                        segmentId === seg.id ? 'border-brand-primary bg-brand-primary-soft' : 'border-border hover:bg-muted',
+                      )}
                     >
-                      <input
-                        type="checkbox"
-                        className="accent-brand-primary"
-                        checked={(audienceCustomerIds ?? []).includes(c.id)}
-                        onChange={() => toggleCustomer(c.id)}
-                      />
-                      <span className="flex-1">{c.name}</span>
-                      <span className="text-muted-foreground">{c.phone}</span>
+                      <input type="radio" value={seg.id} className="accent-brand-primary" {...register('segmentId', { onChange: () => clearErrors('segmentId') })} />
+                      <span className="flex-1">
+                        <span className="block font-medium">{seg.name}</span>
+                        {seg.description && (
+                          <span className="block text-caption text-muted-foreground">{seg.description}</span>
+                        )}
+                      </span>
+                      <span className="shrink-0 text-muted-foreground">
+                        {seg.memberCount} customer{seg.memberCount === 1 ? '' : 's'}
+                      </span>
                     </label>
-                  ))
-                )}
-              </div>
-            </>
+                  ))}
+                </div>
+              )}
+            </fieldset>
           )}
 
           {step === 2 && (
@@ -229,7 +202,9 @@ export function DesktopCreateCampaignContent() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Audience</span>
-                <span className="font-medium">{audienceCustomerIds?.length ?? 0} customers</span>
+                <span className="font-medium">
+                  {selectedSegment ? `${selectedSegment.name} · ${selectedSegment.memberCount} customers now` : '—'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Scheduled for</span>

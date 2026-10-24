@@ -13,9 +13,10 @@
  * behind service boundaries. Do not hard-code a specific provider into
  * the UI layer" — since no provider is named, none is invented here.
  *
- * `audienceCustomerIds` reuses customerService.listCustomers()'s own
- * Customer.id — no new customer mock data, no segment/tag data model
- * (none exists on Customer).
+ * Audience: Book 3 §4 — every campaign targets a Segment (§10), never
+ * "all customers". Until it is sent, the audience follows the segment's
+ * current membership; on send, who it went to is frozen in
+ * `sentToCustomerIds` so later segment changes don't rewrite history.
  */
 
 export type CampaignStatus = 'draft' | 'scheduled' | 'sent'
@@ -25,10 +26,21 @@ export type Campaign = {
   name: string
   status: CampaignStatus
   message: string
-  audienceCustomerIds: string[]
+  segmentId: string
+  /** Customer ids it was sent to, fixed at send time. Null until sent. */
+  sentToCustomerIds: string[] | null
   /** ISO timestamp — when a scheduled/sent campaign is set to go out. Never an actual dispatch. */
   scheduledAt: string | null
   createdAt: string
+}
+
+/**
+ * A campaign plus its resolved audience. `segmentName` is null if the
+ * segment has since been deleted; such a campaign cannot be sent.
+ */
+export type CampaignSummary = Campaign & {
+  segmentName: string | null
+  audienceCount: number
 }
 
 export type CampaignSortBy = 'createdAt' | 'name'
@@ -41,7 +53,7 @@ export type CampaignListParams = {
 }
 
 export type CampaignListResult = {
-  items: Campaign[]
+  items: CampaignSummary[]
   total: number
 }
 
@@ -55,6 +67,6 @@ export type CampaignOverview = {
 export type CreateCampaignInput = {
   name: string
   message: string
-  audienceCustomerIds: string[]
+  segmentId: string
   scheduledAt: string | null
 }

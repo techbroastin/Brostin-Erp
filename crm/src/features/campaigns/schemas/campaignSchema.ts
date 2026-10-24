@@ -9,7 +9,8 @@ import { z } from 'zod'
 export const campaignSchema = z.object({
   name: z.string().trim().min(1, 'Campaign name is required.').max(120, 'Campaign name is too long.'),
   message: z.string().trim().min(1, 'Message content is required.').max(2000, 'Message is too long.'),
-  audienceCustomerIds: z.array(z.string()).min(1, 'Select at least one customer.'),
+  /** Book 3 §4: every campaign targets a segment — there is no "all customers" option. */
+  segmentId: z.string().min(1, 'Pick a segment.'),
   scheduledAt: z.string().nullable(),
 })
 

@@ -25,7 +25,8 @@ function seedCampaigns(): Campaign[] {
       name: 'Weekend Broasted Combo Offer',
       status: 'sent',
       message: 'This weekend only: get our Broasted Combo at a special price. Order now!',
-      audienceCustomerIds: ['cust-001', 'cust-002', 'cust-003', 'cust-004', 'cust-005'],
+      segmentId: 'seg-repeat',
+      sentToCustomerIds: ['cust-001', 'cust-002', 'cust-003', 'cust-004', 'cust-005'],
       scheduledAt: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date(now - 6 * 24 * 60 * 60 * 1000).toISOString(),
     },
@@ -34,7 +35,8 @@ function seedCampaigns(): Campaign[] {
       name: 'Loyalty Points Reminder',
       status: 'scheduled',
       message: 'You have loyalty points waiting to be redeemed — check your balance and treat yourself!',
-      audienceCustomerIds: ['cust-007', 'cust-010', 'cust-019', 'cust-022'],
+      segmentId: 'seg-vip',
+      sentToCustomerIds: null,
       scheduledAt: new Date(now + 2 * 24 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(),
     },
@@ -43,7 +45,8 @@ function seedCampaigns(): Campaign[] {
       name: 'New Menu Announcement',
       status: 'draft',
       message: "We've added new items to the menu — come try them!",
-      audienceCustomerIds: [],
+      segmentId: 'seg-new',
+      sentToCustomerIds: null,
       scheduledAt: null,
       createdAt: new Date(now - 1 * 60 * 60 * 1000).toISOString(),
     },
@@ -59,6 +62,10 @@ export function getCampaignStore(): Campaign[] {
 
 export function addCampaignToStore(campaign: Campaign): void {
   campaignStore = [campaign, ...campaignStore]
+}
+
+export function replaceCampaignInStore(campaign: Campaign): void {
+  campaignStore = campaignStore.map((c) => (c.id === campaign.id ? campaign : c))
 }
 
 export function updateCampaignStatusInStore(id: string, status: CampaignStatus): Campaign | null {

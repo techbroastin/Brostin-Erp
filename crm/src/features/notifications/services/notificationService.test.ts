@@ -78,14 +78,14 @@ describe('notificationService', () => {
 describe('sendCampaign', () => {
   beforeEach(() => vi.resetModules())
 
-  test('marks the campaign sent and routes one message per audience member', async () => {
+  test('marks the campaign sent and routes one message per segment member', async () => {
     const campaigns = await import('@/features/campaigns/services/campaignService')
     const notifications = await import('./notificationService')
     const { campaign, delivery } = await campaigns.sendCampaign('camp-002')
 
-    expect(campaign?.status).toBe('sent')
-    expect(delivery?.total).toBe(campaign?.audienceCustomerIds.length)
+    expect(campaign.status).toBe('sent')
+    expect(delivery.total).toBe(campaign.sentToCustomerIds?.length)
     const logged = await notifications.listMessages({ search: 'Loyalty Points Reminder', status: 'all' })
-    expect(logged).toHaveLength(campaign?.audienceCustomerIds.length ?? -1)
+    expect(logged).toHaveLength(campaign.sentToCustomerIds?.length ?? -1)
   })
 })

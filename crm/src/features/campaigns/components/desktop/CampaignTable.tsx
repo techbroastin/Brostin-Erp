@@ -11,7 +11,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { buttonVariants } from '@/components/ui/button'
 import { CampaignStatusBadge } from '@/features/campaigns/components/shared/CampaignStatusBadge'
-import type { Campaign, CampaignSortBy } from '@/features/campaigns/types/campaign'
+import type { CampaignSortBy, CampaignSummary } from '@/features/campaigns/types/campaign'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 10
@@ -26,7 +26,7 @@ export function CampaignTable({
   total,
   onPageChange,
 }: {
-  items: Campaign[]
+  items: CampaignSummary[]
   isLoading: boolean
   sortBy: CampaignSortBy
   onSortChange: (sortBy: CampaignSortBy) => void
@@ -83,7 +83,10 @@ export function CampaignTable({
                   <TableCell>
                     <CampaignStatusBadge status={campaign.status} />
                   </TableCell>
-                  <TableCell>{campaign.audienceCustomerIds.length}</TableCell>
+                  <TableCell>
+                    {campaign.segmentName ?? <span className="text-destructive">Segment deleted</span>}
+                    <span className="text-muted-foreground"> · {campaign.audienceCount}</span>
+                  </TableCell>
                   <TableCell>
                     {new Date(campaign.createdAt).toLocaleString(undefined, {
                       dateStyle: 'medium',

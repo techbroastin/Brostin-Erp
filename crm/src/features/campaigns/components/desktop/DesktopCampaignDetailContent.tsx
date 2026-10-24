@@ -1,16 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
 import { CardSectionHeading } from '@/components/shared/CardSectionHeading'
 import { CampaignStatusBadge } from '@/features/campaigns/components/shared/CampaignStatusBadge'
 import { sendCampaign } from '@/features/campaigns/services/campaignService'
 import type { DispatchSummary } from '@/features/notifications/types/message'
-import { listCustomers } from '@/features/customers/services/customerService'
-import type { Campaign } from '@/features/campaigns/types/campaign'
-
-const ALL_CUSTOMERS_PAGE_SIZE = 1000
+import { useCampaignAudience } from '@/features/campaigns/hooks/useCampaignAudience'
+import type { CampaignSummary } from '@/features/campaigns/types/campaign'
 
 /**
  * docs/DESKTOP_UI_SPEC.md — denser multi-column layout. "Mark as Sent"
@@ -21,20 +19,12 @@ const ALL_CUSTOMERS_PAGE_SIZE = 1000
  * engagement metric (opens/clicks) exists in the mock data, so none is
  * shown as a number.
  */
-export function DesktopCampaignDetailContent({ campaign }: { campaign: Campaign }) {
+export function DesktopCampaignDetailContent({ campaign }: { campaign: CampaignSummary }) {
   const queryClient = useQueryClient()
   const [actionError, setActionError] = useState<string | null>(null)
   const [delivery, setDelivery] = useState<DispatchSummary | null>(null)
 
-  const { data: customersResult } = useQuery({
-    queryKey: ['customers', 'list', { search: '', page: 1, pageSize: ALL_CUSTOMERS_PAGE_SIZE, sortBy: 'name' }],
-    queryFn: () =>
-      listCustomers({ search: '', page: 1, pageSize: ALL_CUSTOMERS_PAGE_SIZE, sortBy: 'name' }),
-  })
-
-  const audienceCustomers = (customersResult?.items ?? []).filter((c) =>
-    campaign.audienceCustomerIds.includes(c.id),
-  )
+  const { data: audienceCustomers = [], isPending: audiencePending } = useCampaignAudience(campaign.id)
 
   const markAsSent = useMutation({
     mutationFn: () => sendCampaign(campaign.id),
@@ -44,7 +34,12 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: Campaign 
       queryClient.invalidateQueries({ queryKey: ['campaigns'] })
       queryClient.invalidateQueries({ queryKey: ['messages'] })
     },
-    onError: () => setActionError('Could not update this campaign. Please try again.'),
+    onError: (error) =>
+      setActionError(
+        error instanceof Error && /segment|already been sent/.test(error.message)
+          ? error.message
+          : 'Could not send this campaign. Please try again.',
+      ),
   })
 
   return (
@@ -119,12 +114,24 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: Campaign 
             <CardSectionHeading>Audience</CardSectionHeading>
           </CardHeader>
           <CardContent className="flex flex-col gap-1.5 text-body-sm">
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Segment</span>
+              {campaign.segmentName ? (
+                <Link to={`/customers/segments/${campaign.segmentId}`} className="font-medium hover:underline">
+                  {campaign.segmentName}
+                </Link>
+              ) : (
+                <span className="text-destructive">Deleted</span>
+              )}
+            </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Audience size</span>
-              <span className="font-medium">{campaign.audienceCustomerIds.length}</span>
+              <span className="text-muted-foreground">{campaign.status === 'sent' ? 'Sent to' : 'Customers now'}</span>
+              <span className="font-medium">{campaign.audienceCount}</span>
             </div>
             <p className="text-caption text-muted-foreground">
-              Selected individually — no customer segment/tag model exists yet.
+              {campaign.status === 'sent'
+                ? 'Fixed when the campaign was sent.'
+                : "Follows the segment's membership until the campaign is sent."}
             </p>
           </CardContent>
         </Card>
@@ -150,11 +157,13 @@ export function DesktopCampaignDetailContent({ campaign }: { campaign: Campaign 
 
       <Card>
         <CardHeader>
-          <CardSectionHeading>Audience ({audienceCustomers.length})</CardSectionHeading>
+          <CardSectionHeading>Audience{audiencePending ? '' : ` (${audienceCustomers.length})`}</CardSectionHeading>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          {audienceCustomers.length === 0 ? (
-            <p className="text-body-sm text-muted-foreground">No customers selected.</p>
+          {audiencePending ? (
+            <p className="text-body-sm text-muted-foreground">Loading audience…</p>
+          ) : audienceCustomers.length === 0 ? (
+            <p className="text-body-sm text-muted-foreground">No customers in this audience.</p>
           ) : (
             audienceCustomers.map((c) => (
               <Link
