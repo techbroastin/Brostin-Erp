@@ -154,6 +154,39 @@ export const router = createBrowserRouter([
           return { Component: CustomersListScreen }
         },
       },
+      /**
+       * Book 3 §10 Segmentation. Fixed sub-path 'segments' is declared
+       * before 'customers/:customerId' so its precedence is explicit
+       * (docs/NAVIGATION.md route matching note).
+       */
+      {
+        path: 'customers/segments',
+        lazy: async () => {
+          const { SegmentsListScreen } = await import('@/features/segments')
+          return { Component: SegmentsListScreen }
+        },
+      },
+      {
+        path: 'customers/segments/new',
+        lazy: async () => {
+          const { CreateSegmentScreen } = await import('@/features/segments')
+          return { Component: CreateSegmentScreen }
+        },
+      },
+      {
+        path: 'customers/segments/:segmentId',
+        lazy: async () => {
+          const { SegmentDetailScreen } = await import('@/features/segments')
+          return { Component: SegmentDetailScreen }
+        },
+      },
+      {
+        path: 'customers/segments/:segmentId/edit',
+        lazy: async () => {
+          const { EditSegmentScreen } = await import('@/features/segments')
+          return { Component: EditSegmentScreen }
+        },
+      },
       {
         path: 'customers/:customerId',
         lazy: async () => {
